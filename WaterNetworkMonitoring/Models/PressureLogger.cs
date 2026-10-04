@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace WaterNetworkMonitoring.Models
 {
-    internal class PressureLogger
+    public class PressureLogger : Sensor
     {
+        public double CurrentPressure { get; set; }
+
+        public double MinPressure { get; set; }
+
+        public double MaxPressure { get; set; }
     }
 }

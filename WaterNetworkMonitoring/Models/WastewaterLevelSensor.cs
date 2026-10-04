@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace WaterNetworkMonitoring.Models
 {
-    internal class WastewaterLevelSensor
+    public class WastewaterLevelSensor : Sensor
     {
+        public double CurrentLevel { get; set; }
+
+        public double MaximumLevel { get; set; }
     }
 }
