@@ -154,7 +154,7 @@ namespace WaterNetworkMonitoring
             Controls.Add(panelContent);
             Controls.Add(panelSidebar);
             Name = "MainForm";
-            Text = "MainForm";
+            Text = "Water Network Monitoring\n";
             Load += MainForm_Load;
             panelSidebar.ResumeLayout(false);
             ResumeLayout(false);

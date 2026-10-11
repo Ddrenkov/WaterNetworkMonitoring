@@ -1,6 +1,6 @@
 namespace WaterNetworkMonitoring
 {
-    partial class Form1
+    partial class LoginForm
     {
         /// <summary>
         ///  Required designer variable.
@@ -89,7 +89,7 @@ namespace WaterNetworkMonitoring
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
-            // Form1
+            // LoginForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -100,7 +100,7 @@ namespace WaterNetworkMonitoring
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
-            Name = "Form1";
+            Name = "LoginForm";
             Text = "Login Form";
             ResumeLayout(false);
             PerformLayout();
