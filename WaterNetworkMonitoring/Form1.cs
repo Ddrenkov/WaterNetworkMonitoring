@@ -55,11 +55,6 @@ namespace WaterNetworkMonitoring
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            using RegisterForm registerForm = new RegisterForm();
-            registerForm.ShowDialog();
-        }
     }
 
 }

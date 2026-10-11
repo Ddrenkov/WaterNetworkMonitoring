@@ -1,4 +1,4 @@
-﻿namespace WaterNetworkMonitoring
+namespace WaterNetworkMonitoring
 {
     partial class Form1
     {
@@ -34,7 +34,6 @@
             textBox1 = new TextBox();
             textBox2 = new TextBox();
             button1 = new Button();
-            button2 = new Button();
             SuspendLayout();
             // 
             // label1
@@ -90,22 +89,11 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
-            // button2
-            // 
-            button2.Location = new Point(319, 312);
-            button2.Name = "button2";
-            button2.Size = new Size(152, 36);
-            button2.TabIndex = 6;
-            button2.Text = "Register";
-            button2.UseVisualStyleBackColor = true;
-            button2.Click += button2_Click;
-            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(button2);
             Controls.Add(button1);
             Controls.Add(textBox2);
             Controls.Add(textBox1);
@@ -126,6 +114,5 @@
         private TextBox textBox1;
         private TextBox textBox2;
         private Button button1;
-        private Button button2;
     }
 }

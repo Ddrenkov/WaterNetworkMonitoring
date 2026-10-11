@@ -66,6 +66,7 @@ namespace WaterNetworkMonitoring
             btnLogout.TabIndex = 0;
             btnLogout.Text = "Logout";
             btnLogout.UseVisualStyleBackColor = true;
+            btnLogout.Click += btnLogout_Click;
             // 
             // btnAccountManagement
             // 

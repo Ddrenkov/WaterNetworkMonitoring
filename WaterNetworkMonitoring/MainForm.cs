@@ -31,6 +31,10 @@ namespace WaterNetworkMonitoring
                 currentAccount.Role == "Admin";
         }
        
+        private void btnLogout_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
         private void btnDashboard_Click(object sender, EventArgs e)
         {
 
