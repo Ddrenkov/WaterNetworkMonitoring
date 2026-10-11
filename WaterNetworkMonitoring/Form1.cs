@@ -41,7 +41,18 @@ namespace WaterNetworkMonitoring
                 return;
             }
 
-            MessageBox.Show("Login successful!");
+            using MainForm mainForm = new MainForm(account);
+
+            this.Hide();
+
+            try
+            {
+                mainForm.ShowDialog();
+            }
+            finally
+            {
+                this.Show();
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
