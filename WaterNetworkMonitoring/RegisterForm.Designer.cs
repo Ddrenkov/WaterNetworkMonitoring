@@ -37,7 +37,6 @@
             txtPassword = new TextBox();
             txtConfirmPassword = new TextBox();
             btnRegister = new Button();
-            btnClose = new Button();
             SuspendLayout();
             // 
             // label1
@@ -117,22 +116,11 @@
             btnRegister.UseVisualStyleBackColor = true;
             btnRegister.Click += btnRegister_Click;
             // 
-            // btnClose
-            // 
-            btnClose.Location = new Point(167, 342);
-            btnClose.Name = "btnClose";
-            btnClose.Size = new Size(222, 31);
-            btnClose.TabIndex = 9;
-            btnClose.Text = "Close";
-            btnClose.UseVisualStyleBackColor = true;
-            btnClose.Click += btnClose_Click;
-            // 
             // RegisterForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(546, 440);
-            Controls.Add(btnClose);
             Controls.Add(btnRegister);
             Controls.Add(txtConfirmPassword);
             Controls.Add(txtPassword);
@@ -159,6 +147,5 @@
         private TextBox txtPassword;
         private TextBox txtConfirmPassword;
         private Button btnRegister;
-        private Button btnClose;
     }
 }

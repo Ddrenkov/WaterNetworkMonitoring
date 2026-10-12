@@ -79,6 +79,7 @@ namespace WaterNetworkMonitoring
             btnAccountManagement.TabIndex = 1;
             btnAccountManagement.Text = "Account Management";
             btnAccountManagement.UseVisualStyleBackColor = true;
+            btnAccountManagement.Click += btnAccountManagement_Click;
             // 
             // btnReports
             // 

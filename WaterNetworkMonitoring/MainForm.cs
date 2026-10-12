@@ -19,6 +19,7 @@ namespace WaterNetworkMonitoring
         {
             InitializeComponent();
             this.WindowState = FormWindowState.Maximized;
+            panelContent.Resize += panelContent_Resize;
 
             currentAccount = account;
 
@@ -31,6 +32,44 @@ namespace WaterNetworkMonitoring
                 currentAccount.Role == "Admin";
         }
        
+        private void btnAccountManagement_Click(object sender, EventArgs e)
+        {
+            if (currentAccount.Role != "Admin")
+            {
+                return;
+            }
+
+            foreach (Control content in panelContent.Controls.Cast<Control>().ToArray())
+            {
+                content.Dispose();
+            }
+
+            RegisterForm registerForm = new RegisterForm
+            {
+                TopLevel = false,
+                FormBorderStyle = FormBorderStyle.None,
+                Dock = DockStyle.None,
+                StartPosition = FormStartPosition.Manual
+            };
+
+            panelContent.Controls.Add(registerForm);
+            registerForm.Show();
+            CenterContent();
+        }
+        private void panelContent_Resize(object? sender, EventArgs e)
+        {
+            CenterContent();
+        }
+
+        private void CenterContent()
+        {
+            foreach (Control content in panelContent.Controls)
+            {
+                content.Location = new Point(
+                    Math.Max(0, (panelContent.ClientSize.Width - content.Width) / 2),
+                    Math.Max(0, (panelContent.ClientSize.Height - content.Height) / 2));
+            }
+        }
         private void btnLogout_Click(object sender, EventArgs e)
         {
             this.Close();
