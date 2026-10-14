@@ -24,6 +24,7 @@ namespace WaterNetworkMonitoring
             currentAccount = account;
 
             SetupUserAccess();
+            btnDashboard_Click(this, EventArgs.Empty);
         }
 
         private void SetupUserAccess()
@@ -65,6 +66,11 @@ namespace WaterNetworkMonitoring
         {
             foreach (Control content in panelContent.Controls)
             {
+                if (content.Dock != DockStyle.None)
+                {
+                    continue;
+                }
+
                 content.Location = new Point(
                     Math.Max(0, (panelContent.ClientSize.Width - content.Width) / 2),
                     Math.Max(0, (panelContent.ClientSize.Height - content.Height) / 2));
@@ -76,7 +82,17 @@ namespace WaterNetworkMonitoring
         }
         private void btnDashboard_Click(object sender, EventArgs e)
         {
+            foreach (Control content in panelContent.Controls.Cast<Control>().ToArray())
+            {
+                content.Dispose();
+            }
 
+            DashboardControl dashboard = new DashboardControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            panelContent.Controls.Add(dashboard);
         }
 
         private void MainForm_Load(object sender, EventArgs e)

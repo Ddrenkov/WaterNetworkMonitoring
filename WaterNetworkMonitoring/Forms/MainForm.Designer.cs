@@ -128,6 +128,7 @@ namespace WaterNetworkMonitoring
             btnDashboard.TabIndex = 5;
             btnDashboard.Text = "Dashboard";
             btnDashboard.UseVisualStyleBackColor = true;
+            btnDashboard.Click += btnDashboard_Click;
             // 
             // lblWaterNetwork
             // 
