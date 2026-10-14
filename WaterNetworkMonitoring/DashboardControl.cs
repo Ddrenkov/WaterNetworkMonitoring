@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -25,11 +25,11 @@ namespace WaterNetworkMonitoring
             var map = new GMap.NET.WindowsForms.GMapControl
             {
                 Dock = DockStyle.Fill,
-                MapProvider = ProjectOpenStreetMapProvider.Instance,
+                MapProvider = OSMap.Instance,
                 Position = new GMap.NET.PointLatLng(42.0209, 23.0943),
                 MinZoom = 2,
                 MaxZoom = 19,
-                Zoom = 14,
+                Zoom = 13,
                 CanDragMap = true,
                 DragButton = MouseButtons.Left,
                 ShowCenter = false

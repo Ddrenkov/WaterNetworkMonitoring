@@ -5,15 +5,15 @@ using System.Net.Http;
 
 namespace WaterNetworkMonitoring
 {
-    internal sealed class ProjectOpenStreetMapProvider : GMapProvider
+    internal sealed class OSMap : GMapProvider
     {
-        public static readonly ProjectOpenStreetMapProvider Instance = new();
+        public static readonly OSMap Instance = new();
         private static readonly HttpClient Client = CreateClient();
         private static readonly string CacheFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "WaterNetworkMonitoring", "OsmTiles");
 
-        private ProjectOpenStreetMapProvider()
+        private OSMap()
         {
             BypassCache = true;
             Copyright = "© OpenStreetMap contributors";
