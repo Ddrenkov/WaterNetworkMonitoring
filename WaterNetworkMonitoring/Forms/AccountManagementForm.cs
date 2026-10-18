@@ -17,6 +17,7 @@ namespace WaterNetworkMonitoring
             InitializeComponent();
             footerPanel.Resize += (_, _) => CenterFooterButton();
             CenterFooterButton();
+            accountsList.ClientSizeChanged += (_, _) => ResizeAccountRows();
         }
 
         public AccountManagementForm(Account currentAccount) : this()
@@ -50,7 +51,21 @@ namespace WaterNetworkMonitoring
             {
                 if (!IsAdmin()) return;
                 using var db = new AppDbContext();
-                accountsGrid.DataSource = db.Accounts.AsNoTracking().OrderBy(a => a.Username).ToList();
+                var accounts = db.Accounts.AsNoTracking().OrderBy(a => a.CreatedAt).ThenBy(a => a.Id).ToList();
+                accountsList.SuspendLayout();
+                try
+                {
+                    foreach (Control row in accountsList.Controls.Cast<Control>().ToArray()) row.Dispose();
+                    foreach (var account in accounts)
+                    {
+                        var row = new AccountRowControl(account);
+                        row.EditRequested += (_, _) => OpenEditor(account.Id);
+                        row.DeleteRequested += (_, _) => DeleteAccount(account.Id);
+                        accountsList.Controls.Add(row);
+                    }
+                    ResizeAccountRows();
+                }
+                finally { accountsList.ResumeLayout(); }
             }
             catch (Exception)
             {
@@ -58,13 +73,11 @@ namespace WaterNetworkMonitoring
             }
         }
 
-        private void AccountAction(object? sender, DataGridViewCellEventArgs e)
+        private void ResizeAccountRows()
         {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0 || accountsGrid.Rows[e.RowIndex].DataBoundItem is not Account account) return;
-            if (accountsGrid.Columns[e.ColumnIndex].Name == "Edit") OpenEditor(account.Id);
-            else if (accountsGrid.Columns[e.ColumnIndex].Name == "Delete") DeleteAccount(account.Id);
+            int width = Math.Max(720, accountsList.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4);
+            foreach (Control row in accountsList.Controls) row.Width = width;
         }
-
         private void DeleteAccount(int id)
         {
             try
@@ -105,7 +118,7 @@ namespace WaterNetworkMonitoring
             var host = new Panel { Dock = DockStyle.Fill };
             void CenterEditor() => editor.Location = new Point(Math.Max(0, (host.ClientSize.Width - editor.Width) / 2), Math.Max(0, (host.ClientSize.Height - editor.Height) / 2));
             host.Resize += (_, _) => CenterEditor();
-            accountsGrid.Visible = false;
+            accountsList.Visible = false;
             addButton.Visible = false;
             host.Controls.Add(editor);
             var backPanel = new Panel { Dock = DockStyle.Bottom, Height = 50 };
@@ -122,7 +135,7 @@ namespace WaterNetworkMonitoring
                 BeginInvoke(new Action(() =>
                 {
                     host.Dispose();
-                    accountsGrid.Visible = true;
+                    accountsList.Visible = true;
                     addButton.Visible = true;
                     if (saved && id == currentAccount.Id)
                     {
@@ -141,6 +154,8 @@ namespace WaterNetworkMonitoring
         }
     }
 }
+
+
 
 
 
