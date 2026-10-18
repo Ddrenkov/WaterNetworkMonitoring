@@ -1,4 +1,4 @@
-﻿namespace WaterNetworkMonitoring
+namespace WaterNetworkMonitoring
 {
     partial class RegisterForm
     {
@@ -37,6 +37,8 @@
             txtPassword = new TextBox();
             txtConfirmPassword = new TextBox();
             btnRegister = new Button();
+            label5 = new Label();
+            cmbRole = new ComboBox();
             SuspendLayout();
             // 
             // label1
@@ -108,19 +110,41 @@
             // btnRegister
             // 
             btnRegister.Font = new Font("Segoe UI", 10.8F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            btnRegister.Location = new Point(167, 276);
+            btnRegister.Location = new Point(193, 338);
             btnRegister.Name = "btnRegister";
-            btnRegister.Size = new Size(222, 50);
+            btnRegister.Size = new Size(160, 36);
             btnRegister.TabIndex = 8;
             btnRegister.Text = "Register";
             btnRegister.UseVisualStyleBackColor = true;
             btnRegister.Click += btnRegister_Click;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(164, 274);
+            label5.Name = "label5";
+            label5.Size = new Size(39, 20);
+            label5.TabIndex = 9;
+            label5.Text = "Role";
+            
+            // 
+            // cmbRole
+            // 
+            cmbRole.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbRole.Items.AddRange(new object[] { "User", "Admin" });
+            cmbRole.FormattingEnabled = true;
+            cmbRole.Location = new Point(274, 271);
+            cmbRole.Name = "cmbRole";
+            cmbRole.Size = new Size(149, 28);
+            cmbRole.TabIndex = 11;
             // 
             // RegisterForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(546, 440);
+            Controls.Add(cmbRole);
+            Controls.Add(label5);
             Controls.Add(btnRegister);
             Controls.Add(txtConfirmPassword);
             Controls.Add(txtPassword);
@@ -147,5 +171,8 @@
         private TextBox txtPassword;
         private TextBox txtConfirmPassword;
         private Button btnRegister;
+        private Label label5;
+        private ComboBox cmbRole;
     }
 }
+

@@ -45,17 +45,19 @@ namespace WaterNetworkMonitoring
                 content.Dispose();
             }
 
-            RegisterForm registerForm = new RegisterForm
+            var accounts = new AccountManagementForm(currentAccount)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.None,
-                StartPosition = FormStartPosition.Manual
+                Dock = DockStyle.Fill
             };
-
-            panelContent.Controls.Add(registerForm);
-            registerForm.Show();
-            CenterContent();
+            accounts.CurrentAccountChanged += (_, _) =>
+            {
+                SetupUserAccess();
+                if (currentAccount.Role != "Admin") btnDashboard_Click(this, EventArgs.Empty);
+            };
+            panelContent.Controls.Add(accounts);
+            accounts.Show();
         }
         private void panelContent_Resize(object? sender, EventArgs e)
         {
@@ -101,3 +103,5 @@ namespace WaterNetworkMonitoring
         }
     }
 }
+
+
