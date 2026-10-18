@@ -31,16 +31,8 @@ namespace WaterNetworkMonitoring
                 {
                     Text = "Leave passwords empty to keep the current password.",
                     AutoSize = true,
-                    Location = new Point(90, 143)
+                    Location = new Point(90, 20)
                 };
-                foreach (Control field in new Control[]
-                {
-                    label3, txtPassword, label4, txtConfirmPassword,
-                    label5, cmbRole, btnRegister
-                })
-                {
-                    field.Top += 24;
-                }
                 Controls.Add(hint);
             }
         }

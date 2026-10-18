@@ -39,10 +39,12 @@ namespace WaterNetworkMonitoring
             rowLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
             deleteButton.Text = "Delete";
             deleteButton.Size = new Size(72, 32);
-            deleteButton.Anchor = AnchorStyles.None;
+            deleteButton.Anchor = AnchorStyles.Top;
+            deleteButton.Margin = new Padding(3, 24, 3, 3);
             editButton.Text = "Edit";
             editButton.Size = new Size(72, 32);
-            editButton.Anchor = AnchorStyles.None;
+            editButton.Anchor = AnchorStyles.Top;
+            editButton.Margin = new Padding(3, 24, 3, 3);
             rowLayout.Controls.Add(deleteButton, 5, 0);
             rowLayout.Controls.Add(editButton, 4, 0);
             usernamePanel.Dock = DockStyle.Fill;

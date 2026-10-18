@@ -76,7 +76,10 @@ namespace WaterNetworkMonitoring
         private void ResizeAccountRows()
         {
             int width = Math.Max(720, accountsList.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4);
-            foreach (Control row in accountsList.Controls) row.Width = width;
+            foreach (Control row in accountsList.Controls)
+            {
+                if (row.Width != width) row.Width = width;
+            }
         }
         private void DeleteAccount(int id)
         {
