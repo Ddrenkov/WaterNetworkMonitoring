@@ -14,6 +14,8 @@ namespace WaterNetworkMonitoring
             accountsList = new FlowLayoutPanel();
             footerPanel = new Panel();
             addButton = new Button();
+            accountRowPreview = new AccountRowControl();
+            accountsList.SuspendLayout();
             footerPanel.SuspendLayout();
             SuspendLayout();
             accountsList.Name = "accountsList";
@@ -22,7 +24,8 @@ namespace WaterNetworkMonitoring
             accountsList.FlowDirection = FlowDirection.TopDown;
             accountsList.WrapContents = false;
             accountsList.BackColor = SystemColors.Window;
-            accountsList.Size = new Size(952, 496);
+            accountsList.Controls.Add(accountRowPreview);
+            accountRowPreview.Name = "accountRowPreview";
             footerPanel.Name = "footerPanel";
             footerPanel.Dock = DockStyle.Bottom;
             footerPanel.Height = 56;
@@ -36,17 +39,18 @@ namespace WaterNetworkMonitoring
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1000, 600);
-            Controls.Add(accountsList);
-            Controls.Add(footerPanel);
+            Controls.AddRange(new Control[] { accountsList, footerPanel });
             Padding = new Padding(24);
             Name = "AccountManagementForm";
             Text = "Account Management";
             Load += AccountManagementForm_Load;
             footerPanel.ResumeLayout(false);
+            accountsList.ResumeLayout(false);
             ResumeLayout(false);
         }
         private FlowLayoutPanel accountsList;
         private Panel footerPanel;
         private Button addButton;
+        private AccountRowControl accountRowPreview;
     }
 }

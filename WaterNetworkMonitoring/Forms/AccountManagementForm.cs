@@ -6,10 +6,7 @@ namespace WaterNetworkMonitoring
 {
     public partial class AccountManagementForm : Form
     {
-        private Account currentAccount = new Account();
-
-
-
+        private readonly Account currentAccount = new Account();
         public event EventHandler? CurrentAccountChanged;
 
         public AccountManagementForm()
@@ -27,6 +24,7 @@ namespace WaterNetworkMonitoring
 
         private void AccountManagementForm_Load(object? sender, EventArgs e)
         {
+            ClearAccountRows();
             if (currentAccount.Id != 0) LoadAccounts();
         }
 
@@ -55,12 +53,12 @@ namespace WaterNetworkMonitoring
                 accountsList.SuspendLayout();
                 try
                 {
-                    foreach (Control row in accountsList.Controls.Cast<Control>().ToArray()) row.Dispose();
+                    ClearAccountRows();
                     foreach (var account in accounts)
                     {
                         var row = new AccountRowControl(account);
-                        row.EditRequested += (_, _) => OpenEditor(account.Id);
-                        row.DeleteRequested += (_, _) => DeleteAccount(account.Id);
+                        row.EditRequested += EditAccountRow;
+                        row.DeleteRequested += DeleteAccountRow;
                         accountsList.Controls.Add(row);
                     }
                     ResizeAccountRows();
@@ -80,6 +78,24 @@ namespace WaterNetworkMonitoring
             {
                 if (row.Width != width) row.Width = width;
             }
+        }
+
+        private void ClearAccountRows()
+        {
+            foreach (Control row in accountsList.Controls.Cast<Control>().ToArray())
+            {
+                row.Dispose();
+            }
+        }
+
+        private void EditAccountRow(object? sender, EventArgs e)
+        {
+            if (sender is AccountRowControl row) OpenEditor(row.AccountId);
+        }
+
+        private void DeleteAccountRow(object? sender, EventArgs e)
+        {
+            if (sender is AccountRowControl row) DeleteAccount(row.AccountId);
         }
         private void DeleteAccount(int id)
         {

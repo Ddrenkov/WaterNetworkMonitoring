@@ -4,6 +4,7 @@ namespace WaterNetworkMonitoring
 {
     public partial class AccountRowControl : UserControl
     {
+        public int AccountId { get; private set; }
         public event EventHandler? EditRequested;
         public event EventHandler? DeleteRequested;
 
@@ -16,6 +17,7 @@ namespace WaterNetworkMonitoring
 
         public AccountRowControl(Account account) : this()
         {
+            AccountId = account.Id;
             usernameTextBox.Text = account.Username;
             roleTextBox.Text = account.Role;
             emailTextBox.Text = account.Email;
