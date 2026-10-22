@@ -171,6 +171,11 @@ namespace WaterNetworkMonitoring
             editor.Show();
             CenterEditor();
         }
+
+        private void accountRowPreview_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
 

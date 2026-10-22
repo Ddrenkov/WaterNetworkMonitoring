@@ -23,5 +23,10 @@ namespace WaterNetworkMonitoring
             emailTextBox.Text = account.Email;
             createdTextBox.Text = account.CreatedAt.ToString("dd/MM/yyyy HH:mm");
         }
+
+        private void editButton_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
