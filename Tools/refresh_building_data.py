@@ -24,26 +24,30 @@ cache.mkdir(parents=True, exist_ok=True)
 output = Path(__file__).resolve().parents[1] / 'WaterNetworkMonitoring' / 'Data' / 'Maps' / 'Buildings.json'
 nodes, ways, relations = {}, {}, {}
 sources = []
-for x, (west, east) in enumerate([(23.063, 23.092), (23.092, 23.122)]):
-    for y, (south, north) in enumerate([(41.984, 42.000), (42.000, 42.016), (42.016, 42.032)]):
-        bbox = f'{west},{south},{east},{north}'
-        url = f'https://api.openstreetmap.org/api/0.6/map?bbox={bbox}'
-        target = cache / f'{x}-{y}.osm'
-        if not target.exists():
-            print('Downloading', bbox, flush=True)
-            request = urllib.request.Request(url, headers={'User-Agent': 'WaterNetworkMonitoring/1.0 (student building map)', 'Accept-Encoding': 'identity'})
-            with urllib.request.urlopen(request, timeout=100) as response:
-                raw = response.read()
-            ET.fromstring(raw)
-            target.write_bytes(raw)
-            time.sleep(1)
-        root = ET.parse(target).getroot()
-        sources.append({'Url': url, 'RetrievedAtUtc': datetime.fromtimestamp(target.stat().st_mtime, timezone.utc).isoformat(),
-                        'OsmBaseTimestamp': root.find('meta').get('osm_base') if root.find('meta') is not None else None})
-        for element in root:
-            collection = {'node': nodes, 'way': ways, 'relation': relations}.get(element.tag)
-            if collection is not None:
-                collection[int(element.get('id'))] = element
+requests = [(f'{x}-{y}', west, south, east, north)
+            for x, (west, east) in enumerate([(23.063, 23.092), (23.092, 23.122)])
+            for y, (south, north) in enumerate([(41.984, 42.000), (42.000, 42.016), (42.016, 42.032)])]
+# Include the southern housing edge added to Strumsko on 2026-11-08.
+requests.append(('south-extension', 23.063, 41.983, 23.122, 41.984))
+for key, west, south, east, north in requests:
+    bbox = f'{west},{south},{east},{north}'
+    url = f'https://api.openstreetmap.org/api/0.6/map?bbox={bbox}'
+    target = cache / f'{key}.osm'
+    if not target.exists():
+        print('Downloading', bbox, flush=True)
+        request = urllib.request.Request(url, headers={'User-Agent': 'WaterNetworkMonitoring/1.0 (student building map)', 'Accept-Encoding': 'identity'})
+        with urllib.request.urlopen(request, timeout=100) as response:
+            raw = response.read()
+        ET.fromstring(raw)
+        target.write_bytes(raw)
+        time.sleep(1)
+    root = ET.parse(target).getroot()
+    sources.append({'Url': url, 'RetrievedAtUtc': datetime.fromtimestamp(target.stat().st_mtime, timezone.utc).isoformat(),
+                    'OsmBaseTimestamp': root.find('meta').get('osm_base') if root.find('meta') is not None else None})
+    for element in root:
+        collection = {'node': nodes, 'way': ways, 'relation': relations}.get(element.tag)
+        if collection is not None:
+            collection[int(element.get('id'))] = element
 
 def tags(element):
     return {t.get('k'): t.get('v') for t in element.findall('tag')}
@@ -123,7 +127,7 @@ for identifier, node in sorted(nodes.items()):
 
 buildings.sort(key=lambda b: (b['OsmType'], b['OsmId']))
 result = {'RetrievedAtUtc': max(source['RetrievedAtUtc'] for source in sources),
-          'Bounds': [23.063, 41.984, 23.122, 42.032],
+          'Bounds': [23.063, 41.983, 23.122, 42.032],
           'Attribution': '© OpenStreetMap contributors, ODbL 1.0',
           'Sources': sources, 'Buildings': buildings, 'IncompleteElements': sorted(set(incomplete))}
 output.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')

@@ -58,12 +58,12 @@ Each refined record includes AdjustmentReference identifying the supplied screen
 ## Numbered building map — 2026-11-07
 
 Water Meters uses a separate map with no zone polygons. Buildings.json is a public
-OpenStreetMap snapshot covering longitude 23.063–23.122 and latitude 41.984–42.032.
-The six bounded API source URLs and retrieval time are recorded in the JSON.
+OpenStreetMap snapshot covering longitude 23.063–23.122 and latitude 41.983–42.032.
+The seven bounded API source URLs and retrieval time are recorded in the JSON.
 Building data: © OpenStreetMap contributors, Open Database License 1.0
 (https://www.openstreetmap.org/copyright and https://opendatacommons.org/licenses/odbl/1-0/).
 
-The snapshot contains 5,541 mapped building records. Closed building ways and
+The snapshot contains 5,564 mapped building records. Closed building ways and
 building multipolygon relations are converted to an interior representative point,
 so courtyard/L-shaped buildings keep their pins inside the footprint. Relation
 member ways are counted once. Building nodes inside an already mapped footprint
@@ -73,7 +73,7 @@ footprints were complete. Raw API data and source screenshots are not needed at 
 
 At runtime, the existing Neighbourhoods.json polygons and holes filter these points.
 A building qualifies when its representative point falls inside at least one zone.
-The current zones contain 4,286 unique building records. The map assigns consecutive
+The current zones contain 4,750 unique building records. The map assigns consecutive
 numbers from 1 in OSM element-type/ID order. A shared boundary or a region filter
 does not duplicate or renumber a building. Numbers are stable for this snapshot
 and zone geometry; a later data refresh or zone edit can change the sequence.
@@ -89,3 +89,166 @@ Coverage depends on OSM mapping and the project's approximate zones. Unmapped
 physical buildings cannot be inferred from this dataset. Refresh tooling is in
 Tools/refresh_building_data.py (requires Python and Shapely); rebuild the project
 after refreshing the embedded JSON. The script caches API extracts between runs.
+
+
+## Strumsko residential expansion — 2026-11-08
+
+The user reference codex-clipboard-24344320-b47d-476a-99d7-2f8285cbed22.png
+was aligned with cached OSM tiles using 51 feature matches (0.81-pixel residual).
+The western residential frontage and southern housing edge were expanded to
+include the previously excluded houses. Existing Strumsko area was preserved;
+the Route 1 corridor remains outside. The adjoining Southern Industrial Zone
+yields about 4,670 square metres at the shared edge so region selection stays unique.
+The outline remains an approximate project boundary.
+
+Strumsko now includes 571 mapped building records, up from 363 (208 additional
+records). Three of those buildings previously belonged to the Industrial Zone,
+so the city-wide unique numbered total increases by 205, to 4,491.
+A small additional OSM API strip extends building coverage south to latitude
+41.983; source URLs and individual retrieval times remain in Buildings.json.
+The numbered map uses the revised zone geometry automatically.
+
+
+## Alen Mak red-outline correction — 2026-11-08
+
+The user reference codex-clipboard-69ce1923-815b-434a-a43e-276ca21ab443.png
+was aligned with cached OSM tiles using 231 feature matches (0.05-pixel residual).
+Alen Mak follows the centre of the user's red drawing, including the school,
+the northern apartment frontage up to the road, and Byalata Visota on the west.
+It ends on the north side of Peyo Yavorov Boulevard. This remains an approximate
+project boundary rather than an official neighbourhood boundary.
+
+The buildings on the south side of the boulevard in the supplied reference now
+belong to Southern Industrial Zone. The shared eastern frontage is assigned to
+Elenovo 1 as Alen Mak ends on the west side of Simeon Radev Street. A short
+connection across the boulevard at the west end keeps Industrial Zone continuous.
+A roughly 2-square-metre tracing sliver with no buildings was discarded.
+
+The three adjacent outlines are valid and do not overlap. Every previously zoned
+building stays assigned to a zone. Current mapped-building counts: Alen Mak 80,
+Southern Industrial Zone 523, Elenovo 1 191; city-wide unique numbered total 4,552.
+Other neighbourhoods, including the expanded Strumsko boundary, are unchanged.
+
+
+## Industrial southern frontage — 2026-11-08
+
+The user reference codex-clipboard-0beeea58-328c-46f4-85cb-80f1bfc7e681.png
+was aligned with cached OSM tiles using 430 feature matches (0.02-pixel residual).
+The southern boundary beneath Alen Mak now follows the centre of the red stroke
+in place of the straight lower edge. The frontage also extends east to the end
+of the supplied red line, yielding to Elenovo 1 on its northern side.
+Only Southern Industrial Zone changed; other neighbourhood boundaries are intact.
+The university campus and the earlier Alen Mak/Strumsko adjustments are preserved.
+The outline remains an approximate project boundary.
+
+Industrial Zone now contains 534 mapped building records; the city-wide unique
+numbered total is 4,563. Pins are filtered against the revised boundary at runtime.
+
+
+## Elenovo road boundaries — 2026-11-08
+
+The reference codex-clipboard-9136b4fb-71ea-4ff4-b3f2-199b968b327b.png was
+aligned with cached OSM tiles using 123 feature matches (0.73-pixel residual).
+Elenovo 1 now ends at the northern road drawn below Orlova Chuka and follows
+the marked western frontage. Its unmarked southern edge is preserved.
+The former northern protrusion is assigned to adjoining Orlova Chuka.
+Elenovo 2 extends north to the marked road, follows the eastern roadside, and
+retains its unmarked southern outline. Both areas use the same shared boundary.
+The adjoining Industrial outline yields at the shared edges to prevent overlaps.
+Alen Mak and all other neighbourhoods retain their previous geometry.
+These remain approximate project areas rather than official boundaries.
+
+Current mapped-building counts: Elenovo 1 186, Elenovo 2 150, Orlova Chuka 501,
+Southern Industrial Zone 530. The unique numbered total is 4,585.
+Two previously included building representative points are outside the revised
+road boundaries; all pin memberships are recalculated from the new polygons.
+
+
+## Elenovo 1 apartment-block inclusion — 2026-11-08
+
+The reference codex-clipboard-b8a2c311-2c60-4fff-8d42-e3c7595babaf.png was
+aligned with cached OSM tiles using 238 feature matches (0.07-pixel residual).
+Elenovo 1 expands along the red western frontage beside 14-ti Polk and the
+park-side apartment blocks, and along the northern frontage beneath Zdravets.
+The expansion is unioned with the previous outline: the southern/shared road
+boundaries and every previously included Elenovo 1 building are preserved.
+Orlova Chuka and Industrial Zone yield at the adjoining edges; other areas,
+including Elenovo 2, Alen Mak and Strumsko, are unchanged.
+The outlines remain approximate project geometry.
+
+Elenovo 1 now contains 189 mapped building records (previously 186), including
+one transferred from Orlova Chuka and two newly covered records. Orlova Chuka
+contains 500 records; Industrial Zone remains at 530. The unique numbered total
+is 4,587. No previously zoned building is lost.
+
+
+## Orlova Chuka hole and Varosha road — 2026-11-08
+
+The reference codex-clipboard-92e928b0-b98c-4cc5-8b1d-9f223bd8ae04.png was
+aligned with cached OSM tiles using 868 feature matches (0.10-pixel residual).
+The internal 11-vertex cutout in Orlova Chuka is filled. Its former area now
+belongs to Orlova Chuka and receives the same blue fill as the surrounding area.
+Varosha and Orlova Chuka now share the same road boundary from the 14-ti Polk
+junction toward the zoo entrance, following the road indicated by the red arrow.
+This replaces the previous pair of offset edges and closes the uncovered strip.
+Only these two neighbourhoods change; all other recent refinements are retained.
+The boundaries remain approximate project outlines.
+
+Orlova Chuka now contains 532 mapped building records, Varosha 359; the unique
+numbered total is 4,608. No previously zoned building is lost.
+
+
+## Riverside building groups — 2026-11-08
+
+The reference codex-clipboard-5063c2a9-602b-46c5-be53-ac7af3857b6d.png was
+aligned with cached OSM tiles using 510 feature matches (0.05-pixel residual).
+The upper red-outlined group around Orceto is included in City Centre.
+The lower campus buildings along the river are included in Southern Industrial
+Zone, with the river-side boundary following the user's long red stroke.
+The adjacent Varosha edge yields to the upper group. The later road boundary
+between Varosha and Orlova Chuka and the filled Orlova hole are preserved.
+Only Centre, Industrial and Varosha change; the outlines remain approximate
+project areas rather than official boundaries.
+
+Current mapped-building counts: City Centre 1,553, Industrial Zone 536, Varosha
+351. The unique numbered total is 4,631. All previously zoned buildings remain
+assigned to a zone. Runtime pins use the updated boundaries automatically.
+
+
+## Centre riverfront and northern neighbourhood — 2026-11-08
+
+Two user references extend City Centre while preserving its previous area:
+- codex-clipboard-f66f2999-46fe-4c9b-b039-58a552192561.png: the western riverfront
+  buildings beside Tsar Ivan Shishman, aligned using 966 matches (0.08-pixel residual).
+- codex-clipboard-88c99dac-b09d-48ee-858b-d85ec00e1970.png: northern streets and
+  aquapark frontage, aligned using 809 matches (0.08-pixel residual).
+The red strokes are traced through their centres and registered to the basemap.
+Each open stroke is closed through the existing Centre interior, so their union
+adds the marked areas without removing earlier Centre refinements. The adjoining
+Varosha edge yields about 2,872 square metres along the river; no Varosha building
+record is removed. Other neighbourhoods and the recent Industrial/campus changes
+retain their geometry. AdjustmentReferences lists both supplied images.
+These remain approximate project boundaries.
+
+City Centre now contains 1,633 mapped building records (80 more); Varosha remains
+at 351. The unique numbered total is 4,711. No previously zoned building is lost.
+
+
+## Centre frontages and straight Varosha/Industrial edge — 2026-11-08
+
+The reference codex-clipboard-3658f963-5e9f-407a-9c22-cafe61aaf5e0.png was
+aligned with cached OSM tiles using 2,113 matches (0.04-pixel residual).
+The red-marked frontages along Slavyanska and Matitsa are added to City Centre.
+Zapad yields at the Matitsa edge, including four mapped building records.
+The adjoining university campus location remains in Industrial Zone.
+
+Varosha and Southern Industrial Zone now share a single straight segment from
+the Centre junction to the Orlova road junction. The previous bent/offset edges
+are replaced together, filling the small road-side gaps between them. Varosha's
+Centre-facing curve and its road boundary toward the zoo are retained.
+Other neighbourhoods, including Osvobozhdenie and Orlova Chuka, retain their
+geometry. The boundaries remain approximate project areas.
+
+Current mapped-building counts: City Centre 1,673; Zapad 63; Varosha 352;
+Industrial Zone 538. The unique numbered total is 4,750. All previously zoned
+buildings retain a zone assignment.
