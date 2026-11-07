@@ -116,6 +116,7 @@ namespace WaterNetworkMonitoring
             btnLoggers.TabIndex = 4;
             btnLoggers.Text = "Loggers";
             btnLoggers.UseVisualStyleBackColor = true;
+            btnLoggers.Click += btnLoggers_Click;
             // 
             // btnDashboard
             // 

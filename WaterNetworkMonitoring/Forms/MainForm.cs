@@ -97,11 +97,29 @@ namespace WaterNetworkMonitoring
             panelContent.Controls.Add(dashboard);
         }
 
+        private void btnLoggers_Click(object sender, EventArgs e)
+        {
+            foreach (Control content in panelContent.Controls.Cast<Control>().ToArray())
+            {
+                content.Dispose();
+            }
+
+            var loggers = new Loggers
+            {
+                TopLevel = false,
+                FormBorderStyle = FormBorderStyle.None,
+                Dock = DockStyle.Fill
+            };
+            panelContent.Controls.Add(loggers);
+            loggers.Show();
+        }
         private void MainForm_Load(object sender, EventArgs e)
         {
 
         }
     }
 }
+
+
 
 
