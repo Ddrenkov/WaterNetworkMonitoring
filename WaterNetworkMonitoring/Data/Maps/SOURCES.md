@@ -54,3 +54,38 @@ Each refined record includes AdjustmentReference identifying the supplied screen
   previously aligned satellite screenshots using 571 inlier shared features.
 - Varosha is removed from the broader City Centre/Industrial outlines so clicks have
   a distinct neighbourhood target. All outlines remain project geometry, not official boundaries.
+
+## Numbered building map — 2026-11-07
+
+Water Meters uses a separate map with no zone polygons. Buildings.json is a public
+OpenStreetMap snapshot covering longitude 23.063–23.122 and latitude 41.984–42.032.
+The six bounded API source URLs and retrieval time are recorded in the JSON.
+Building data: © OpenStreetMap contributors, Open Database License 1.0
+(https://www.openstreetmap.org/copyright and https://opendatacommons.org/licenses/odbl/1-0/).
+
+The snapshot contains 5,541 mapped building records. Closed building ways and
+building multipolygon relations are converted to an interior representative point,
+so courtyard/L-shaped buildings keep their pins inside the footprint. Relation
+member ways are counted once. Building nodes inside an already mapped footprint
+are excluded; isolated building nodes remain. Building parts are not separately
+included unless they are explicitly tagged as buildings. All retrieved building
+footprints were complete. Raw API data and source screenshots are not needed at runtime.
+
+At runtime, the existing Neighbourhoods.json polygons and holes filter these points.
+A building qualifies when its representative point falls inside at least one zone.
+The current zones contain 4,286 unique building records. The map assigns consecutive
+numbers from 1 in OSM element-type/ID order. A shared boundary or a region filter
+does not duplicate or renumber a building. Numbers are stable for this snapshot
+and zone geometry; a later data refresh or zone edit can change the sequence.
+These numbers identify map buildings, not installed meters or database records.
+
+The map starts centered on Blagoevgrad. Every qualifying building has a pin;
+compact pins are used at city zoom and numbers appear from zoom 17. Hover gives
+the number, region, name/address where available. Click selects a pin; Building #
+and Go find a specific number. Only drawing objects in/near the viewport are
+created, while the complete numbered list remains available for filtering/search.
+
+Coverage depends on OSM mapping and the project's approximate zones. Unmapped
+physical buildings cannot be inferred from this dataset. Refresh tooling is in
+Tools/refresh_building_data.py (requires Python and Shapely); rebuild the project
+after refreshing the embedded JSON. The script caches API extracts between runs.

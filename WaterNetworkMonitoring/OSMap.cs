@@ -15,6 +15,7 @@ namespace WaterNetworkMonitoring
 
         private OSMap()
         {
+            MaxZoom = 19;
             BypassCache = true;
             Copyright = "© OpenStreetMap contributors";
         }

@@ -104,6 +104,7 @@ namespace WaterNetworkMonitoring
             btnWaterMeters.TabIndex = 3;
             btnWaterMeters.Text = "Water Meters";
             btnWaterMeters.UseVisualStyleBackColor = true;
+            btnWaterMeters.Click += btnWaterMeters_Click;
             // 
             // btnLoggers
             // 

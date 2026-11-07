@@ -19,12 +19,22 @@ namespace WaterNetworkMonitoring
             public double[][][] Holes { get; set; } = Array.Empty<double[][]>();
         }
 
-        public static GMapOverlay CreateOverlay()
+        public static List<Zone> LoadZones()
         {
             using var stream = typeof(BlagoevgradNeighbourhoods).Assembly.GetManifestResourceStream(
                 "WaterNetworkMonitoring.Data.Maps.Neighbourhoods.json")
                 ?? throw new InvalidOperationException("Neighbourhood map data is missing.");
-            var zones = JsonSerializer.Deserialize<List<Zone>>(stream) ?? new List<Zone>();
+            return JsonSerializer.Deserialize<List<Zone>>(stream) ?? new List<Zone>();
+        }
+
+        public static bool Contains(Zone zone, PointLatLng point)
+        {
+            return InsideRing(zone.Points, point) && !zone.Holes.Any(hole => InsideRing(hole, point));
+        }
+
+        public static GMapOverlay CreateOverlay()
+        {
+            var zones = LoadZones();
             var overlay = new GMapOverlay("neighbourhoods");
             foreach (var zone in zones)
             {
