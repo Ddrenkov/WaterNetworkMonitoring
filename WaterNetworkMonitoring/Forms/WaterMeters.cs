@@ -124,9 +124,7 @@ namespace WaterNetworkMonitoring
             selectedNumber = building.Number;
             buildingNumber.Value = building.Number;
             if (center) { map.Zoom = 18; map.Position = building.Position; }
-            statusLabel.Text = $"Building #{building.Number} • {string.Join(", ", building.Zones)}";
-            if (!string.IsNullOrWhiteSpace(building.Name)) statusLabel.Text += " • " + building.Name;
-            if (!string.IsNullOrWhiteSpace(building.Address)) statusLabel.Text += " • " + building.Address;
+            statusLabel.Text = building.Number.ToString();
             UpdatePins();
         }
 

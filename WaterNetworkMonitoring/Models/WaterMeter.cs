@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WaterNetworkMonitoring.Models
 {
-    public class WaterMeter : Sensor
+    public class WaterMeter
     {
-        public double CurrentFlow { get; set; }
-        public double TotalConsumption { get; set; }
+        public int Id { get; set; }
+        public int MapNumber { get; set; }
+        public string Reading { get; set; } = "00000000";
+        public DateTimeOffset TakenAt { get; set; }
     }
 }

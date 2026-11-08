@@ -16,9 +16,7 @@ namespace WaterNetworkMonitoring
             this.selected = selected;
             number = building.Number.ToString();
             Tag = building;
-            ToolTipText = $"Building #{number}\n{string.Join(", ", building.Zones)}";
-            if (!string.IsNullOrWhiteSpace(building.Name)) ToolTipText += "\n" + building.Name;
-            if (!string.IsNullOrWhiteSpace(building.Address)) ToolTipText += "\n" + building.Address;
+            ToolTipText = number;
             ToolTipMode = MarkerTooltipMode.OnMouseOver;
             Size = this.showNumber ? new Size(Math.Max(28, number.Length * 8 + 12), 30) : new Size(8, 11);
             Offset = new Point(-Size.Width / 2, -Size.Height);

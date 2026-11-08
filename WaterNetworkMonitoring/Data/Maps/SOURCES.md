@@ -87,8 +87,8 @@ filters with the same global number and has one pin in the combined map.
 Standalone OSM building nodes continue to use point-in-zone selection.
 
 The map starts centered on Blagoevgrad. Every qualifying building has a pin;
-compact pins are used at city zoom and numbers appear from zoom 17. Hover gives
-the number, region, name/address where available. Click selects a pin; Building #
+compact pins are used at city zoom and numbers appear from zoom 17. Hover and
+click selection show only the pin number. Click selects a pin; Building #
 and Go find a specific number. Only drawing objects in/near the viewport are
 created, while the complete numbered list remains available for filtering/search.
 
