@@ -352,14 +352,6 @@
     "BoundaryNote": "Approximate project outline includes the marked Slavyanska and Matitsa frontages, as well as earlier riverfront and northern additions; not an official boundary.",
     "Points": [
       [
-        42.0260217,
-        23.0968436
-      ],
-      [
-        42.0256919,
-        23.0976178
-      ],
-      [
         42.0257612,
         23.0981284
       ],
@@ -892,8 +884,8 @@
         23.0796146
       ],
       [
-        42.0200633,
-        23.0814171
+        42.0196895,
+        23.0807956
       ],
       [
         42.0201054,
@@ -1002,10 +994,22 @@
       [
         42.0263785,
         23.0960336
+      ],
+      [
+        42.0260217,
+        23.0968436
+      ],
+      [
+        42.0256919,
+        23.0976178
       ]
     ],
     "Holes": [
       [
+        [
+          42.0266677,
+          23.1022254
+        ],
         [
           42.0266638,
           23.1022445
@@ -1013,21 +1017,9 @@
         [
           42.0266941,
           23.1021479
-        ],
-        [
-          42.0266677,
-          23.1022254
         ]
       ],
       [
-        [
-          42.0263816,
-          23.1036295
-        ],
-        [
-          42.0265099,
-          23.1043656
-        ],
         [
           42.0265671,
           23.1042695
@@ -1035,11 +1027,19 @@
         [
           42.026567,
           23.1027194
+        ],
+        [
+          42.0263816,
+          23.1036295
+        ],
+        [
+          42.0265099,
+          23.1043656
         ]
       ]
     ],
     "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-3658f963-5e9f-407a-9c22-cafe61aaf5e0.png",
+    "AdjustmentReference": "codex-clipboard-03b4c38e-1670-4cab-b202-6bb49f40ea2a.png",
     "AdjustmentReferences": [
       "codex-clipboard-f66f2999-46fe-4c9b-b039-58a552192561.png",
       "codex-clipboard-88c99dac-b09d-48ee-858b-d85ec00e1970.png"
@@ -2028,16 +2028,8 @@
     "SourceUrl": "",
     "IsApproximate": true,
     "ReferenceImage": "codex-clipboard-0999afdb-af9e-400b-ab85-964f8b182871.png",
-    "BoundaryNote": "Outline traced from the supplied screenshot and aligned using shared landmarks; not an official surveyed boundary.",
+    "BoundaryNote": "Approximate project outline expanded west along the user red stroke to include the marked buildings and Vetren frontage; original area retained. Not an official boundary.",
     "Points": [
-      [
-        42.0234379,
-        23.0802606
-      ],
-      [
-        42.0237762,
-        23.0805854
-      ],
       [
         42.024191,
         23.0810781
@@ -2163,24 +2155,69 @@
         23.0817057
       ],
       [
-        42.0206393,
-        23.0814317
+        42.019346,
+        23.0800438
       ],
       [
-        42.0211968,
-        23.0813288
+        42.0199359,
+        23.079679
       ],
       [
-        42.0221316,
-        23.0808232
+        42.0201909,
+        23.0795717
       ],
       [
-        42.0225614,
-        23.0804519
+        42.0209242,
+        23.0795288
+      ],
+      [
+        42.0210518,
+        23.0793357
+      ],
+      [
+        42.0212112,
+        23.0787993
+      ],
+      [
+        42.0213068,
+        23.0776405
+      ],
+      [
+        42.0214184,
+        23.0774903
+      ],
+      [
+        42.0217851,
+        23.0771899
+      ],
+      [
+        42.0221358,
+        23.0771685
+      ],
+      [
+        42.0227415,
+        23.0778122
+      ],
+      [
+        42.0232356,
+        23.0795932
+      ],
+      [
+        42.0236023,
+        23.0803657
+      ],
+      [
+        42.0235736,
+        23.0803909
+      ],
+      [
+        42.0237762,
+        23.0805854
       ]
     ],
     "Holes": [],
-    "AdditionalParts": []
+    "AdditionalParts": [],
+    "AdjustmentReference": "codex-clipboard-03b4c38e-1670-4cab-b202-6bb49f40ea2a.png"
   },
   {
     "Name": "Southern Industrial Zone",

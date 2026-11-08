@@ -64,20 +64,27 @@ Building data: © OpenStreetMap contributors, Open Database License 1.0
 (https://www.openstreetmap.org/copyright and https://opendatacommons.org/licenses/odbl/1-0/).
 
 The snapshot contains 5,564 mapped building records. Closed building ways and
-building multipolygon relations are converted to an interior representative point,
+building multipolygon relations retain their WKT footprints and an interior point,
 so courtyard/L-shaped buildings keep their pins inside the footprint. Relation
 member ways are counted once. Building nodes inside an already mapped footprint
 are excluded; isolated building nodes remain. Building parts are not separately
 included unless they are explicitly tagged as buildings. All retrieved building
 footprints were complete. Raw API data and source screenshots are not needed at runtime.
 
-At runtime, the existing Neighbourhoods.json polygons and holes filter these points.
-A building qualifies when its representative point falls inside at least one zone.
-The current zones contain 4,750 unique building records. The map assigns consecutive
+At runtime, Neighbourhoods.json polygons and holes are intersected with the building
+footprints using NetTopologySuite. A building qualifies when a positive-area part
+of its footprint lies in a zone; a point/line boundary touch alone does not qualify.
+The current zones contain 4,822 unique building records. The map assigns consecutive
 numbers from 1 in OSM element-type/ID order. A shared boundary or a region filter
 does not duplicate or renumber a building. Numbers are stable for this snapshot
 and zone geometry; a later data refresh or zone edit can change the sequence.
 These numbers identify map buildings, not installed meters or database records.
+
+Existing in-zone pin positions are retained. If a building's original interior
+point lies outside every zone, the pin moves to an interior point of its largest
+in-zone footprint portion. A building crossing multiple zones appears in their
+filters with the same global number and has one pin in the combined map.
+Standalone OSM building nodes continue to use point-in-zone selection.
 
 The map starts centered on Blagoevgrad. Every qualifying building has a pin;
 compact pins are used at city zoom and numbers appear from zoom 17. Hover gives
@@ -252,3 +259,47 @@ geometry. The boundaries remain approximate project areas.
 Current mapped-building counts: City Centre 1,673; Zapad 63; Varosha 352;
 Industrial Zone 538. The unique numbered total is 4,750. All previously zoned
 buildings retain a zone assignment.
+
+
+## Osvobozhdenie western frontage — 2026-11-08
+
+The reference codex-clipboard-03b4c38e-1670-4cab-b202-6bb49f40ea2a.png was
+aligned with cached OSM tiles using 967 feature matches (0.09-pixel residual).
+Osvobozhdenie expands along the centre of the user's red stroke to include the
+western residential buildings and Vetren frontage. Its former area is preserved.
+The adjoining Centre edge yields about 376 square metres along the junction;
+no Centre building record changes zone. Other neighbourhoods, including the
+Industrial/university area and straight Varosha boundary, retain their geometry.
+These remain approximate project outlines rather than official boundaries.
+
+Osvobozhdenie now contains 134 mapped buildings (42 more); the unique numbered
+total is 4,792. Every previously zoned building keeps a zone assignment.
+
+
+## Complete Water Meters footprint audit — 2026-11-08
+
+All seven bounded public OSM API extracts were downloaded again. The resulting
+5,564 deduplicated building records match the previous source dataset, and all
+way/relation footprints are complete. Buildings.json now retains FootprintWkt
+for each polygon/multipolygon; the refresh tool preserves it on future updates.
+
+The old centre-point-only selector missed 30 buildings whose footprints intersect
+a project zone while their representative points fall outside every zone.
+NetTopologySuite 2.6.0 now computes positive-area footprint/zone intersections,
+including zone holes and building courtyards. Pure edge/point touches are excluded
+using a 1e-14 square-degree numerical tolerance. Every qualifying OSM element
+still receives one global consecutive number. Buildings spanning zones appear
+in the relevant filters with the same number, without duplicate global pins.
+
+All 4,792 previous records and positions are retained. The 30 new pins are anchored
+inside their largest in-zone footprint portion. The unique numbered total is
+4,822. Current filter memberships are: Alen Mak 81, Balarbashi 98, City Centre 1,701,
+Elenovo 1 195, Elenovo 2 155, Gramada 439, Orlova Chuka 545, Osvobozhdenie 144,
+Southern Industrial Zone 567, Strumsko 577, Varosha 356, Zapad 68. Membership
+counts can overlap because a physical building can cross a project boundary.
+
+An independent geometry comparison checked every runtime ID, zone membership
+and pin position against the source footprints. All pins lie inside their
+building and at least one assigned zone. All 30 added pins passed number search
+and rendering checks; all 12 region filters passed. The separate Loggers map
+and existing neighbourhood selections passed their regression checks.

@@ -1,4 +1,4 @@
-"""Fetch a bounded OSM snapshot and derive one interior point per building.
+"""Fetch a bounded OSM snapshot with an interior point and footprint per building.
 
 Run with Python and Shapely. Raw API responses are cached, never map tiles.
 Use --cache to choose a cache folder; delete old extracts there to download a fresh snapshot.
@@ -79,7 +79,8 @@ def add(kind, identifier, t, geometry):
     buildings.append({'OsmType': kind, 'OsmId': identifier,
                       'Latitude': round(point.y, 7), 'Longitude': round(point.x, 7),
                       'Name': t.get('name:en', t.get('name', '')),
-                      'Address': address, 'BuildingType': t['building']})
+                      'Address': address, 'BuildingType': t['building'],
+                      'FootprintWkt': geometry.wkt})
 
 for identifier, relation in sorted(relations.items()):
     t = tags(relation)
