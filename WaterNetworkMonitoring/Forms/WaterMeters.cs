@@ -6,7 +6,6 @@ namespace WaterNetworkMonitoring
 {
     public partial class WaterMeters : Form
     {
-        private static readonly PointLatLng CityCenter = new(42.012, 23.097);
         private readonly GMapOverlay pins = new("buildings");
         private List<BuildingMapData.Building> buildings = new();
         private List<BlagoevgradNeighbourhoods.Zone> zones = new();
@@ -22,7 +21,7 @@ namespace WaterNetworkMonitoring
                 if (!IsDesigner()) map.BeginInvoke(new Action(() =>
                 {
                     if (IsDisposed) return;
-                    CenterOnCity();
+                    CenterOnZapad();
                     UpdatePins();
                 }));
             };
@@ -42,9 +41,9 @@ namespace WaterNetworkMonitoring
             map.MapProvider = OSMap.Instance;
             // The zones select buildings only; this map deliberately has no polygon overlay.
             map.Overlays.Add(pins);
-            zoneSelector.Items.Add("All regions");
             foreach (var zone in zones.OrderBy(z => z.Name)) zoneSelector.Items.Add(zone.Name);
             zoneSelector.SelectedIndex = 0;
+            zoneSelector.Enabled = false;
             buildingNumber.Maximum = Math.Max(1, buildings.Count);
             findButton.Enabled = buildings.Count > 0;
             map.OnPositionChanged += _ => QueueRefresh();
@@ -56,14 +55,17 @@ namespace WaterNetworkMonitoring
             };
             map.OnMarkerEnter += _ => map.Cursor = Cursors.Hand;
             map.OnMarkerLeave += _ => map.Cursor = Cursors.Default;
-            CenterOnCity();
+            CenterOnZapad();
             UpdatePins();
         }
 
-        private void CenterOnCity()
+        private void CenterOnZapad()
         {
-            map.Zoom = 14;
-            map.Position = CityCenter;
+            var zone = zones.FirstOrDefault(z => z.Name == "Zapad");
+            if (zone == null) return;
+            map.SetZoomToFitRect(RectLatLng.FromLTRB(zone.Points.Min(p => p[1]) - .0003,
+                zone.Points.Max(p => p[0]) + .0003, zone.Points.Max(p => p[1]) + .0003,
+                zone.Points.Min(p => p[0]) - .0003));
         }
 
         private IEnumerable<BuildingMapData.Building> FilteredBuildings() =>
@@ -96,14 +98,14 @@ namespace WaterNetworkMonitoring
                 pins.Markers.Clear();
                 foreach (var building in visible)
                 {
-                    var marker = new NumberedBuildingPin(building, map.Zoom >= 17, building.Number == selectedNumber);
+                    var marker = new NumberedBuildingPin(building, true, building.Number == selectedNumber);
                     pins.Markers.Add(marker);
                     map.UpdateMarkerLocalPosition(marker);
                 }
             }
             finally { map.HoldInvalidation = false; }
             if (selectedNumber == null)
-                statusLabel.Text = $"{filtered.Count:N0} mapped buildings • Pins 1–{buildings.Count:N0} • Zoom in for numbers";
+                statusLabel.Text = $"{filtered.Count:N0} mapped buildings • Pins 1–{buildings.Count:N0} • Zapad";
             map.Refresh();
         }
 
@@ -112,7 +114,7 @@ namespace WaterNetworkMonitoring
             if (!initialized) return;
             selectedNumber = null;
             var zone = zones.FirstOrDefault(z => z.Name == zoneSelector.SelectedItem as string);
-            if (zone == null) CenterOnCity();
+            if (zone == null) CenterOnZapad();
             else map.SetZoomToFitRect(RectLatLng.FromLTRB(zone.Points.Min(p => p[1]) - .0005,
                 zone.Points.Max(p => p[0]) + .0005, zone.Points.Max(p => p[1]) + .0005,
                 zone.Points.Min(p => p[0]) - .0005));
@@ -140,7 +142,7 @@ namespace WaterNetworkMonitoring
         {
             selectedNumber = null;
             zoneSelector.SelectedIndex = 0;
-            CenterOnCity();
+            CenterOnZapad();
             UpdatePins();
         }
 

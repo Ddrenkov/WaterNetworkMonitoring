@@ -1,4 +1,4 @@
-"""Fetch a bounded OSM snapshot with an interior point and footprint per building.
+"""Refresh only Zapad buildings, with an interior point and footprint per building.
 
 Run with Python and Shapely. Raw API responses are cached, never map tiles.
 Use --cache to choose a cache folder; delete old extracts there to download a fresh snapshot.
@@ -13,6 +13,7 @@ from pathlib import Path
 from shapely.geometry import Point, Polygon
 from shapely.ops import polygonize, unary_union
 from shapely.geometry import LineString
+from shapely import wkt
 
 import argparse
 import tempfile
@@ -22,13 +23,17 @@ args = parser.parse_args()
 cache = args.cache
 cache.mkdir(parents=True, exist_ok=True)
 output = Path(__file__).resolve().parents[1] / 'WaterNetworkMonitoring' / 'Data' / 'Maps' / 'Buildings.json'
+zone = next(z for z in json.loads(output.with_name('Neighbourhoods.json').read_text(encoding='utf-8-sig'))
+            if z['Name'] == 'Zapad')
+zapad = Polygon([(p[1], p[0]) for p in zone['Points']],
+                [[(p[1], p[0]) for p in hole] for hole in zone.get('Holes', [])])
+west, south, east, north = zapad.bounds
+# Include a small surrounding strip so boundary-crossing footprints are complete.
+bounds = [west - .001, south - .001, east + .001, north + .001]
 nodes, ways, relations = {}, {}, {}
 sources = []
-requests = [(f'{x}-{y}', west, south, east, north)
-            for x, (west, east) in enumerate([(23.063, 23.092), (23.092, 23.122)])
-            for y, (south, north) in enumerate([(41.984, 42.000), (42.000, 42.016), (42.016, 42.032)])]
-# Include the southern housing edge added to Strumsko on 2026-11-08.
-requests.append(('south-extension', 23.063, 41.983, 23.122, 41.984))
+cache_key = 'zapad-' + '-'.join(f'{value:.7f}' for value in bounds)
+requests = [(cache_key, *bounds)]
 for key, west, south, east, north in requests:
     bbox = f'{west},{south},{east},{north}'
     url = f'https://api.openstreetmap.org/api/0.6/map?bbox={bbox}'
@@ -126,9 +131,14 @@ for identifier, node in sorted(nodes.items()):
                           'Latitude': float(node.get('lat')), 'Longitude': float(node.get('lon')),
                           'Name': t.get('name:en', t.get('name', '')), 'Address': '', 'BuildingType': t['building']})
 
-buildings.sort(key=lambda b: (b['OsmType'], b['OsmId']))
+def in_zapad(building):
+    if building.get('FootprintWkt'):
+        return wkt.loads(building['FootprintWkt']).intersection(zapad).area > 1e-14
+    return zapad.contains(Point(building['Longitude'], building['Latitude']))
+
+buildings = sorted((b for b in buildings if in_zapad(b)), key=lambda b: (b['OsmType'], b['OsmId']))
 result = {'RetrievedAtUtc': max(source['RetrievedAtUtc'] for source in sources),
-          'Bounds': [23.063, 41.983, 23.122, 42.032],
+          'Region': 'Zapad', 'Bounds': bounds,
           'Attribution': '© OpenStreetMap contributors, ODbL 1.0',
           'Sources': sources, 'Buildings': buildings, 'IncompleteElements': sorted(set(incomplete))}
 output.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')

@@ -6,8 +6,6 @@ namespace WaterNetworkMonitoring
 {
     public partial class Loggers : Form
     {
-        private static readonly PointLatLng BlagoevgradCenter = new PointLatLng(42.012, 23.097);
-        private const int CityZoom = 14;
         private GMapOverlay? neighbourhoods;
         private bool updatingSelection;
         private string? selectedZoneName;
@@ -25,14 +23,14 @@ namespace WaterNetworkMonitoring
             if (DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime || neighbourhoods != null) return;
             GMaps.Instance.Mode = AccessMode.ServerAndCache;
             map.MapProvider = OSMap.Instance;
-            CenterOnBlagoevgrad();
+            CenterOnZapad();
             neighbourhoods = BlagoevgradNeighbourhoods.CreateOverlay();
             map.Overlays.Add(neighbourhoods);
             foreach (var polygon in neighbourhoods.Polygons) map.UpdatePolygonLocalPosition(polygon);
             foreach (var marker in neighbourhoods.Markers) map.UpdateMarkerLocalPosition(marker);
-            zoneSelector.Items.Add("All regions");
             foreach (var polygon in neighbourhoods.Polygons) zoneSelector.Items.Add(polygon.Name);
             zoneSelector.SelectedIndex = 0;
+            zoneSelector.Enabled = false;
             resetButton_Click(this, EventArgs.Empty);
             map.OnPolygonClick += (polygon, args) =>
             {
@@ -61,29 +59,31 @@ namespace WaterNetworkMonitoring
             if (neighbourhoods == null) return;
             selectedZoneName = null;
             foreach (var polygon in neighbourhoods.Polygons) BlagoevgradNeighbourhoods.StylePolygon(polygon, false);
-            CenterOnBlagoevgrad();
+            CenterOnZapad();
             updatingSelection = true;
             zoneSelector.SelectedIndex = 0;
             updatingSelection = false;
-            selectionLabel.Text = "Choose a region from the list or click its blue outline. Drag to pan; scroll to zoom.";
+            selectionLabel.Text = "Zapad. Click the blue outline to select it. Drag to pan; scroll to zoom.";
             UpdateLabelVisibility();
             map.Refresh();
         }
 
-        private void CenterOnBlagoevgrad()
+        private void CenterOnZapad()
         {
-            map.Zoom = CityZoom;
-            map.Position = BlagoevgradCenter;
+            var zone = BlagoevgradNeighbourhoods.LoadZones().Single(z => z.Name == "Zapad");
+            map.SetZoomToFitRect(RectLatLng.FromLTRB(zone.Points.Min(p => p[1]) - .0003,
+                zone.Points.Max(p => p[0]) + .0003, zone.Points.Max(p => p[1]) + .0003,
+                zone.Points.Min(p => p[0]) - .0003));
         }
 
         private void map_Load(object? sender, EventArgs e)
         {
             if (DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime) return;
-            // Apply the city view after GMap completes its own startup and layout.
+            // Apply the Zapad view after GMap completes its own startup and layout.
             map.BeginInvoke(new Action(() =>
             {
                 if (IsDisposed || map.IsDisposed) return;
-                CenterOnBlagoevgrad();
+                CenterOnZapad();
                 UpdateLabelVisibility();
             }));
         }

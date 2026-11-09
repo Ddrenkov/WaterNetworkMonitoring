@@ -99,476 +99,476 @@ namespace WaterNetworkMonitoring.Migrations
                         new
                         {
                             Id = 100001,
-                            MapNumber = 49,
+                            MapNumber = 1,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100002,
-                            MapNumber = 50,
+                            MapNumber = 2,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100003,
-                            MapNumber = 51,
+                            MapNumber = 3,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100004,
-                            MapNumber = 194,
+                            MapNumber = 4,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100005,
-                            MapNumber = 195,
+                            MapNumber = 5,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100006,
-                            MapNumber = 196,
+                            MapNumber = 6,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100007,
-                            MapNumber = 197,
+                            MapNumber = 7,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100008,
-                            MapNumber = 198,
+                            MapNumber = 8,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100009,
-                            MapNumber = 199,
+                            MapNumber = 9,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100010,
-                            MapNumber = 200,
+                            MapNumber = 10,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100011,
-                            MapNumber = 201,
+                            MapNumber = 11,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100012,
-                            MapNumber = 202,
+                            MapNumber = 12,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100013,
-                            MapNumber = 203,
+                            MapNumber = 13,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100014,
-                            MapNumber = 204,
+                            MapNumber = 14,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100015,
-                            MapNumber = 205,
+                            MapNumber = 15,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100016,
-                            MapNumber = 206,
+                            MapNumber = 16,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100017,
-                            MapNumber = 207,
+                            MapNumber = 17,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100018,
-                            MapNumber = 208,
+                            MapNumber = 18,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100019,
-                            MapNumber = 209,
+                            MapNumber = 19,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100020,
-                            MapNumber = 210,
+                            MapNumber = 20,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100021,
-                            MapNumber = 211,
+                            MapNumber = 21,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100022,
-                            MapNumber = 212,
+                            MapNumber = 22,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100023,
-                            MapNumber = 213,
+                            MapNumber = 23,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100024,
-                            MapNumber = 214,
+                            MapNumber = 24,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100025,
-                            MapNumber = 215,
+                            MapNumber = 25,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100026,
-                            MapNumber = 216,
+                            MapNumber = 26,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100027,
-                            MapNumber = 217,
+                            MapNumber = 27,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100028,
-                            MapNumber = 218,
+                            MapNumber = 28,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100029,
-                            MapNumber = 219,
+                            MapNumber = 29,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100030,
-                            MapNumber = 220,
+                            MapNumber = 30,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100031,
-                            MapNumber = 221,
+                            MapNumber = 31,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100032,
-                            MapNumber = 222,
+                            MapNumber = 32,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100033,
-                            MapNumber = 223,
+                            MapNumber = 33,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100034,
-                            MapNumber = 224,
+                            MapNumber = 34,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100035,
-                            MapNumber = 225,
+                            MapNumber = 35,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100036,
-                            MapNumber = 226,
+                            MapNumber = 36,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100037,
-                            MapNumber = 227,
+                            MapNumber = 37,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100038,
-                            MapNumber = 228,
+                            MapNumber = 38,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100039,
-                            MapNumber = 229,
+                            MapNumber = 39,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100040,
-                            MapNumber = 230,
+                            MapNumber = 40,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100041,
-                            MapNumber = 231,
+                            MapNumber = 41,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100042,
-                            MapNumber = 232,
+                            MapNumber = 42,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100043,
-                            MapNumber = 233,
+                            MapNumber = 43,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100044,
-                            MapNumber = 234,
+                            MapNumber = 44,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100045,
-                            MapNumber = 235,
+                            MapNumber = 45,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100046,
-                            MapNumber = 236,
+                            MapNumber = 46,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100047,
-                            MapNumber = 237,
+                            MapNumber = 47,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100048,
-                            MapNumber = 238,
+                            MapNumber = 48,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100049,
-                            MapNumber = 239,
+                            MapNumber = 49,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100050,
-                            MapNumber = 240,
+                            MapNumber = 50,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100051,
-                            MapNumber = 241,
+                            MapNumber = 51,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100052,
-                            MapNumber = 500,
+                            MapNumber = 52,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100053,
-                            MapNumber = 605,
+                            MapNumber = 53,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100054,
-                            MapNumber = 606,
+                            MapNumber = 54,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100055,
-                            MapNumber = 607,
+                            MapNumber = 55,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100056,
-                            MapNumber = 608,
+                            MapNumber = 56,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100057,
-                            MapNumber = 725,
+                            MapNumber = 57,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100058,
-                            MapNumber = 1034,
+                            MapNumber = 58,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100059,
-                            MapNumber = 2131,
+                            MapNumber = 59,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100060,
-                            MapNumber = 2254,
+                            MapNumber = 60,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100061,
-                            MapNumber = 2530,
+                            MapNumber = 61,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100062,
-                            MapNumber = 2531,
+                            MapNumber = 62,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100063,
-                            MapNumber = 2801,
+                            MapNumber = 63,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100064,
-                            MapNumber = 3200,
+                            MapNumber = 64,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100065,
-                            MapNumber = 3201,
+                            MapNumber = 65,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100066,
-                            MapNumber = 3202,
+                            MapNumber = 66,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100067,
-                            MapNumber = 3374,
+                            MapNumber = 67,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
                             Id = 100068,
-                            MapNumber = 3375,
+                            MapNumber = 68,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         });
