@@ -12,6 +12,7 @@ namespace WaterNetworkMonitoring
 
         public Loggers()
         {
+            Program.ConfigureTraceOutput();
             InitializeComponent();
             map.Load += map_Load;
             Resize += (_, _) => LayoutMap();

@@ -557,16 +557,6 @@
     },
     {
       "OsmType": "way",
-      "OsmId": 467447796,
-      "Latitude": 42.0164889,
-      "Longitude": 23.0858018,
-      "Name": "",
-      "Address": "",
-      "BuildingType": "apartments",
-      "FootprintWkt": "POLYGON ((23.0856132 42.0162467, 23.0857982 42.0167687, 23.0859904 42.0167311, 23.0858054 42.0162091, 23.0856132 42.0162467))"
-    },
-    {
-      "OsmType": "way",
       "OsmId": 655151349,
       "Latitude": 42.0173282,
       "Longitude": 23.0807483,
@@ -728,5 +718,12 @@
   ],
   "IncompleteElements": [],
   "Region": "Zapad",
-  "ScopeNote": "Only the 68 buildings intersecting the approximate project outline of Zapad are retained."
+  "ScopeNote": "Only the 67 included Zapad buildings are retained. Explicitly excluded buildings are not displayed or refreshed.",
+  "ExcludedBuildings": [
+    {
+      "OsmType": "way",
+      "OsmId": 467447796,
+      "Reason": "Building 52 removed at the user's request before renumbering."
+    }
+  ]
 }

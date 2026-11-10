@@ -92,23 +92,22 @@ namespace WaterNetworkMonitoring.Migrations
                     { 100049, 49, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
                     { 100050, 50, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
                     { 100051, 51, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100052, 52, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100053, 53, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100054, 54, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100055, 55, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100056, 56, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100057, 57, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100058, 58, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100059, 59, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100060, 60, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100061, 61, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100062, 62, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100063, 63, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100064, 64, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100065, 65, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100066, 66, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100067, 67, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
-                    { 100068, 68, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) }
+                    { 100053, 52, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100054, 53, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100055, 54, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100056, 55, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100057, 56, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100058, 57, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100059, 58, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100060, 59, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100061, 60, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100062, 61, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100063, 62, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100064, 63, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100065, 64, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100066, 65, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100067, 66, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) },
+                    { 100068, 67, "00000000", new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0)) }
                 });
 
             migrationBuilder.CreateIndex(
@@ -568,120 +567,113 @@ namespace WaterNetworkMonitoring.Migrations
                         },
                         new
                         {
-                            Id = 100052,
+                            Id = 100053,
                             MapNumber = 52,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100053,
+                            Id = 100054,
                             MapNumber = 53,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100054,
+                            Id = 100055,
                             MapNumber = 54,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100055,
+                            Id = 100056,
                             MapNumber = 55,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100056,
+                            Id = 100057,
                             MapNumber = 56,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100057,
+                            Id = 100058,
                             MapNumber = 57,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100058,
+                            Id = 100059,
                             MapNumber = 58,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100059,
+                            Id = 100060,
                             MapNumber = 59,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100060,
+                            Id = 100061,
                             MapNumber = 60,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100061,
+                            Id = 100062,
                             MapNumber = 61,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100062,
+                            Id = 100063,
                             MapNumber = 62,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100063,
+                            Id = 100064,
                             MapNumber = 63,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100064,
+                            Id = 100065,
                             MapNumber = 64,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100065,
+                            Id = 100066,
                             MapNumber = 65,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100066,
+                            Id = 100067,
                             MapNumber = 66,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         },
                         new
                         {
-                            Id = 100067,
-                            MapNumber = 67,
-                            Reading = "00000000",
-                            TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
-                        },
-                        new
-                        {
                             Id = 100068,
-                            MapNumber = 68,
+                            MapNumber = 67,
                             Reading = "00000000",
                             TakenAt = new DateTimeOffset(new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 2, 0, 0, 0))
                         });

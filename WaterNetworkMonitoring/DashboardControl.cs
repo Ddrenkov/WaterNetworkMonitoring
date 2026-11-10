@@ -15,6 +15,7 @@ namespace WaterNetworkMonitoring
         private readonly Panel mapPanel;
         public DashboardControl()
         {
+            Program.ConfigureTraceOutput();
             InitializeComponent();
 
             GMap.NET.GMaps.Instance.Mode =

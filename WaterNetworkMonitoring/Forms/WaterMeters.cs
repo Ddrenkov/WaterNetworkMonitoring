@@ -14,6 +14,7 @@ namespace WaterNetworkMonitoring
 
         public WaterMeters()
         {
+            Program.ConfigureTraceOutput();
             InitializeComponent();
             refreshTimer.Tick += (_, _) => { refreshTimer.Stop(); UpdatePins(); };
             map.Load += (_, _) =>

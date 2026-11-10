@@ -23,6 +23,9 @@ args = parser.parse_args()
 cache = args.cache
 cache.mkdir(parents=True, exist_ok=True)
 output = Path(__file__).resolve().parents[1] / 'WaterNetworkMonitoring' / 'Data' / 'Maps' / 'Buildings.json'
+existing = json.loads(output.read_text(encoding='utf-8-sig')) if output.exists() else {}
+exclusions = existing.get('ExcludedBuildings', [])
+excluded_ids = {(b['OsmType'], b['OsmId']) for b in exclusions}
 zone = next(z for z in json.loads(output.with_name('Neighbourhoods.json').read_text(encoding='utf-8-sig'))
             if z['Name'] == 'Zapad')
 zapad = Polygon([(p[1], p[0]) for p in zone['Points']],
@@ -132,6 +135,8 @@ for identifier, node in sorted(nodes.items()):
                           'Name': t.get('name:en', t.get('name', '')), 'Address': '', 'BuildingType': t['building']})
 
 def in_zapad(building):
+    if (building['OsmType'], building['OsmId']) in excluded_ids:
+        return False
     if building.get('FootprintWkt'):
         return wkt.loads(building['FootprintWkt']).intersection(zapad).area > 1e-14
     return zapad.contains(Point(building['Longitude'], building['Latitude']))
@@ -140,7 +145,8 @@ buildings = sorted((b for b in buildings if in_zapad(b)), key=lambda b: (b['OsmT
 result = {'RetrievedAtUtc': max(source['RetrievedAtUtc'] for source in sources),
           'Region': 'Zapad', 'Bounds': bounds,
           'Attribution': '© OpenStreetMap contributors, ODbL 1.0',
-          'Sources': sources, 'Buildings': buildings, 'IncompleteElements': sorted(set(incomplete))}
+          'Sources': sources, 'Buildings': buildings, 'ExcludedBuildings': exclusions,
+          'IncompleteElements': sorted(set(incomplete))}
 output.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 print('Buildings:', len(buildings), 'incomplete:', len(set(incomplete)), flush=True)
 print('Incomplete elements:', sorted(set(incomplete)), flush=True)
