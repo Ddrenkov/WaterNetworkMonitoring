@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 
 namespace WaterNetworkMonitoring.Models
 {
-    public class PressureLogger : Sensor
+    public class PressureLogger
     {
-        public double CurrentPressure { get; set; }
-
-        public double MinPressure { get; set; }
-
-        public double MaxPressure { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string ZoneName { get; set; } = string.Empty;
+        public int? ParentLoggerId { get; set; }
+        public int? SuppliedWaterMeterId { get; set; }
+        public bool IsSimulated { get; set; }
+        public PressureLogger? ParentLogger { get; set; }
+        public WaterMeter? SuppliedWaterMeter { get; set; }
     }
 }
