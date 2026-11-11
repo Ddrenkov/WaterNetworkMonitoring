@@ -8,18 +8,25 @@ namespace WaterNetworkMonitoring
         private readonly bool showNumber;
         private readonly bool selected;
         private readonly string number;
+        private readonly bool compact;
 
-        public NumberedBuildingPin(BuildingMapData.Building building, bool showNumber, bool selected)
+        public NumberedBuildingPin(BuildingMapData.Building building, bool showNumber, bool selected, bool compact = false)
             : base(building.Position)
         {
             this.showNumber = showNumber || selected;
             this.selected = selected;
+            this.compact = compact;
             number = building.Number.ToString();
             Tag = building;
             ToolTipText = number;
             ToolTipMode = MarkerTooltipMode.OnMouseOver;
             Size = this.showNumber ? new Size(Math.Max(28, number.Length * 8 + 12), 30) : new Size(8, 11);
             Offset = new Point(-Size.Width / 2, -Size.Height);
+            if (compact && this.showNumber)
+            {
+                Size = selected ? new Size(24, 24) : new Size(20, 20);
+                Offset = new Point(-Size.Width / 2, -Size.Height / 2);
+            }
             IsHitTestVisible = true;
         }
 
@@ -27,6 +34,20 @@ namespace WaterNetworkMonitoring
         {
             var state = graphics.Save();
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            if (compact && showNumber)
+            {
+                using var background = new SolidBrush(selected ? Color.FromArgb(195, 100, 35) : Color.White);
+                using var outline = new Pen(selected ? Color.White : Color.FromArgb(37, 99, 180), 1.2f);
+                using var ink = new SolidBrush(selected ? Color.White : Color.FromArgb(28, 79, 141));
+                using var font = new Font(SystemFonts.DefaultFont.FontFamily, selected ? 8F : 7.5F, FontStyle.Regular);
+                using var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                var circle = new Rectangle(LocalPosition, Size);
+                graphics.FillEllipse(background, circle);
+                graphics.DrawEllipse(outline, circle);
+                graphics.DrawString(number, font, ink, circle, format);
+                graphics.Restore(state);
+                return;
+            }
             using var fill = new SolidBrush(selected ? Color.FromArgb(220, 88, 30) : Color.FromArgb(28, 103, 191));
             using var border = new Pen(Color.White, showNumber ? 1.5f : .7f);
             int x = LocalPosition.X, y = LocalPosition.Y, w = Size.Width, h = Size.Height;

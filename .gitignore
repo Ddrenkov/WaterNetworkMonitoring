@@ -1,4 +1,7 @@
 ﻿.vs/
 bin/
-bin/
 obj/
+*.csproj.user
+*.suo
+__pycache__/
+*.py[cod]
