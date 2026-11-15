@@ -13,6 +13,9 @@ namespace WaterNetworkMonitoring
         private DashboardData? data;
         private CancellationTokenSource? loadCancellation;
         private GMapOverlay? buildingPins;
+        private GMapOverlay? pipes;
+        private BuildingPipeGraph? pipeGraph;
+        private int? flaggedBuilding;
         private List<BuildingMapData.Building> buildings = new();
         private bool initialized;
         private bool layingOut;
@@ -40,6 +43,7 @@ namespace WaterNetworkMonitoring
         private async void refreshButton_Click(object? sender, EventArgs e) => await LoadReadingsAsync();
         private void resetMapButton_Click(object? sender, EventArgs e) => ResetMap();
         private void numbersCheckBox_CheckedChanged(object? sender, EventArgs e) => UpdatePins(null);
+        private void pipesCheckBox_CheckedChanged(object? sender, EventArgs e) => UpdatePipes(null);
         private void attributionLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e) =>
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.openstreetmap.org/copyright") { UseShellExecute = true });
 
@@ -62,6 +66,20 @@ namespace WaterNetworkMonitoring
             // The map header already names Zapad; omit the large label over its buildings.
             regions.Markers.Clear();
             map.Overlays.Add(regions);
+            try
+            {
+                pipeGraph = BuildingPipeGraph.Create(buildings, zones.Single(z => z.Name == "Zapad"));
+                pipes = new GMapOverlay("dashboard-pipes");
+                foreach (var connection in pipeGraph.Connections)
+                    pipes.Routes.Add(new GMapRoute(new List<PointLatLng> { connection.From.Position, connection.To.Position }, connection.Id)
+                        { Stroke = new Pen(Blue, 2f), IsHitTestVisible = true });
+                map.Overlays.Add(pipes);
+            }
+            catch (InvalidOperationException ex)
+            {
+                pipesCheckBox.Enabled = false;
+                System.Diagnostics.Trace.TraceWarning(ex.Message);
+            }
             buildingPins = new GMapOverlay("dashboard-buildings");
             map.Overlays.Add(buildingPins);
             UpdatePins(null);
@@ -83,6 +101,21 @@ namespace WaterNetworkMonitoring
             buildingPins.Markers.Clear();
             foreach (var building in buildings.OrderBy(b => b.Number == selected))
                 buildingPins.Markers.Add(new NumberedBuildingPin(building, numbersCheckBox.Checked, building.Number == selected, compact: true));
+            UpdatePipes(selected);
+            map.Invalidate();
+        }
+
+        private void UpdatePipes(int? selected)
+        {
+            if (pipes == null || pipeGraph == null) return;
+            foreach (var route in pipes.Routes)
+            {
+                var connection = pipeGraph.Connections.First(p => p.Id == route.Name);
+                bool flagged = connection.Touches(flaggedBuilding);
+                route.Stroke.Dispose();
+                route.Stroke = new Pen(flagged ? Color.Firebrick : Blue, flagged || connection.Touches(selected) ? 3f : 1.5f);
+                route.IsVisible = pipesCheckBox.Checked;
+            }
             map.Invalidate();
         }
 
@@ -98,7 +131,7 @@ namespace WaterNetworkMonitoring
                 foreach (var polygon in overlay.Polygons) map.UpdatePolygonLocalPosition(polygon);
                 foreach (var marker in overlay.Markers) map.UpdateMarkerLocalPosition(marker);
             }
-            mapHint.Text = $"{buildings.Count} buildings · drag to move, scroll to zoom";
+            mapHint.Text = $"{buildings.Count} buildings · proposed connections";
         }
 
         private async Task LoadReadingsAsync()
@@ -108,7 +141,7 @@ namespace WaterNetworkMonitoring
             loadCancellation = new CancellationTokenSource();
             var token = loadCancellation.Token;
             refreshButton.Enabled = false;
-            statusLabel.Text = "Loading database readings…";
+            statusLabel.Text = "Loading readings…";
             try
             {
                 var result = await DashboardData.LoadAsync(token);
@@ -121,8 +154,8 @@ namespace WaterNetworkMonitoring
                 data = null;
                 periodSelector.Items.Clear();
                 periodSelector.Enabled = false;
-                ClearReadings("Readings unavailable", "Check the database connection and click Refresh.");
-                statusLabel.Text = "Could not load readings from the database. The map is still available.";
+                ClearReadings("Readings unavailable", "Check the connection.");
+                statusLabel.Text = "Refresh to retry.";
                 System.Diagnostics.Trace.TraceError("Dashboard readings: " + ex.Message);
             }
             finally
@@ -140,8 +173,8 @@ namespace WaterNetworkMonitoring
             periodSelector.Enabled = months.Count > 0;
             if (months.Count == 0)
             {
-                ClearReadings("No readings yet", "Readings will appear here when they are available in the database.");
-                statusLabel.Text = "No Zapad logger readings found.";
+                ClearReadings("No readings", "Add readings to the database.");
+                statusLabel.Text = "No data.";
                 return;
             }
             // Start on the month with the most observations, rather than a short boundary day.
@@ -153,34 +186,30 @@ namespace WaterNetworkMonitoring
             if (data == null || periodSelector.SelectedItem is not DashboardData.Month month) return;
             var report = data.Report(month);
             var dayGap = TimeSpan.FromHours(26);
-            flowChart.SetSeries(new ChartSeries("Zapad inlet", Blue, report.InletDays, dayGap));
-            pressureChart.SetSeries(new ChartSeries("Zapad inlet", Blue, report.InletPressure, dayGap),
-                new ChartSeries("Skaptopara branch", Orange, report.BranchPressure, dayGap));
-            branchChart.SetSeries(
-                new ChartSeries("Supplied", Blue, report.Balances.Select(b => new ChartPoint(b.To, (double)b.SuppliedM3)).ToList(), TimeSpan.FromHours(14)),
-                new ChartSeries("Metered use", Orange, report.Balances.Select(b => new ChartPoint(b.To, (double)b.ConsumedM3)).ToList(), TimeSpan.FromHours(14)));
-            flowChart.Subtitle = "Daily average from 15-minute readings";
-            pressureChart.Subtitle = "Daily average from 15-minute readings";
-            branchChart.Subtitle = "Matching meter windows · supplied water includes any loss";
-            statusLabel.Text = $"{report.Period} · {(report.IsSimulated ? "Simulated readings" : "Database readings")} · " +
-                $"{(report.CompleteMonth ? "Water supplied" : "Recorded supply (partial month)")}: {report.SuppliedM3:N1} m³";
+            flowChart.SetSeries(new ChartSeries("Inlet", Blue, report.InletDays, dayGap));
+            pressureChart.SetSeries(new ChartSeries("Inlet", Blue, report.InletPressure, dayGap),
+                new ChartSeries("Branch", Orange, report.BranchPressure, dayGap));
+            lossChart.SetSeries(new ChartSeries("Difference", Color.Firebrick,
+                report.Balances.Select(b => new ChartPoint(b.To, (double)b.ExcessM3PerHour * 1000)).ToList(), TimeSpan.FromHours(14)));
+            statusLabel.Text = report.CompleteMonth ? "" : "Partial period";
+            leakLoggers.Text = report.LoggerSummary;
+            flaggedBuilding = report.LatestLeak == null ? null : report.BuildingNumber;
             if (report.LatestLeak is { } leak)
             {
-                leakPanel.BackColor = Color.FromArgb(255, 248, 238);
+                leakPanel.BackColor = SystemColors.Control;
                 leakStatus.Text = "Possible leak · Skaptopara";
                 leakStatus.ForeColor = Color.FromArgb(149, 72, 24);
-                leakDetails.Text = $"Building {report.BuildingNumber} · meter {report.MeterId}\n" +
-                    $"First flagged {report.FirstLeak!.To:dd MMM, HH:mm} · latest confirmation {leak.To:dd MMM, HH:mm}";
+                leakDetails.Text = $"Building {report.BuildingNumber} · meter {report.MeterId} · flagged {report.FirstLeak!.To:dd MMM HH:mm}";
                 leakRate.Text = $"{Math.Max(0, leak.ExcessM3PerHour) * 1000:N0} L/h";
-                leakRateCaption.Text = leak.PressureDrop ? "Estimated loss · pressure also lower" : "Estimated loss from the branch balance";
+                leakRateCaption.Text = "Estimated loss";
                 UpdatePins(report.BuildingNumber);
             }
             else
             {
-                leakPanel.BackColor = Color.White;
-                leakStatus.Text = report.AnalysisNote == null ? "No leak detected in this period" : "Not enough data to assess leaks";
+                leakPanel.BackColor = SystemColors.Control;
+                leakStatus.Text = report.AnalysisNote == null ? "No leak detected" : "Not enough data";
                 leakStatus.ForeColor = ForeColor;
-                leakDetails.Text = report.AnalysisNote ?? "Complete branch readings show no persistent water imbalance.";
+                leakDetails.Text = report.AnalysisNote == null ? "Readings are balanced." : "Matching meter readings are needed.";
                 leakRate.Text = "—";
                 leakRateCaption.Text = "Estimated loss";
                 UpdatePins(null);
@@ -189,13 +218,15 @@ namespace WaterNetworkMonitoring
 
         private void ClearReadings(string title, string detail)
         {
-            leakPanel.BackColor = Color.White;
+            leakPanel.BackColor = SystemColors.Control;
             leakStatus.Text = title;
             leakStatus.ForeColor = ForeColor;
             leakDetails.Text = detail;
+            leakLoggers.Text = "";
             leakRate.Text = "—";
             leakRateCaption.Text = "Estimated loss";
-            flowChart.SetSeries(); pressureChart.SetSeries(); branchChart.SetSeries();
+            flowChart.SetSeries(); pressureChart.SetSeries(); lossChart.SetSeries();
+            flaggedBuilding = null;
             UpdatePins(null);
         }
 
@@ -206,35 +237,37 @@ namespace WaterNetworkMonitoring
             try
             {
                 float s = DeviceDpi / 96f;
-                int gap = (int)(24 * s);
-                int available = ClientSize.Width - gap * 2 - (VerticalScroll.Visible ? SystemInformation.VerticalScrollBarWidth : 0);
+                int gap = (int)(16 * s);
+                // Leave room for the scrollbar before the taller layout makes it appear.
+                int available = ClientSize.Width - gap * 2 - SystemInformation.VerticalScrollBarWidth;
                 int width = Math.Min((int)(1120 * s), Math.Max((int)(280 * s), available));
-                bool narrow = width < 760 * s;
+                bool narrow = width < 850 * s;
                 page.SuspendLayout();
                 graphGrid.SuspendLayout();
-                graphGrid.ColumnCount = 2;
-                graphGrid.RowCount = 2;
+                graphGrid.ColumnCount = 3;
+                graphGrid.RowCount = 3;
                 graphGrid.SetCellPosition(pressureChart, narrow ? new TableLayoutPanelCellPosition(0, 1) : new TableLayoutPanelCellPosition(1, 0));
-                graphGrid.ColumnCount = narrow ? 1 : 2;
-                graphGrid.RowCount = narrow ? 2 : 1;
+                graphGrid.SetCellPosition(lossChart, narrow ? new TableLayoutPanelCellPosition(0, 2) : new TableLayoutPanelCellPosition(2, 0));
+                graphGrid.ColumnCount = narrow ? 1 : 3;
+                graphGrid.RowCount = narrow ? 3 : 1;
                 graphGrid.ColumnStyles.Clear();
-                graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, narrow ? 100 : 50));
-                if (!narrow) graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+                for (int i = 0; i < graphGrid.ColumnCount; i++)
+                    graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / graphGrid.ColumnCount));
                 graphGrid.RowStyles.Clear();
-                graphGrid.RowStyles.Add(new RowStyle(SizeType.Percent, narrow ? 50 : 100));
-                if (narrow) graphGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
-                int mapHeight = (int)Math.Clamp(width * .42, 340 * s, 470 * s);
-                int graphHeight = (int)((narrow ? 500 : 250) * s);
-                page.RowStyles[0].Height = 48 * s;
-                page.RowStyles[1].Height = 28 * s;
+                for (int i = 0; i < graphGrid.RowCount; i++)
+                    graphGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / graphGrid.RowCount));
+                foreach (Control chart in graphGrid.Controls) chart.Margin = narrow ? new Padding(0, 0, 0, 10) : new Padding(4, 0, 4, 0);
+                int mapHeight = (int)Math.Clamp(width * .32, 280 * s, 360 * s);
+                int graphHeight = (int)((narrow ? 630 : 210) * s);
+                page.RowStyles[0].Height = 40 * s;
+                page.RowStyles[1].Height = 22 * s;
                 page.RowStyles[2].Height = mapHeight;
-                page.RowStyles[3].Height = (narrow ? 182 : 140) * s;
+                page.RowStyles[3].Height = (narrow ? 122 : 100) * s;
                 page.RowStyles[4].Height = graphHeight;
-                page.RowStyles[5].Height = 250 * s;
                 int height = page.RowStyles.Cast<RowStyle>().Sum(r => (int)r.Height);
                 page.Size = new Size(width, height);
                 // AutoScroll uses logical coordinates; retain the current vertical scroll position.
-                page.Location = new Point(Math.Max(gap, (ClientSize.Width - width) / 2), gap + AutoScrollPosition.Y);
+                page.Location = new Point(gap + Math.Max(0, (available - width) / 2), gap + AutoScrollPosition.Y);
                 AutoScrollMinSize = new Size(0, height + gap * 2);
                 leakContent.ColumnStyles[0].Width = narrow ? 62 : 72;
                 leakContent.ColumnStyles[1].Width = narrow ? 38 : 28;

@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WaterNetworkMonitoring.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace WaterNetworkMonitoring.Data
 {
@@ -45,6 +47,7 @@ namespace WaterNetworkMonitoring.Data
                     "LEN([Reading]) = 8 AND [Reading] COLLATE Latin1_General_100_BIN2 NOT LIKE '%[^0-9]%'");
             });
             meters.Property(m => m.Id).UseIdentityColumn(100001, 1);
+            ConfigureReadingTime(meters);
             meters.HasIndex(m => m.MapNumber).IsUnique();
             meters.Property(m => m.Reading).HasMaxLength(8).IsFixedLength().IsUnicode(false).IsRequired();
             meters.HasData(ZapadWaterMeterSeed.GetReadings());
@@ -61,6 +64,7 @@ namespace WaterNetworkMonitoring.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             var loggerReadings = modelBuilder.Entity<LoggerReading>();
+            ConfigureReadingTime(loggerReadings);
             loggerReadings.ToTable("LoggerReadings", table =>
             {
                 table.HasCheckConstraint("CK_LoggerReadings_Flow", "[FlowM3PerHour] >= 0");
@@ -73,6 +77,7 @@ namespace WaterNetworkMonitoring.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             var meterReadings = modelBuilder.Entity<WaterMeterReading>();
+            ConfigureReadingTime(meterReadings);
             meterReadings.ToTable("WaterMeterReadings", table =>
                 table.HasCheckConstraint("CK_WaterMeterReadings_Reading",
                     "LEN([Reading]) = 8 AND [Reading] COLLATE Latin1_General_100_BIN2 NOT LIKE '%[^0-9]%'"));
@@ -80,6 +85,20 @@ namespace WaterNetworkMonitoring.Data
             meterReadings.HasIndex(r => new { r.WaterMeterId, r.TakenAt }).IsUnique();
             meterReadings.HasOne(r => r.WaterMeter).WithMany().HasForeignKey(r => r.WaterMeterId)
                 .OnDelete(DeleteBehavior.Restrict);
+        }
+
+        private static void ConfigureReadingTime<TEntity>(EntityTypeBuilder<TEntity> entity) where TEntity : class
+        {
+            // UTC keeps repeated local times distinct when daylight saving ends.
+            var converter = new ValueConverter<DateTimeOffset, DateTime>(
+                value => value.UtcDateTime,
+                value => TimeZoneInfo.ConvertTime(new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc)),
+                    TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time")));
+            entity.Property<DateTimeOffset>("TakenAt").HasColumnName("TakenAtUtc")
+                .HasColumnType("datetime2(2)").HasConversion(converter);
+            // The database exposes the original local clock time without an offset suffix.
+            entity.Property<DateTime>("LocalTakenAt").HasColumnName("TakenAt").HasColumnType("datetime2(2)")
+                .HasComputedColumnSql("CONVERT(datetime2(2), [TakenAtUtc] AT TIME ZONE 'UTC' AT TIME ZONE 'FLE Standard Time')", stored: false);
         }
     }
 }

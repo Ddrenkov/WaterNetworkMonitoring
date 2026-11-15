@@ -10,7 +10,7 @@ namespace WaterNetworkMonitoring
     public sealed class DashboardChart : Control
     {
         private IReadOnlyList<ChartSeries> series = Array.Empty<ChartSeries>();
-        private string heading = "Readings", unit = "", subtitle = "";
+        private string heading = "Readings", unit = "";
         public DashboardChart()
         {
             DoubleBuffered = true;
@@ -24,8 +24,6 @@ namespace WaterNetworkMonitoring
         public string Heading { get => heading; set { heading = value; Invalidate(); } }
         [DefaultValue("")]
         public string Unit { get => unit; set { unit = value; Invalidate(); } }
-        [DefaultValue("")]
-        public string Subtitle { get => subtitle; set { subtitle = value; Invalidate(); } }
         [DefaultValue(true)]
         public bool StartAtZero { get; set; } = true;
         internal void SetSeries(params ChartSeries[] values) { series = values; Invalidate(); }
@@ -36,25 +34,24 @@ namespace WaterNetworkMonitoring
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             float s = DeviceDpi / 96f;
-            using var titleFont = new Font(Font, FontStyle.Bold);
-            using var smallFont = new Font(Font.FontFamily, Math.Max(7, Font.Size - 1));
+            using var titleFont = new Font(Font.FontFamily, 9F, FontStyle.Regular);
+            using var smallFont = new Font(Font.FontFamily, 8F);
             using var text = new SolidBrush(ForeColor);
             using var muted = new SolidBrush(Color.FromArgb(100, 110, 122));
             using var border = new Pen(Color.FromArgb(220, 225, 231));
             using var grid = new Pen(Color.FromArgb(235, 238, 242));
             g.DrawRectangle(border, 0, 0, Width - 1, Height - 1);
-            g.DrawString(Heading, titleFont, text, 16 * s, 12 * s);
-            g.DrawString(Subtitle, smallFont, muted, 16 * s, 36 * s);
+            g.DrawString(string.IsNullOrEmpty(Unit) ? Heading : $"{Heading} ({Unit})", titleFont, text, 10 * s, 8 * s);
             var values = series.SelectMany(v => v.Points).Where(p => double.IsFinite(p.Value)).ToArray();
             if (values.Length == 0)
             {
                 using var centered = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("No readings to display", Font, muted, new RectangleF(0, 60 * s, Width, Height - 60 * s), centered);
+                g.DrawString("No data", smallFont, muted, new RectangleF(0, 30 * s, Width, Height - 30 * s), centered);
                 return;
             }
-            var plot = new RectangleF(58 * s, 75 * s, Width - 78 * s, Height - 126 * s);
+            var plot = new RectangleF(46 * s, 36 * s, Width - 68 * s, Height - (series.Count > 1 ? 82 : 62) * s);
             if (plot.Width < 30 || plot.Height < 20) return;
-            double max = values.Max(v => v.Value), min = StartAtZero ? 0 : values.Min(v => v.Value);
+            double max = values.Max(v => v.Value), min = StartAtZero ? Math.Min(0, values.Min(v => v.Value)) : values.Min(v => v.Value);
             double padding = Math.Max((max - min) * .12, StartAtZero ? .1 : .05);
             max += padding;
             if (!StartAtZero) min -= padding;
@@ -65,23 +62,22 @@ namespace WaterNetworkMonitoring
             float X(DateTimeOffset time) => plot.Left + (float)((time - first).TotalSeconds / duration) * plot.Width;
             float Y(double value) => plot.Bottom - (float)((value - min) / (max - min)) * plot.Height;
             using var right = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
-            for (int i = 0; i <= 4; i++)
+            for (int i = 0; i <= 2; i++)
             {
-                float y = plot.Top + plot.Height * i / 4;
+                float y = plot.Top + plot.Height * i / 2;
                 g.DrawLine(grid, plot.Left, y, plot.Right, y);
-                g.DrawString((max - (max - min) * i / 4).ToString("0.##", CultureInfo.InvariantCulture), smallFont, muted,
+                g.DrawString((max - (max - min) * i / 2).ToString("0.##", CultureInfo.InvariantCulture), smallFont, muted,
                     new RectangleF(2, y - 9 * s, plot.Left - 8 * s, 18 * s), right);
             }
             using var centeredLabel = new StringFormat { Alignment = StringAlignment.Center };
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
-                var time = first.AddSeconds(duration * i / 3);
+                var time = first.AddSeconds(duration * i / 2);
                 g.DrawString(time.ToString("dd MMM"), smallFont, muted, X(time), plot.Bottom + 7 * s, centeredLabel);
             }
-            g.DrawString(Unit, smallFont, muted, plot.Left, plot.Top - 19 * s);
             foreach (var line in series)
             {
-                using var pen = new Pen(line.Color, 2 * s) { LineJoin = LineJoin.Round };
+                using var pen = new Pen(line.Color, 1.5f * s) { LineJoin = LineJoin.Round };
                 using var fill = new SolidBrush(line.Color);
                 ChartPoint? previous = null;
                 foreach (var point in line.Points.OrderBy(p => p.Time))
@@ -89,10 +85,12 @@ namespace WaterNetworkMonitoring
                     if (!double.IsFinite(point.Value)) { previous = null; continue; }
                     if (previous != null && point.Time - previous.Time <= line.MaximumGap)
                         g.DrawLine(pen, X(previous.Time), Y(previous.Value), X(point.Time), Y(point.Value));
-                    g.FillEllipse(fill, X(point.Time) - 2 * s, Y(point.Value) - 2 * s, 4 * s, 4 * s);
+                    if (previous == null || point.Time - previous.Time > line.MaximumGap)
+                        g.FillEllipse(fill, X(point.Time) - 2 * s, Y(point.Value) - 2 * s, 4 * s, 4 * s);
                     previous = point;
                 }
             }
+            if (series.Count < 2) return;
             float legendX = plot.Left;
             foreach (var line in series)
             {

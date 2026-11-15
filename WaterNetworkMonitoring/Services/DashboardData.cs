@@ -95,6 +95,8 @@ namespace WaterNetworkMonitoring.Services
                 BranchPressure = Daily(branchReadings, r => r.PressureBar),
                 Balances = monthBalances, LatestLeak = latestLeak, FirstLeak = firstLeak,
                 BranchName = branch?.Name ?? "Branch", BuildingNumber = building,
+                LoggerSummary = branch == null ? "" : "Loggers: " +
+                    (inlet == null ? "" : $"{inlet.Name} ({inlet.Id}) → ") + $"{branch.Name} ({branch.Id})",
                 MeterId = branch?.SuppliedWaterMeterId, AnalysisNote = analysisNote,
                 SuppliedM3 = inletReadings.Sum(r => r.FlowM3PerHour * 0.25m), CompleteMonth = complete,
                 LastReading = readings.Count > 0 ? readings.Max(r => r.TakenAt) : null
@@ -130,6 +132,7 @@ namespace WaterNetworkMonitoring.Services
         public BranchBalance? LatestLeak { get; init; }
         public BranchBalance? FirstLeak { get; init; }
         public string BranchName { get; init; } = "";
+        public string LoggerSummary { get; init; } = "";
         public int? BuildingNumber { get; init; }
         public int? MeterId { get; init; }
         public string? AnalysisNote { get; init; }

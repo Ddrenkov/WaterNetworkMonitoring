@@ -21,6 +21,12 @@ namespace WaterNetworkMonitoring
 
         public static List<Zone> LoadZones()
         {
+            // Building numbers and the dashboard remain limited to Zapad.
+            return LoadAllZones().Where(z => z.Name == "Zapad").ToList();
+        }
+
+        public static List<Zone> LoadAllZones()
+        {
             using var stream = typeof(BlagoevgradNeighbourhoods).Assembly.GetManifestResourceStream(
                 "WaterNetworkMonitoring.Data.Maps.Neighbourhoods.json")
                 ?? throw new InvalidOperationException("Neighbourhood map data is missing.");
@@ -34,7 +40,11 @@ namespace WaterNetworkMonitoring
 
         public static GMapOverlay CreateOverlay()
         {
-            var zones = LoadZones();
+            return CreateOverlay(LoadZones());
+        }
+
+        public static GMapOverlay CreateOverlay(IEnumerable<Zone> zones)
+        {
             var overlay = new GMapOverlay("neighbourhoods");
             foreach (var zone in zones)
             {
