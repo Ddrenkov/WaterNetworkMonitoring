@@ -7,12 +7,11 @@ namespace WaterNetworkMonitoring
 {
     public partial class DashboardControl : UserControl
     {
-        private static readonly Color Blue = Color.FromArgb(37, 99, 180);
-        private static readonly Color Orange = Color.FromArgb(195, 100, 35);
         private readonly DashboardData? previewData;
         private DashboardData? data;
         private CancellationTokenSource? loadCancellation;
         private GMapOverlay? buildingPins;
+        private GMapOverlay? loggerPins;
         private GMapOverlay? pipes;
         private BuildingPipeGraph? pipeGraph;
         private int? flaggedBuilding;
@@ -69,10 +68,7 @@ namespace WaterNetworkMonitoring
             try
             {
                 pipeGraph = BuildingPipeGraph.Create(buildings, zones.Single(z => z.Name == "Zapad"));
-                pipes = new GMapOverlay("dashboard-pipes");
-                foreach (var connection in pipeGraph.Connections)
-                    pipes.Routes.Add(new GMapRoute(new List<PointLatLng> { connection.From.Position, connection.To.Position }, connection.Id)
-                        { Stroke = new Pen(Blue, 2f), IsHitTestVisible = true });
+                pipes = pipeGraph.CreateOverlay("dashboard-pipes");
                 map.Overlays.Add(pipes);
             }
             catch (InvalidOperationException ex)
@@ -83,9 +79,18 @@ namespace WaterNetworkMonitoring
             buildingPins = new GMapOverlay("dashboard-buildings");
             map.Overlays.Add(buildingPins);
             UpdatePins(null);
+            loggerPins = LoggerMapPin.CreateOverlay(pipeGraph);
+            map.Overlays.Add(loggerPins);
             map.OnMarkerClick += (marker, args) =>
             {
+                if (args.Button == MouseButtons.Left && marker is LoggerMapPin logger)
+                {
+                    LoggerMapPin.Select(loggerPins, logger);
+                    map.Invalidate();
+                    return;
+                }
                 if (args.Button != MouseButtons.Left || marker.Tag is not BuildingMapData.Building building) return;
+                LoggerMapPin.Select(loggerPins, null);
                 mapHint.Text = $"Building {building.Number}";
                 UpdatePins(building.Number);
             };
@@ -108,14 +113,7 @@ namespace WaterNetworkMonitoring
         private void UpdatePipes(int? selected)
         {
             if (pipes == null || pipeGraph == null) return;
-            foreach (var route in pipes.Routes)
-            {
-                var connection = pipeGraph.Connections.First(p => p.Id == route.Name);
-                bool flagged = connection.Touches(flaggedBuilding);
-                route.Stroke.Dispose();
-                route.Stroke = new Pen(flagged ? Color.Firebrick : Blue, flagged || connection.Touches(selected) ? 3f : 1.5f);
-                route.IsVisible = pipesCheckBox.Checked;
-            }
+            pipeGraph.StyleOverlay(pipes,pipesCheckBox.Checked,flaggedBuilding,selected);
             map.Invalidate();
         }
 
@@ -132,6 +130,7 @@ namespace WaterNetworkMonitoring
                 foreach (var marker in overlay.Markers) map.UpdateMarkerLocalPosition(marker);
             }
             mapHint.Text = $"{buildings.Count} buildings · proposed connections";
+            LoggerMapPin.Select(loggerPins, null);
         }
 
         private async Task LoadReadingsAsync()
@@ -185,21 +184,25 @@ namespace WaterNetworkMonitoring
         {
             if (data == null || periodSelector.SelectedItem is not DashboardData.Month month) return;
             var report = data.Report(month);
-            var dayGap = TimeSpan.FromHours(26);
-            flowChart.SetSeries(new ChartSeries("Inlet", Blue, report.InletDays, dayGap));
-            pressureChart.SetSeries(new ChartSeries("Inlet", Blue, report.InletPressure, dayGap),
-                new ChartSeries("Branch", Orange, report.BranchPressure, dayGap));
+            LoggerMapPin.UpdateReadings(loggerPins, data, report.LastReading, report.FlaggedLoggerId);
+            LoggerMapPin.Select(loggerPins, null);
+            flowChart.SetSeries(report.FlowSeries);
+            pressureChart.SetSeries(report.PressureSeries);
+            lossChart.Heading = "Water difference";
             lossChart.SetSeries(new ChartSeries("Difference", Color.Firebrick,
                 report.Balances.Select(b => new ChartPoint(b.To, (double)b.ExcessM3PerHour * 1000)).ToList(), TimeSpan.FromHours(14)));
             statusLabel.Text = report.CompleteMonth ? "" : "Partial period";
             leakLoggers.Text = report.LoggerSummary;
+            leakLocation.Text = report.LeakLocation;
             flaggedBuilding = report.LatestLeak == null ? null : report.BuildingNumber;
             if (report.LatestLeak is { } leak)
             {
                 leakPanel.BackColor = SystemColors.Control;
-                leakStatus.Text = "Possible leak · Skaptopara";
+                leakStatus.Text = "Possible leak · " + report.BranchName;
                 leakStatus.ForeColor = Color.FromArgb(149, 72, 24);
-                leakDetails.Text = $"Building {report.BuildingNumber} · meter {report.MeterId} · flagged {report.FirstLeak!.To:dd MMM HH:mm}";
+                leakDetails.Text = report.MeterId.HasValue
+                    ? $"Building {report.BuildingNumber} · meter {report.MeterId} · flagged {report.FirstLeak!.To:dd MMM HH:mm}"
+                    : $"{report.BranchName} · flagged {report.FirstLeak!.To:dd MMM HH:mm}";
                 leakRate.Text = $"{Math.Max(0, leak.ExcessM3PerHour) * 1000:N0} L/h";
                 leakRateCaption.Text = "Estimated loss";
                 UpdatePins(report.BuildingNumber);
@@ -223,6 +226,9 @@ namespace WaterNetworkMonitoring
             leakStatus.ForeColor = ForeColor;
             leakDetails.Text = detail;
             leakLoggers.Text = "";
+            leakLocation.Text = "";
+            LoggerMapPin.UpdateReadings(loggerPins, null);
+            LoggerMapPin.Select(loggerPins, null);
             leakRate.Text = "—";
             leakRateCaption.Text = "Estimated loss";
             flowChart.SetSeries(); pressureChart.SetSeries(); lossChart.SetSeries();
@@ -262,7 +268,7 @@ namespace WaterNetworkMonitoring
                 page.RowStyles[0].Height = 40 * s;
                 page.RowStyles[1].Height = 22 * s;
                 page.RowStyles[2].Height = mapHeight;
-                page.RowStyles[3].Height = (narrow ? 122 : 100) * s;
+                page.RowStyles[3].Height = (narrow ? 150 : 128) * s;
                 page.RowStyles[4].Height = graphHeight;
                 int height = page.RowStyles.Cast<RowStyle>().Sum(r => (int)r.Height);
                 page.Size = new Size(width, height);

@@ -14,7 +14,14 @@ namespace WaterNetworkMonitoring
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing) components?.Dispose();
+            if (disposing)
+            {
+                var cancellation = loadCancellation;
+                loadCancellation = null;
+                cancellation?.Cancel();
+                cancellation?.Dispose();
+                components?.Dispose();
+            }
             base.Dispose(disposing);
         }
 
@@ -37,6 +44,12 @@ namespace WaterNetworkMonitoring
             zoomInButton = new Button();
             zoomOutButton = new Button();
             labelsCheckBox = new CheckBox();
+            chartsPanel = new TableLayoutPanel();
+            chartHeader = new Panel();
+            periodSelector = new ComboBox();
+            refreshReadingsButton = new Button();
+            flowChart = new DashboardChart();
+            pressureChart = new DashboardChart();
             mapPanel.SuspendLayout();
             headerPanel.SuspendLayout();
             SuspendLayout();
@@ -130,12 +143,49 @@ namespace WaterNetworkMonitoring
             attributionLabel.Height = 28;
             attributionLabel.TextAlign = ContentAlignment.MiddleRight;
             attributionLabel.Font = new Font("Segoe UI", 8F);
+            // Logger charts
+            chartsPanel.Name = "chartsPanel";
+            chartsPanel.Visible = false;
+            chartsPanel.ColumnCount = 1;
+            chartsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            chartsPanel.RowCount = 3;
+            chartsPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
+            chartsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            chartsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            chartsPanel.Controls.Add(chartHeader, 0, 0);
+            chartsPanel.Controls.Add(flowChart, 0, 1);
+            chartsPanel.Controls.Add(pressureChart, 0, 2);
+            chartHeader.Dock = DockStyle.Fill;
+            chartHeader.Margin = Padding.Empty;
+            chartHeader.Controls.Add(periodSelector);
+            chartHeader.Controls.Add(refreshReadingsButton);
+            periodSelector.Name = "periodSelector";
+            periodSelector.Dock = DockStyle.Fill;
+            periodSelector.DropDownStyle = ComboBoxStyle.DropDownList;
+            periodSelector.SelectedIndexChanged += periodSelector_SelectedIndexChanged;
+            refreshReadingsButton.Name = "refreshReadingsButton";
+            refreshReadingsButton.Text = "Refresh";
+            refreshReadingsButton.Dock = DockStyle.Right;
+            refreshReadingsButton.Width = 76;
+            refreshReadingsButton.Click += refreshReadingsButton_Click;
+            flowChart.Name = "flowChart";
+            flowChart.Dock = DockStyle.Fill;
+            flowChart.Heading = "Daily flow";
+            flowChart.Unit = "m³/h";
+            flowChart.Margin = new Padding(0, 0, 0, 10);
+            pressureChart.Name = "pressureChart";
+            pressureChart.Dock = DockStyle.Fill;
+            pressureChart.Heading = "Daily pressure";
+            pressureChart.Unit = "bar";
+            pressureChart.StartAtZero = false;
+            pressureChart.Margin = Padding.Empty;
             // Loggers
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1148, 692);
             BackColor = Color.FromArgb(245, 247, 251);
             Controls.Add(mapPanel);
+            Controls.Add(chartsPanel);
             Name = "Loggers";
             Text = "Loggers";
             Load += Loggers_Load;
@@ -157,6 +207,12 @@ namespace WaterNetworkMonitoring
         private Button zoomInButton;
         private Button zoomOutButton;
         private CheckBox labelsCheckBox;
+        private TableLayoutPanel chartsPanel;
+        private Panel chartHeader;
+        private ComboBox periodSelector;
+        private Button refreshReadingsButton;
+        private DashboardChart flowChart;
+        private DashboardChart pressureChart;
     }
 }
 

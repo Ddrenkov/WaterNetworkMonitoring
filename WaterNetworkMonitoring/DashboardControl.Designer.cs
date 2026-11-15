@@ -55,6 +55,7 @@ namespace WaterNetworkMonitoring
             leakStatus = new Label();
             leakDetails = new Label();
             leakLoggers = new Label();
+            leakLocation = new Label();
             lossPanel = new TableLayoutPanel();
             leakRate = new Label();
             leakRateCaption = new Label();
@@ -84,7 +85,7 @@ namespace WaterNetworkMonitoring
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 360));
-            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 100));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 128));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 210));
             page.Controls.Add(headerPanel, 0, 0);
             page.Controls.Add(statusLabel, 0, 1);
@@ -219,15 +220,17 @@ namespace WaterNetworkMonitoring
             leakTextPanel.Margin = Padding.Empty;
             leakTextPanel.ColumnCount = 1;
             leakTextPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            leakTextPanel.RowCount = 4;
+            leakTextPanel.RowCount = 5;
             leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 16));
             leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 18));
             leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 18));
+            leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
             leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             leakTextPanel.Controls.Add(leakHeading, 0, 0);
             leakTextPanel.Controls.Add(leakStatus, 0, 1);
             leakTextPanel.Controls.Add(leakDetails, 0, 2);
             leakTextPanel.Controls.Add(leakLoggers, 0, 3);
+            leakTextPanel.Controls.Add(leakLocation, 0, 4);
             leakHeading.Name = "leakHeading";
             leakHeading.Text = "Latest leak";
             leakHeading.Dock = DockStyle.Fill;
@@ -249,6 +252,11 @@ namespace WaterNetworkMonitoring
             leakLoggers.Font = new Font("Segoe UI", 8F);
             leakLoggers.ForeColor = Color.FromArgb(85, 95, 108);
             leakLoggers.Margin = Padding.Empty;
+            leakLocation.Name = "leakLocation";
+            leakLocation.Dock = DockStyle.Fill;
+            leakLocation.Font = new Font("Segoe UI", 8F);
+            leakLocation.ForeColor = Color.FromArgb(85, 95, 108);
+            leakLocation.Margin = Padding.Empty;
             lossPanel.Name = "lossPanel";
             lossPanel.Dock = DockStyle.Fill;
             lossPanel.ColumnCount = 1;
@@ -356,6 +364,7 @@ namespace WaterNetworkMonitoring
         private Label leakStatus;
         private Label leakDetails;
         private Label leakLoggers;
+        private Label leakLocation;
         private TableLayoutPanel lossPanel;
         private Label leakRate;
         private Label leakRateCaption;

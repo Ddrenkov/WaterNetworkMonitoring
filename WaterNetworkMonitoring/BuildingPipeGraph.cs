@@ -1,6 +1,8 @@
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Prepared;
 using NetTopologySuite.IO;
+using GMap.NET;
+using GMap.NET.WindowsForms;
 
 namespace WaterNetworkMonitoring
 {
@@ -89,6 +91,51 @@ namespace WaterNetworkMonitoring
         }
 
         public IReadOnlyList<Connection> ConnectionsAt(int buildingNumber) => neighbours[buildingNumber];
+
+        public PointLatLng PositionOnPipe(PointLatLng desired, int loggerId)
+        {
+            var candidates = loggerId == 200002
+                ? Connections.Where(p => p.From.OsmId == 992665907 || p.To.OsmId == 992665907).ToList()
+                : Connections.ToList();
+            if (candidates.Count == 0) return desired;
+            double scale = Math.Cos(desired.Lat * Math.PI / 180);
+            var nearest = candidates.Select(pipe =>
+            {
+                double dx = (pipe.To.Longitude-pipe.From.Longitude)*scale;
+                double dy = pipe.To.Latitude-pipe.From.Latitude;
+                double t = ((desired.Lng-pipe.From.Longitude)*scale*dx + (desired.Lat-pipe.From.Latitude)*dy)
+                    / (dx*dx+dy*dy);
+                // Place the logger along the pipe, away from the building markers at either end.
+                t = Math.Clamp(t, .15, .85);
+                var point = new PointLatLng(pipe.From.Latitude+t*dy,
+                    pipe.From.Longitude+t*(pipe.To.Longitude-pipe.From.Longitude));
+                double distance = Math.Pow((point.Lng-desired.Lng)*scale,2)+Math.Pow(point.Lat-desired.Lat,2);
+                return (Point:point, Distance:distance);
+            }).OrderBy(p => p.Distance).First();
+            return nearest.Point;
+        }
+
+        public GMapOverlay CreateOverlay(string id)
+        {
+            var overlay = new GMapOverlay(id);
+            foreach (var pipe in Connections)
+                overlay.Routes.Add(new GMapRoute(new List<PointLatLng> { pipe.From.Position, pipe.To.Position }, pipe.Id)
+                    { Stroke = new Pen(Color.FromArgb(37,99,180),1.5f), IsHitTestVisible = true });
+            return overlay;
+        }
+
+        public void StyleOverlay(GMapOverlay overlay, bool visible, int? flaggedBuilding, int? selectedBuilding = null)
+        {
+            foreach (var route in overlay.Routes)
+            {
+                var pipe = Connections.First(p => p.Id == route.Name);
+                bool flagged = pipe.Touches(flaggedBuilding);
+                route.Stroke.Dispose();
+                route.Stroke = new Pen(flagged ? Color.Firebrick : Color.FromArgb(37,99,180),
+                    flagged || pipe.Touches(selectedBuilding) ? 3f : 1.5f);
+                route.IsVisible = visible;
+            }
+        }
 
         // Breadth-first search verifies which building nodes can be reached through the graph.
         public HashSet<int> ReachableFrom(int buildingNumber)

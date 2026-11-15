@@ -50,7 +50,11 @@ namespace WaterNetworkMonitoring.Data
             ConfigureReadingTime(meters);
             meters.HasIndex(m => m.MapNumber).IsUnique();
             meters.Property(m => m.Reading).HasMaxLength(8).IsFixedLength().IsUnicode(false).IsRequired();
-            meters.HasData(ZapadWaterMeterSeed.GetReadings());
+            var seedMeters = ZapadWaterMeterSeed.GetReadings();
+            foreach (var meter in seedMeters) meter.LoggerId = ZapadFourLoggerSeed.LoggerForMeter(meter.Id);
+            meters.HasData(seedMeters);
+            meters.HasOne(m => m.Logger).WithMany(l => l.WaterMeters).HasForeignKey(m => m.LoggerId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             var loggers = modelBuilder.Entity<PressureLogger>();
             loggers.ToTable("Loggers", table =>
