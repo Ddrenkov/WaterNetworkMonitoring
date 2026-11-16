@@ -1,7 +1,6 @@
-using GMap.NET;
+﻿using GMap.NET;
 using GMap.NET.WindowsForms;
 using WaterNetworkMonitoring.Models;
-using WaterNetworkMonitoring.Data;
 using WaterNetworkMonitoring.Services;
 
 namespace WaterNetworkMonitoring
@@ -18,7 +17,7 @@ namespace WaterNetworkMonitoring
         private LoggerMapPin(PressureLogger logger, BuildingPipeGraph? pipeline) : base(new PointLatLng(logger.Latitude,logger.Longitude))
         {
             this.pipeline = pipeline;
-            LoggerId=logger.Id; label=$"{LabelFor(logger.Id)} · {logger.Id}";
+            LoggerId=logger.Id; label=LabelFor(logger.Id) == logger.Id.ToString() ? logger.Id.ToString() : $"{LabelFor(logger.Id)} · {logger.Id}";
             color=ColorFor(logger.Id); defaultName=logger.Name;
             Size=new Size(96,24);
             bool left=logger.Id is 200001 or 200004, above=logger.Id is 200001 or 200003;
@@ -33,25 +32,37 @@ namespace WaterNetworkMonitoring
             200001 => Color.FromArgb(30,115,74),
             200002 => Color.FromArgb(107,65,170),
             200003 => Color.FromArgb(37,99,180),
-            _ => Color.FromArgb(190,106,25)
+            200004 => Color.FromArgb(190,106,25),
+            _ => new[] { Color.SeaGreen, Color.SteelBlue, Color.DarkViolet, Color.DarkOrange }[(int)((uint)id % 4)]
         };
 
-        public static GMapOverlay CreateOverlay(BuildingPipeGraph? pipeline = null)
-        {
-            var overlay=new GMapOverlay("zapad-loggers");
-            foreach(var logger in ZapadFourLoggerSeed.GetLoggers()) overlay.Markers.Add(new LoggerMapPin(logger,pipeline));
-            return overlay;
-        }
+        public static GMapOverlay CreateOverlay() => new GMapOverlay("zapad-loggers");
 
-        public static void UpdateReadings(GMapOverlay? overlay, DashboardData? data, DateTimeOffset? through = null, int? flaggedLoggerId = null)
+        public static void UpdateReadings(GMapOverlay? overlay, DashboardData? data,
+            DateTimeOffset? through = null, int? flaggedLoggerId = null, BuildingPipeGraph? pipeline = null)
         {
             if (overlay == null) return;
-            foreach (var pin in overlay.Markers.OfType<LoggerMapPin>())
+            var loggers = data?.Loggers.Where(l => double.IsFinite(l.Latitude) && double.IsFinite(l.Longitude) &&
+                l.Latitude != 0 && l.Longitude != 0 && Math.Abs(l.Latitude) <= 90 && Math.Abs(l.Longitude) <= 180)
+                .ToList() ?? new List<PressureLogger>();
+            foreach (var pin in overlay.Markers.OfType<LoggerMapPin>().Where(p => !loggers.Any(l => l.Id == p.LoggerId)).ToList())
             {
-                pin.suspectedLeak=pin.LoggerId==flaggedLoggerId;
-                pin.SetReading(data?.Loggers.FirstOrDefault(l => l.Id == pin.LoggerId),
-                    data?.LoggerReadings.Where(r => r.LoggerId == pin.LoggerId && (!through.HasValue || r.TakenAt <= through.Value))
-                        .OrderByDescending(r => r.TakenAt).FirstOrDefault());
+                overlay.Markers.Remove(pin);
+                pin.Dispose();
+            }
+            foreach (var logger in loggers)
+            {
+                var pin = overlay.Markers.OfType<LoggerMapPin>().FirstOrDefault(p => p.LoggerId == logger.Id);
+                if (pin == null)
+                {
+                    pin = new LoggerMapPin(logger, pipeline);
+                    overlay.Markers.Add(pin);
+                }
+                var assigned = data!.Meters.Where(m => m.LoggerId == logger.Id).ToList();
+                pin.suspectedLeak = logger.Id == flaggedLoggerId;
+                pin.SetReading(logger, data.LoggerReadings.Where(r => r.LoggerId == logger.Id &&
+                    (!through.HasValue || r.TakenAt <= through.Value)).OrderByDescending(r => r.TakenAt).FirstOrDefault(),
+                    assigned.Count == 1 ? assigned[0].MapNumber : null);
             }
         }
 
@@ -62,12 +73,12 @@ namespace WaterNetworkMonitoring
                 pin.ToolTipMode = pin == selected ? MarkerTooltipMode.Always : MarkerTooltipMode.OnMouseOver;
         }
 
-        private void SetReading(PressureLogger? logger, LoggerReading? reading)
+        private void SetReading(PressureLogger? logger, LoggerReading? reading, int? servedBuilding = null)
         {
             if (logger != null && logger.Latitude != 0 && logger.Longitude != 0)
             {
                 var desired = new PointLatLng(logger.Latitude,logger.Longitude);
-                Position = pipeline?.PositionOnPipe(desired,LoggerId) ?? desired;
+                Position = pipeline?.PositionOnPipe(desired,servedBuilding) ?? desired;
             }
             ToolTipText = $"{logger?.Name ?? defaultName} ({LoggerId})\n" + (reading == null
                 ? "No reading available"

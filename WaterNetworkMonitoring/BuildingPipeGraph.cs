@@ -1,4 +1,4 @@
-using NetTopologySuite.Geometries;
+﻿using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Prepared;
 using NetTopologySuite.IO;
 using GMap.NET;
@@ -92,10 +92,10 @@ namespace WaterNetworkMonitoring
 
         public IReadOnlyList<Connection> ConnectionsAt(int buildingNumber) => neighbours[buildingNumber];
 
-        public PointLatLng PositionOnPipe(PointLatLng desired, int loggerId)
+        public PointLatLng PositionOnPipe(PointLatLng desired, int? servedBuilding = null)
         {
-            var candidates = loggerId == 200002
-                ? Connections.Where(p => p.From.OsmId == 992665907 || p.To.OsmId == 992665907).ToList()
+            var candidates = servedBuilding.HasValue
+                ? Connections.Where(p => p.Touches(servedBuilding)).ToList()
                 : Connections.ToList();
             if (candidates.Count == 0) return desired;
             double scale = Math.Cos(desired.Lat * Math.PI / 180);

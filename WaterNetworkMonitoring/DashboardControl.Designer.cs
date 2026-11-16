@@ -1,4 +1,4 @@
-namespace WaterNetworkMonitoring
+﻿namespace WaterNetworkMonitoring
 {
     partial class DashboardControl
     {
@@ -51,17 +51,17 @@ namespace WaterNetworkMonitoring
             leakPanel = new Panel();
             leakContent = new TableLayoutPanel();
             leakTextPanel = new TableLayoutPanel();
-            leakHeading = new Label();
             leakStatus = new Label();
             leakDetails = new Label();
-            leakLoggers = new Label();
             leakLocation = new Label();
             lossPanel = new TableLayoutPanel();
             leakRate = new Label();
             leakRateCaption = new Label();
+            comparisonHeader = new TableLayoutPanel();
+            comparisonTitle = new Label();
+            comparisonSelector = new ComboBox();
             graphGrid = new TableLayoutPanel();
             flowChart = new DashboardChart();
-            pressureChart = new DashboardChart();
             lossChart = new DashboardChart();
             statusLabel = new Label();
             SuspendLayout();
@@ -78,20 +78,22 @@ namespace WaterNetworkMonitoring
 
             page.Name = "page";
             page.Location = new Point(24, 24);
-            page.Size = new Size(1120, 1078);
+            page.Size = new Size(1120, 760);
             page.ColumnCount = 1;
             page.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            page.RowCount = 5;
+            page.RowCount = 6;
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
-            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 360));
-            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 128));
-            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 210));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 340));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 90));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 230));
             page.Controls.Add(headerPanel, 0, 0);
             page.Controls.Add(statusLabel, 0, 1);
             page.Controls.Add(mapPanel, 0, 2);
             page.Controls.Add(leakPanel, 0, 3);
-            page.Controls.Add(graphGrid, 0, 4);
+            page.Controls.Add(comparisonHeader, 0, 4);
+            page.Controls.Add(graphGrid, 0, 5);
 
             headerPanel.Name = "headerPanel";
             headerPanel.Dock = DockStyle.Fill;
@@ -174,6 +176,7 @@ namespace WaterNetworkMonitoring
             mapFooter.Controls.Add(mapHint, 0, 0);
             mapFooter.Controls.Add(attributionLabel, 1, 0);
             mapHint.Name = "mapHint";
+            mapHint.AutoEllipsis = true;
             mapHint.Text = "Zapad buildings";
             mapHint.Dock = DockStyle.Fill;
             mapHint.Font = new Font("Segoe UI", 9F);
@@ -220,22 +223,13 @@ namespace WaterNetworkMonitoring
             leakTextPanel.Margin = Padding.Empty;
             leakTextPanel.ColumnCount = 1;
             leakTextPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            leakTextPanel.RowCount = 5;
-            leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 16));
-            leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 18));
-            leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 18));
-            leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
+            leakTextPanel.RowCount = 3;
+            leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));
+            leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));
             leakTextPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            leakTextPanel.Controls.Add(leakHeading, 0, 0);
-            leakTextPanel.Controls.Add(leakStatus, 0, 1);
-            leakTextPanel.Controls.Add(leakDetails, 0, 2);
-            leakTextPanel.Controls.Add(leakLoggers, 0, 3);
-            leakTextPanel.Controls.Add(leakLocation, 0, 4);
-            leakHeading.Name = "leakHeading";
-            leakHeading.Text = "Latest leak";
-            leakHeading.Dock = DockStyle.Fill;
-            leakHeading.ForeColor = Color.FromArgb(99, 110, 122);
-            leakHeading.Margin = Padding.Empty;
+            leakTextPanel.Controls.Add(leakStatus, 0, 0);
+            leakTextPanel.Controls.Add(leakDetails, 0, 1);
+            leakTextPanel.Controls.Add(leakLocation, 0, 2);
             leakStatus.Name = "leakStatus";
             leakStatus.Text = "Waiting for readings";
             leakStatus.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
@@ -247,11 +241,6 @@ namespace WaterNetworkMonitoring
             leakDetails.Font = new Font("Segoe UI", 8F);
             leakDetails.ForeColor = Color.FromArgb(85, 95, 108);
             leakDetails.Margin = Padding.Empty;
-            leakLoggers.Name = "leakLoggers";
-            leakLoggers.Dock = DockStyle.Fill;
-            leakLoggers.Font = new Font("Segoe UI", 8F);
-            leakLoggers.ForeColor = Color.FromArgb(85, 95, 108);
-            leakLoggers.Margin = Padding.Empty;
             leakLocation.Name = "leakLocation";
             leakLocation.Dock = DockStyle.Fill;
             leakLocation.Font = new Font("Segoe UI", 8F);
@@ -273,38 +262,52 @@ namespace WaterNetworkMonitoring
             leakRate.TextAlign = ContentAlignment.BottomRight;
             leakRate.Margin = Padding.Empty;
             leakRateCaption.Name = "leakRateCaption";
-            leakRateCaption.Text = "Estimated loss";
+            leakRateCaption.Text = "Difference";
             leakRateCaption.Dock = DockStyle.Fill;
             leakRateCaption.Font = new Font("Segoe UI", 8F);
             leakRateCaption.ForeColor = Color.FromArgb(99, 110, 122);
             leakRateCaption.TextAlign = ContentAlignment.TopRight;
             leakRateCaption.Margin = Padding.Empty;
 
+            comparisonHeader.Name = "comparisonHeader";
+            comparisonHeader.Dock = DockStyle.Fill;
+            comparisonHeader.Margin = new Padding(4, 0, 4, 0);
+            comparisonHeader.ColumnCount = 2;
+            comparisonHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 72));
+            comparisonHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            comparisonHeader.RowCount = 1;
+            comparisonHeader.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            comparisonHeader.Controls.Add(comparisonTitle, 0, 0);
+            comparisonHeader.Controls.Add(comparisonSelector, 1, 0);
+            comparisonTitle.Name = "comparisonTitle";
+            comparisonTitle.Text = "Area";
+            comparisonTitle.Dock = DockStyle.Fill;
+            comparisonTitle.TextAlign = ContentAlignment.MiddleLeft;
+            comparisonTitle.Margin = Padding.Empty;
+            comparisonSelector.Name = "comparisonSelector";
+            comparisonSelector.DropDownStyle = ComboBoxStyle.DropDownList;
+            comparisonSelector.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            comparisonSelector.Margin = new Padding(0, 0, 0, 4);
+            comparisonSelector.Enabled = false;
+            comparisonSelector.SelectedIndexChanged += comparisonSelector_SelectedIndexChanged;
+
             graphGrid.Name = "graphGrid";
             graphGrid.Dock = DockStyle.Fill;
             graphGrid.Margin = Padding.Empty;
-            graphGrid.ColumnCount = 3;
+            graphGrid.ColumnCount = 2;
             graphGrid.RowCount = 1;
-            graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+            graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             graphGrid.Controls.Add(flowChart, 0, 0);
-            graphGrid.Controls.Add(pressureChart, 1, 0);
-            graphGrid.Controls.Add(lossChart, 2, 0);
+            graphGrid.Controls.Add(lossChart, 1, 0);
             flowChart.Name = "flowChart";
             flowChart.Dock = DockStyle.Fill;
-            flowChart.Heading = "Daily flow";
-            flowChart.Unit = "m³/h";
+            flowChart.Heading = "Supply vs meter use";
+            flowChart.Unit = "m³ / interval";
             flowChart.Margin = new Padding(0, 0, 6, 0);
-            pressureChart.Name = "pressureChart";
-            pressureChart.Dock = DockStyle.Fill;
-            pressureChart.Heading = "Daily pressure";
-            pressureChart.Unit = "bar";
-            pressureChart.StartAtZero = false;
-            pressureChart.Margin = new Padding(3, 0, 3, 0);
             lossChart.Name = "lossChart";
             lossChart.Dock = DockStyle.Fill;
-            lossChart.Heading = "Skaptopara difference";
+            lossChart.Heading = "Difference";
             lossChart.Unit = "L/h";
             lossChart.Margin = new Padding(6, 0, 0, 0);
 
@@ -360,17 +363,17 @@ namespace WaterNetworkMonitoring
         private Panel leakPanel;
         private TableLayoutPanel leakContent;
         private TableLayoutPanel leakTextPanel;
-        private Label leakHeading;
         private Label leakStatus;
         private Label leakDetails;
-        private Label leakLoggers;
         private Label leakLocation;
         private TableLayoutPanel lossPanel;
         private Label leakRate;
         private Label leakRateCaption;
+        private TableLayoutPanel comparisonHeader;
+        private Label comparisonTitle;
+        private ComboBox comparisonSelector;
         private TableLayoutPanel graphGrid;
         private DashboardChart flowChart;
-        private DashboardChart pressureChart;
         private DashboardChart lossChart;
         private Label statusLabel;
     }

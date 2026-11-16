@@ -1,4 +1,4 @@
-using GMap.NET;
+﻿using GMap.NET;
 using GMap.NET.WindowsForms;
 using System.ComponentModel;
 using WaterNetworkMonitoring.Services;
@@ -51,7 +51,7 @@ namespace WaterNetworkMonitoring
                 map.RoutesEnabled = true;
             }
             catch (InvalidOperationException ex) { System.Diagnostics.Trace.TraceWarning(ex.Message); }
-            loggerPins = LoggerMapPin.CreateOverlay(pipeGraph);
+            loggerPins = LoggerMapPin.CreateOverlay();
             map.Overlays.Add(loggerPins);
             foreach (var polygon in neighbourhoods.Polygons) map.UpdatePolygonLocalPosition(polygon);
             foreach (var marker in neighbourhoods.Markers) map.UpdateMarkerLocalPosition(marker);
@@ -130,7 +130,7 @@ namespace WaterNetworkMonitoring
             pressureChart.SetSeries(report?.PressureSeries ?? Array.Empty<ChartSeries>());
             chartsShown=report?.FlowSeries.Length>0;
             chartsPanel.Visible=chartsShown;
-            LoggerMapPin.UpdateReadings(loggerPins,data,report?.LastReading,report?.FlaggedLoggerId);
+            LoggerMapPin.UpdateReadings(loggerPins,data,report?.LastReading,report?.FlaggedLoggerId,pipeGraph);
             if (pipes != null && pipeGraph != null)
                 pipeGraph.StyleOverlay(pipes,selectedZoneName is null or "Zapad",
                     report?.LatestLeak == null ? null : report.BuildingNumber);

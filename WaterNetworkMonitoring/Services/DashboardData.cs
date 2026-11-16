@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using WaterNetworkMonitoring.Data;
 using WaterNetworkMonitoring.Models;
@@ -16,7 +16,63 @@ namespace WaterNetworkMonitoring.Services
         public List<LoggerReading> LoggerReadings { get; init; } = new();
         public List<WaterMeterReading> MeterReadings { get; init; } = new();
         public List<WaterMeter> Meters { get; init; } = new();
-        public List<Month> Months => LoggerReadings.GroupBy(r => new { r.TakenAt.Year, r.TakenAt.Month })
+        internal sealed record MeterScope(int LoggerId, string Name, int MeterCount)
+        {
+            public override string ToString() => $"{Name} · {MeterCount} {(MeterCount == 1 ? "meter" : "meters")}";
+        }
+        internal sealed record MeterComparison(MeterScope Scope, IReadOnlyList<BranchBalance> Balances, bool Estimated, string? Note);
+
+        private List<WaterMeter> SuppliedMeters(PressureLogger logger)
+        {
+            var loggerIds = new HashSet<int> { logger.Id };
+            var pending = new Queue<int>();
+            pending.Enqueue(logger.Id);
+            while (pending.TryDequeue(out int id))
+                foreach (var child in Loggers.Where(l => l.ParentLoggerId == id))
+                    if (loggerIds.Add(child.Id)) pending.Enqueue(child.Id);
+            return Meters.Where(m => m.LoggerId.HasValue && loggerIds.Contains(m.LoggerId.Value)).ToList();
+        }
+
+        public List<MeterScope> MeterScopes => Loggers.OrderBy(l => l.Id)
+            .Select(l => new MeterScope(l.Id, l.Name, SuppliedMeters(l).Count)).ToList();
+
+        public MeterComparison CompareMeters(int loggerId, Month month)
+        {
+            var logger = Loggers.Single(l => l.Id == loggerId);
+            var scope = MeterScopes.Single(s => s.LoggerId == loggerId);
+            var meters = SuppliedMeters(logger);
+            var start = Local(new DateTime(month.Year,month.Number,1));
+            var end = Local(new DateTime(month.Year,month.Number,1).AddMonths(1));
+            try
+            {
+                var comparisonReadings = LoggerReadings;
+                if (logger.ParentLoggerId == null)
+                {
+                    // The whole-zone comparison starts when every configured branch is monitored.
+                    // Do not compare periods before the configured branches have readings.
+                    var ids = Loggers.Where(l => l.Id == logger.Id || l.ParentLoggerId == logger.Id).Select(l => l.Id).ToArray();
+                    var coverage = ids.Select(id => LoggerReadings.Where(r => r.LoggerId == id).ToList()).ToArray();
+                    if (coverage.Any(rows => rows.Count == 0))
+                        throw new ArgumentException("A branch has no observations.");
+                    var from = coverage.Max(rows => rows.Min(r => r.TakenAt));
+                    var to = coverage.Min(rows => rows.Max(r => r.TakenAt));
+                    comparisonReadings = LoggerReadings.Where(r => r.TakenAt >= from && r.TakenAt <= to).ToList();
+                }
+                var baselineEnd = comparisonReadings.Count == 0 ? start : comparisonReadings.Where(r => r.LoggerId == logger.Id).Select(r => r.TakenAt).DefaultIfEmpty(start).Min().AddDays(7);
+                var balances = LeakDetectionService.AnalyzeMeterBalance(logger,comparisonReadings,meters,MeterReadings,baselineEnd, requireBaseline: false)
+                    .Where(b => b.To > start && b.To <= end).ToList();
+                var recorded = MeterReadings.GroupBy(r => r.WaterMeterId)
+                    .ToDictionary(g => g.Key,g => g.Select(r => r.TakenAt).ToHashSet());
+                bool estimated = balances.Any(b => meters.Any(m => !recorded.TryGetValue(m.Id,out var times)
+                    || !times.Contains(b.From) || !times.Contains(b.To)));
+                return new MeterComparison(scope,balances,estimated,balances.Count == 0 ? "No complete matching logger and meter intervals." : null);
+            }
+            catch (ArgumentException)
+            {
+                return new MeterComparison(scope,Array.Empty<BranchBalance>(),false,"Matching logger and meter readings are needed.");
+            }
+        }
+        public List<Month> Months => LoggerReadings.GroupBy(r => new { SofiaDate(r.TakenAt.AddTicks(-1)).Year, Month = SofiaDate(r.TakenAt.AddTicks(-1)).Month })
             .Select(g => new Month(g.Key.Year, g.Key.Month, g.Count()))
             .OrderByDescending(m => m.Year).ThenByDescending(m => m.Number).ToList();
 
@@ -62,7 +118,7 @@ namespace WaterNetworkMonitoring.Services
             {
                 try
                 {
-                    var balances = logger.ParentLoggerId == null
+                    var balances = Loggers.Any(l => l.ParentLoggerId == logger.Id)
                         ? LeakDetectionService.AnalyzeInlet(logger, Loggers, LoggerReadings, baselineEnd)
                         : LeakDetectionService.AnalyzeSubzone(logger, LoggerReadings, Meters, MeterReadings, baselineEnd);
                     analyses.Add((logger, balances.ToList()));
@@ -86,7 +142,7 @@ namespace WaterNetworkMonitoring.Services
             string location = "";
             if (latestLeak != null && selected != null)
                 location = selected.ParentLoggerId == null
-                    ? $"Suspected leak: between logger {selected.Id} and its three downstream loggers. Exact point unknown."
+                    ? $"Suspected leak: between logger {selected.Id} and its {Loggers.Count(l => l.ParentLoggerId == selected.Id)} downstream loggers. Exact point unknown."
                     : singleMeter != null
                         ? $"Suspected leak: between logger {selected.Id} and meter {singleMeter.Id}. Exact point unknown."
                         : $"Suspected leak: downstream of logger {selected.Id}, serving {assigned.Count} buildings. Exact point unknown.";

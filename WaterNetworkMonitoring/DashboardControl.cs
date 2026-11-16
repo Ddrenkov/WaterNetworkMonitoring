@@ -1,4 +1,4 @@
-using GMap.NET;
+﻿using GMap.NET;
 using GMap.NET.WindowsForms;
 using System.ComponentModel;
 using WaterNetworkMonitoring.Services;
@@ -18,6 +18,7 @@ namespace WaterNetworkMonitoring
         private List<BuildingMapData.Building> buildings = new();
         private bool initialized;
         private bool layingOut;
+        private bool updatingComparison;
 
         public DashboardControl()
         {
@@ -25,6 +26,11 @@ namespace WaterNetworkMonitoring
             InitializeComponent();
             Load += DashboardControl_Load;
             Resize += (_, _) => LayoutDashboard();
+            map.SizeChanged += (_, _) =>
+            {
+                if (initialized && IsHandleCreated)
+                    BeginInvoke(new Action(() => { if (!IsDisposed) ResetMap(); }));
+            };
             map.Load += (_, _) =>
             {
                 if (IsDesigner()) return;
@@ -39,6 +45,10 @@ namespace WaterNetworkMonitoring
         private bool IsDesigner() => DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 
         private void periodSelector_SelectedIndexChanged(object? sender, EventArgs e) => ShowSelectedPeriod();
+        private void comparisonSelector_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (!updatingComparison) UpdateComparison();
+        }
         private async void refreshButton_Click(object? sender, EventArgs e) => await LoadReadingsAsync();
         private void resetMapButton_Click(object? sender, EventArgs e) => ResetMap();
         private void numbersCheckBox_CheckedChanged(object? sender, EventArgs e) => UpdatePins(null);
@@ -79,7 +89,7 @@ namespace WaterNetworkMonitoring
             buildingPins = new GMapOverlay("dashboard-buildings");
             map.Overlays.Add(buildingPins);
             UpdatePins(null);
-            loggerPins = LoggerMapPin.CreateOverlay(pipeGraph);
+            loggerPins = LoggerMapPin.CreateOverlay();
             map.Overlays.Add(loggerPins);
             map.OnMarkerClick += (marker, args) =>
             {
@@ -92,6 +102,19 @@ namespace WaterNetworkMonitoring
                 if (args.Button != MouseButtons.Left || marker.Tag is not BuildingMapData.Building building) return;
                 LoggerMapPin.Select(loggerPins, null);
                 mapHint.Text = $"Building {building.Number}";
+                if (data?.Meters.FirstOrDefault(m => m.MapNumber == building.Number) is { } meter)
+                {
+                    if (meter.LoggerId.HasValue)
+                        comparisonSelector.SelectedItem = comparisonSelector.Items.Cast<DashboardData.MeterScope>()
+                            .FirstOrDefault(s => s.LoggerId == meter.LoggerId);
+                    if (periodSelector.SelectedItem is DashboardData.Month month)
+                    {
+                        var reading = data.MeterReadings.Where(r => r.WaterMeterId == meter.Id &&
+                            r.TakenAt.Year == month.Year && r.TakenAt.Month == month.Number).OrderByDescending(r => r.TakenAt).FirstOrDefault();
+                        mapHint.Text = reading == null ? $"Building {building.Number} · meter {meter.Id} · no reading this month"
+                            : $"Building {building.Number} · meter {meter.Id} · {reading.Reading} L · {reading.TakenAt:dd MMM HH:mm}";
+                    }
+                }
                 UpdatePins(building.Number);
             };
             map.OnMarkerEnter += _ => map.Cursor = Cursors.Hand;
@@ -184,39 +207,62 @@ namespace WaterNetworkMonitoring
         {
             if (data == null || periodSelector.SelectedItem is not DashboardData.Month month) return;
             var report = data.Report(month);
-            LoggerMapPin.UpdateReadings(loggerPins, data, report.LastReading, report.FlaggedLoggerId);
-            LoggerMapPin.Select(loggerPins, null);
-            flowChart.SetSeries(report.FlowSeries);
-            pressureChart.SetSeries(report.PressureSeries);
-            lossChart.Heading = "Water difference";
-            lossChart.SetSeries(new ChartSeries("Difference", Color.Firebrick,
-                report.Balances.Select(b => new ChartPoint(b.To, (double)b.ExcessM3PerHour * 1000)).ToList(), TimeSpan.FromHours(14)));
+            mapHint.Text = $"{buildings.Count} buildings · click a building for its meter reading";
             statusLabel.Text = report.CompleteMonth ? "" : "Partial period";
-            leakLoggers.Text = report.LoggerSummary;
-            leakLocation.Text = report.LeakLocation;
-            flaggedBuilding = report.LatestLeak == null ? null : report.BuildingNumber;
-            if (report.LatestLeak is { } leak)
+            var selectedId = (comparisonSelector.SelectedItem as DashboardData.MeterScope)?.LoggerId ?? report.FlaggedLoggerId;
+            updatingComparison = true;
+            comparisonSelector.Items.Clear();
+            foreach (var scope in data.MeterScopes) comparisonSelector.Items.Add(scope);
+            comparisonSelector.Enabled = comparisonSelector.Items.Count > 0;
+            comparisonSelector.SelectedItem = comparisonSelector.Items.Cast<DashboardData.MeterScope>()
+                .FirstOrDefault(s => s.LoggerId == selectedId) ?? comparisonSelector.Items.Cast<DashboardData.MeterScope>().FirstOrDefault();
+            updatingComparison = false;
+            UpdateComparison();
+        }
+
+        private void UpdateComparison()
+        {
+            flowChart.SetSeries(); lossChart.SetSeries();
+            mapHint.Text = $"{buildings.Count} buildings · click a building for its meter reading";
+            flaggedBuilding = null;
+            if (data == null || periodSelector.SelectedItem is not DashboardData.Month month ||
+                comparisonSelector.SelectedItem is not DashboardData.MeterScope scope) return;
+            var comparison = data.CompareMeters(scope.LoggerId, month);
+            var balances = comparison.Balances;
+            var last = balances.LastOrDefault();
+            var monthEnd = data.LoggerReadings.Where(r => r.TakenAt.Year == month.Year && r.TakenAt.Month == month.Number)
+                .Select(r => (DateTimeOffset?)r.TakenAt).Max();
+            LoggerMapPin.UpdateReadings(loggerPins, data, last?.To ?? monthEnd,
+                last?.LeakSuspected == true ? scope.LoggerId : null, pipeGraph);
+            LoggerMapPin.Select(loggerPins, null);
+            leakRateCaption.Text = "Difference";
+            leakStatus.ForeColor = ForeColor;
+            if (last == null)
             {
-                leakPanel.BackColor = SystemColors.Control;
-                leakStatus.Text = "Possible leak · " + report.BranchName;
-                leakStatus.ForeColor = Color.FromArgb(149, 72, 24);
-                leakDetails.Text = report.MeterId.HasValue
-                    ? $"Building {report.BuildingNumber} · meter {report.MeterId} · flagged {report.FirstLeak!.To:dd MMM HH:mm}"
-                    : $"{report.BranchName} · flagged {report.FirstLeak!.To:dd MMM HH:mm}";
-                leakRate.Text = $"{Math.Max(0, leak.ExcessM3PerHour) * 1000:N0} L/h";
-                leakRateCaption.Text = "Estimated loss";
-                UpdatePins(report.BuildingNumber);
-            }
-            else
-            {
-                leakPanel.BackColor = SystemColors.Control;
-                leakStatus.Text = report.AnalysisNote == null ? "No leak detected" : "Not enough data";
-                leakStatus.ForeColor = ForeColor;
-                leakDetails.Text = report.AnalysisNote == null ? "Readings are balanced." : "Matching meter readings are needed.";
+                leakStatus.Text = "No matching readings";
+                leakDetails.Text = "Matching logger and meter readings are needed.";
+                leakLocation.Text = scope.Name;
                 leakRate.Text = "—";
-                leakRateCaption.Text = "Estimated loss";
                 UpdatePins(null);
+                return;
             }
+            // Match supply and meter use over the same recorded interval.
+            var gap = TimeSpan.FromTicks(balances.Max(b => (b.To - b.From).Ticks) * 3 / 2);
+            flowChart.SetSeries(
+                new ChartSeries("Supply", Color.FromArgb(30,115,74), balances.Select(b => new ChartPoint(b.To,(double)b.SuppliedM3)).ToList(), gap),
+                new ChartSeries("Meters", Color.FromArgb(37,99,180), balances.Select(b => new ChartPoint(b.To,(double)b.ConsumedM3)).ToList(), gap));
+            lossChart.SetSeries(new ChartSeries("Difference", Color.Firebrick,
+                balances.Select(b => new ChartPoint(b.To,(double)b.ExcessM3PerHour*1000)).ToList(), gap));
+            leakStatus.Text = last.DetectionThreshold == 0 ? "Collecting history"
+                : last.LeakSuspected ? "Possible leak" : "No unusual difference";
+            if (last.LeakSuspected) leakStatus.ForeColor = Color.FromArgb(149,72,24);
+            leakDetails.Text = $"{last.SuppliedM3:0.##} m³ supplied · {last.ConsumedM3:0.##} m³ used · {(last.To-last.From).TotalHours:0.#} h";
+            leakLocation.Text = $"{scope.Name} · {last.From:dd MMM HH:mm}–{last.To:dd MMM HH:mm}" +
+                (comparison.Estimated ? " · estimated meter use" : "");
+            leakRate.Text = $"{last.ExcessM3PerHour*1000:N0} L/h";
+            if (last.LeakSuspected && scope.MeterCount == 1)
+                flaggedBuilding = data.Meters.FirstOrDefault(m => m.LoggerId == scope.LoggerId)?.MapNumber;
+            UpdatePins(null);
         }
 
         private void ClearReadings(string title, string detail)
@@ -225,13 +271,15 @@ namespace WaterNetworkMonitoring
             leakStatus.Text = title;
             leakStatus.ForeColor = ForeColor;
             leakDetails.Text = detail;
-            leakLoggers.Text = "";
             leakLocation.Text = "";
             LoggerMapPin.UpdateReadings(loggerPins, null);
             LoggerMapPin.Select(loggerPins, null);
             leakRate.Text = "—";
-            leakRateCaption.Text = "Estimated loss";
-            flowChart.SetSeries(); pressureChart.SetSeries(); lossChart.SetSeries();
+            leakRateCaption.Text = "Difference";
+            flowChart.SetSeries(); lossChart.SetSeries();
+            comparisonSelector.Items.Clear();
+            comparisonSelector.Enabled = false;
+            mapHint.Text = $"{buildings.Count} buildings · proposed connections";
             flaggedBuilding = null;
             UpdatePins(null);
         }
@@ -250,12 +298,11 @@ namespace WaterNetworkMonitoring
                 bool narrow = width < 850 * s;
                 page.SuspendLayout();
                 graphGrid.SuspendLayout();
-                graphGrid.ColumnCount = 3;
-                graphGrid.RowCount = 3;
-                graphGrid.SetCellPosition(pressureChart, narrow ? new TableLayoutPanelCellPosition(0, 1) : new TableLayoutPanelCellPosition(1, 0));
-                graphGrid.SetCellPosition(lossChart, narrow ? new TableLayoutPanelCellPosition(0, 2) : new TableLayoutPanelCellPosition(2, 0));
-                graphGrid.ColumnCount = narrow ? 1 : 3;
-                graphGrid.RowCount = narrow ? 3 : 1;
+                graphGrid.ColumnCount = 2;
+                graphGrid.RowCount = 2;
+                graphGrid.SetCellPosition(lossChart, narrow ? new TableLayoutPanelCellPosition(0, 1) : new TableLayoutPanelCellPosition(1, 0));
+                graphGrid.ColumnCount = narrow ? 1 : 2;
+                graphGrid.RowCount = narrow ? 2 : 1;
                 graphGrid.ColumnStyles.Clear();
                 for (int i = 0; i < graphGrid.ColumnCount; i++)
                     graphGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / graphGrid.ColumnCount));
@@ -263,13 +310,14 @@ namespace WaterNetworkMonitoring
                 for (int i = 0; i < graphGrid.RowCount; i++)
                     graphGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / graphGrid.RowCount));
                 foreach (Control chart in graphGrid.Controls) chart.Margin = narrow ? new Padding(0, 0, 0, 10) : new Padding(4, 0, 4, 0);
-                int mapHeight = (int)Math.Clamp(width * .32, 280 * s, 360 * s);
-                int graphHeight = (int)((narrow ? 630 : 210) * s);
+                int mapHeight = (int)Math.Clamp(width * .32, 280 * s, 340 * s);
+                int graphHeight = (int)((narrow ? 460 : 230) * s);
                 page.RowStyles[0].Height = 40 * s;
                 page.RowStyles[1].Height = 22 * s;
                 page.RowStyles[2].Height = mapHeight;
-                page.RowStyles[3].Height = (narrow ? 150 : 128) * s;
-                page.RowStyles[4].Height = graphHeight;
+                page.RowStyles[3].Height = (narrow ? 120 : 90) * s;
+                page.RowStyles[4].Height = 32 * s;
+                page.RowStyles[5].Height = graphHeight;
                 int height = page.RowStyles.Cast<RowStyle>().Sum(r => (int)r.Height);
                 page.Size = new Size(width, height);
                 // AutoScroll uses logical coordinates; retain the current vertical scroll position.
