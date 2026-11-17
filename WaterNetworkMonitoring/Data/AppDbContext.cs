@@ -12,6 +12,7 @@ namespace WaterNetworkMonitoring.Data
         public DbSet<PressureLogger> Loggers { get; set; }
         public DbSet<LoggerReading> LoggerReadings { get; set; }
         public DbSet<WaterMeterReading> WaterMeterReadings { get; set; }
+        public DbSet<Repair> Repairs { get; set; }
 
         public AppDbContext() { }
 
@@ -37,6 +38,15 @@ namespace WaterNetworkMonitoring.Data
             modelBuilder.Entity<Account>()
                 .HasIndex(a => a.Email)
                 .IsUnique();
+
+            var repairs = modelBuilder.Entity<Repair>();
+            repairs.ToTable("Repairs", table => table.HasCheckConstraint("CK_Repairs_WaterSystem",
+                "[WaterSystem] IN ('CleanWater', 'Wastewater')"));
+            repairs.Property(r => r.Date).HasColumnType("datetime2(2)");
+            repairs.Property(r => r.Place).HasMaxLength(200).IsRequired();
+            repairs.Property(r => r.WaterSystem).HasConversion<string>().HasMaxLength(20).IsRequired();
+            repairs.HasIndex(r => new { r.WaterSystem, r.Date });
+            repairs.HasData(SepNovSeed.GetRepairs());
 
             var meters = modelBuilder.Entity<WaterMeter>();
             meters.ToTable("WaterMeters", table =>

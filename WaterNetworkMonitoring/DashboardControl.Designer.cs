@@ -57,6 +57,7 @@
             lossPanel = new TableLayoutPanel();
             leakRate = new Label();
             leakRateCaption = new Label();
+            repairLabel = new Label();
             comparisonHeader = new TableLayoutPanel();
             comparisonTitle = new Label();
             comparisonSelector = new ComboBox();
@@ -81,19 +82,21 @@
             page.Size = new Size(1120, 760);
             page.ColumnCount = 1;
             page.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            page.RowCount = 6;
+            page.RowCount = 7;
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 340));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 90));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
             page.RowStyles.Add(new RowStyle(SizeType.Absolute, 230));
             page.Controls.Add(headerPanel, 0, 0);
             page.Controls.Add(statusLabel, 0, 1);
             page.Controls.Add(mapPanel, 0, 2);
             page.Controls.Add(leakPanel, 0, 3);
-            page.Controls.Add(comparisonHeader, 0, 4);
-            page.Controls.Add(graphGrid, 0, 5);
+            page.Controls.Add(repairLabel, 0, 4);
+            page.Controls.Add(comparisonHeader, 0, 5);
+            page.Controls.Add(graphGrid, 0, 6);
 
             headerPanel.Name = "headerPanel";
             headerPanel.Dock = DockStyle.Fill;
@@ -269,6 +272,12 @@
             leakRateCaption.TextAlign = ContentAlignment.TopRight;
             leakRateCaption.Margin = Padding.Empty;
 
+            repairLabel.Name = "repairLabel";
+            repairLabel.Dock = DockStyle.Fill;
+            repairLabel.Font = new Font("Segoe UI", 8F);
+            repairLabel.ForeColor = Color.FromArgb(55, 65, 78);
+            repairLabel.Margin = new Padding(10, 0, 10, 8);
+
             comparisonHeader.Name = "comparisonHeader";
             comparisonHeader.Dock = DockStyle.Fill;
             comparisonHeader.Margin = new Padding(4, 0, 4, 0);
@@ -369,6 +378,7 @@
         private TableLayoutPanel lossPanel;
         private Label leakRate;
         private Label leakRateCaption;
+        private Label repairLabel;
         private TableLayoutPanel comparisonHeader;
         private Label comparisonTitle;
         private ComboBox comparisonSelector;

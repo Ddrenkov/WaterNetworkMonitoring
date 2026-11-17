@@ -142,7 +142,8 @@ namespace WaterNetworkMonitoring.Services
                 result.Add(balance with
                 {
                     Cusum = cusum, DetectionThreshold = balance.From >= baselineEnd ? threshold : 0,
-                    LeakSuspected = cusum > threshold,
+                    // An old accumulated score must not keep an alarm active after flow balances again.
+                    LeakSuspected = cusum > threshold && balance.ExcessM3PerHour > mean + allowance,
                     PressureDrop = pressure < baselinePressure - 0.2m
                 });
                 previousEnd = balance.To;

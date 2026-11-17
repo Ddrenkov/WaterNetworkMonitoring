@@ -16,6 +16,15 @@ namespace WaterNetworkMonitoring.Services
         public List<LoggerReading> LoggerReadings { get; init; } = new();
         public List<WaterMeterReading> MeterReadings { get; init; } = new();
         public List<WaterMeter> Meters { get; init; } = new();
+        public List<Repair> Repairs { get; init; } = new();
+
+        public Repair? LatestCleanWaterRepair(Month month)
+        {
+            var end = new DateTime(month.Year, month.Number, 1).AddMonths(1);
+            return Repairs.Where(r => r.WaterSystem == WaterSystem.CleanWater && r.Date < end)
+                .OrderByDescending(r => r.Date).ThenByDescending(r => r.Id).FirstOrDefault();
+        }
+
         internal sealed record MeterScope(int LoggerId, string Name, int MeterCount)
         {
             public override string ToString() => $"{Name} · {MeterCount} {(MeterCount == 1 ? "meter" : "meters")}";
@@ -86,9 +95,19 @@ namespace WaterNetworkMonitoring.Services
             var loggers = await db.Loggers.AsNoTracking().Where(l => l.ZoneName == "Zapad")
                 .ToListAsync(cancellationToken);
             var ids = loggers.Select(l => l.Id).ToArray();
-            // Bound the dashboard query as history grows; the sample month fits comfortably.
-            var readings = await db.LoggerReadings.AsNoTracking().Where(r => ids.Contains(r.LoggerId))
-                .OrderByDescending(r => r.TakenAt).Take(20000).ToListAsync(cancellationToken);
+            // Load three calendar months, rather than cutting a month at an arbitrary row count.
+            var latest = await db.LoggerReadings.AsNoTracking().Where(r => ids.Contains(r.LoggerId))
+                .OrderByDescending(r => r.TakenAt).Select(r => (DateTimeOffset?)r.TakenAt)
+                .FirstOrDefaultAsync(cancellationToken);
+            var readings = new List<LoggerReading>();
+            if (latest.HasValue)
+            {
+                var date = SofiaDate(latest.Value.AddTicks(-1));
+                var from = Local(new DateTime(date.Year, date.Month, 1).AddMonths(-2)).AddDays(-1);
+                readings = await db.LoggerReadings.AsNoTracking()
+                    .Where(r => ids.Contains(r.LoggerId) && r.TakenAt > from && r.TakenAt <= latest.Value)
+                    .OrderBy(r => r.TakenAt).ToListAsync(cancellationToken);
+            }
             var meters = await db.WaterMeters.AsNoTracking().OrderBy(m => m.MapNumber).ToListAsync(cancellationToken);
             var meterIds = meters.Where(m => m.LoggerId.HasValue).Select(m => m.Id).ToArray();
             var meterReadings = new List<WaterMeterReading>();
@@ -100,8 +119,10 @@ namespace WaterNetworkMonitoring.Services
                     .Where(r => meterIds.Contains(r.WaterMeterId) && r.TakenAt >= from && r.TakenAt <= to)
                     .OrderBy(r => r.TakenAt).ToListAsync(cancellationToken);
             }
+            var repairs = await db.Repairs.AsNoTracking().Where(r => r.WaterSystem == WaterSystem.CleanWater)
+                .OrderByDescending(r => r.Date).ToListAsync(cancellationToken);
             return new DashboardData { Loggers = loggers, LoggerReadings = readings,
-                MeterReadings = meterReadings, Meters = meters };
+                MeterReadings = meterReadings, Meters = meters, Repairs = repairs };
         }
 
         public DashboardReport Report(Month month)

@@ -207,6 +207,9 @@ namespace WaterNetworkMonitoring
         {
             if (data == null || periodSelector.SelectedItem is not DashboardData.Month month) return;
             var report = data.Report(month);
+            var repair = data.LatestCleanWaterRepair(month);
+            repairLabel.Text = repair == null ? "Last clean-water repair: none recorded"
+                : $"Last clean-water repair: {repair.Date:dd MMM yyyy HH:mm}\n{repair.Place}";
             mapHint.Text = $"{buildings.Count} buildings · click a building for its meter reading";
             statusLabel.Text = report.CompleteMonth ? "" : "Partial period";
             var selectedId = (comparisonSelector.SelectedItem as DashboardData.MeterScope)?.LoggerId ?? report.FlaggedLoggerId;
@@ -272,6 +275,7 @@ namespace WaterNetworkMonitoring
             leakStatus.ForeColor = ForeColor;
             leakDetails.Text = detail;
             leakLocation.Text = "";
+            repairLabel.Text = "";
             LoggerMapPin.UpdateReadings(loggerPins, null);
             LoggerMapPin.Select(loggerPins, null);
             leakRate.Text = "—";
@@ -316,8 +320,9 @@ namespace WaterNetworkMonitoring
                 page.RowStyles[1].Height = 22 * s;
                 page.RowStyles[2].Height = mapHeight;
                 page.RowStyles[3].Height = (narrow ? 120 : 90) * s;
-                page.RowStyles[4].Height = 32 * s;
-                page.RowStyles[5].Height = graphHeight;
+                page.RowStyles[4].Height = 44 * s;
+                page.RowStyles[5].Height = 32 * s;
+                page.RowStyles[6].Height = graphHeight;
                 int height = page.RowStyles.Cast<RowStyle>().Sum(r => (int)r.Height);
                 page.Size = new Size(width, height);
                 // AutoScroll uses logical coordinates; retain the current vertical scroll position.

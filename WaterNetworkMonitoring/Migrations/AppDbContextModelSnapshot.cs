@@ -147,6 +147,46 @@ namespace WaterNetworkMonitoring.Migrations
                         });
                 });
 
+            modelBuilder.Entity("WaterNetworkMonitoring.Models.Repair", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<string>("Place")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("WaterSystem")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WaterSystem", "Date");
+
+                    b.ToTable("Repairs", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Repairs_WaterSystem", "[WaterSystem] IN ('CleanWater', 'Wastewater')");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Date = new DateTime(2026, 10, 31, 18, 0, 0, 0, DateTimeKind.Unspecified),
+                            Place = "Zapad - Skaptopara supply branch",
+                            WaterSystem = "CleanWater"
+                        });
+                });
+
             modelBuilder.Entity("WaterNetworkMonitoring.Models.WaterMeter", b =>
                 {
                     b.Property<int>("Id")
