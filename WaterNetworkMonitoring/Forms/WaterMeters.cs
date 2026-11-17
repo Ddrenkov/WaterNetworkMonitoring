@@ -1,6 +1,7 @@
-using GMap.NET;
+﻿using GMap.NET;
 using GMap.NET.WindowsForms;
 using System.ComponentModel;
+using WaterNetworkMonitoring.Services;
 
 namespace WaterNetworkMonitoring
 {
@@ -11,6 +12,10 @@ namespace WaterNetworkMonitoring
         private List<BlagoevgradNeighbourhoods.Zone> zones = new();
         private bool initialized;
         private int? selectedNumber;
+        private readonly WaterMeterConsumptionData? previewData;
+        private WaterMeterConsumptionData? consumption;
+        private CancellationTokenSource? loadCancellation;
+        private bool selectingMeter;
 
         public WaterMeters()
         {
@@ -27,18 +32,25 @@ namespace WaterNetworkMonitoring
                 }));
             };
             Resize += (_, _) => { LayoutMap(); QueueRefresh(); };
+            map.SizeChanged += (_, _) =>
+            {
+                if (initialized && IsHandleCreated)
+                    BeginInvoke(new Action(() => { if (!IsDisposed) { CenterOnZapad(); UpdatePins(); } }));
+            };
             LayoutMap();
         }
 
+        internal WaterMeters(WaterMeterConsumptionData preview) : this() => previewData = preview;
+
         private bool IsDesigner() => DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 
-        private void WaterMeters_Load(object? sender, EventArgs e)
+        private async void WaterMeters_Load(object? sender, EventArgs e)
         {
             if (IsDesigner() || initialized) return;
             zones = BlagoevgradNeighbourhoods.LoadZones();
             buildings = BuildingMapData.Load(zones);
             initialized = true;
-            GMaps.Instance.Mode = AccessMode.ServerAndCache;
+            GMaps.Instance.Mode = previewData == null ? AccessMode.ServerAndCache : AccessMode.CacheOnly;
             map.MapProvider = OSMap.Instance;
             // The zones select buildings only; this map deliberately has no polygon overlay.
             map.Overlays.Add(pins);
@@ -58,6 +70,7 @@ namespace WaterNetworkMonitoring
             map.OnMarkerLeave += _ => map.Cursor = Cursors.Default;
             CenterOnZapad();
             UpdatePins();
+            await LoadConsumptionAsync();
         }
 
         private void CenterOnZapad()
@@ -128,6 +141,16 @@ namespace WaterNetworkMonitoring
             buildingNumber.Value = building.Number;
             if (center) { map.Zoom = 18; map.Position = building.Position; }
             statusLabel.Text = building.Number.ToString();
+            if (!selectingMeter)
+            {
+                var row = consumptionGrid.Rows.Cast<DataGridViewRow>()
+                    .FirstOrDefault(r => (r.Tag as WaterMeterConsumptionData.MeterUsage)?.Meter.MapNumber == building.Number);
+                if (row != null)
+                {
+                    consumptionGrid.CurrentCell = row.Cells[0];
+                    consumptionGrid.FirstDisplayedScrollingRowIndex = row.Index;
+                }
+            }
             UpdatePins();
         }
 
@@ -150,11 +173,154 @@ namespace WaterNetworkMonitoring
         private void zoomInButton_Click(object? sender, EventArgs e) => map.Zoom = Math.Min(map.MaxZoom, map.Zoom + 1);
         private void zoomOutButton_Click(object? sender, EventArgs e) => map.Zoom = Math.Max(map.MinZoom, map.Zoom - 1);
 
+        private async void reloadConsumptionButton_Click(object? sender, EventArgs e) => await LoadConsumptionAsync();
+
+        private async Task LoadConsumptionAsync()
+        {
+            loadCancellation?.Cancel();
+            loadCancellation?.Dispose();
+            loadCancellation = new CancellationTokenSource();
+            var token = loadCancellation.Token;
+            reloadConsumptionButton.Enabled = false;
+            consumptionStatus.Text = "Loading readings…";
+            try
+            {
+                var result = previewData ?? await WaterMeterConsumptionData.LoadAsync(token);
+                if (!IsDisposed && !Disposing && !token.IsCancellationRequested) ShowConsumption(result);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex) when (ex is Microsoft.Data.SqlClient.SqlException or InvalidOperationException or TimeoutException)
+            {
+                if (IsDisposed || Disposing || token.IsCancellationRequested) return;
+                consumption = null;
+                consumptionGrid.Rows.Clear();
+                consumptionGrid.Columns.Clear();
+                consumptionChart.SetSeries();
+                consumptionChart.Heading = "Select a meter";
+                consumptionStatus.Text = "Readings unavailable. Refresh to retry.";
+                System.Diagnostics.Trace.TraceError("Water meter consumption: " + ex.Message);
+            }
+            finally
+            {
+                if (!IsDisposed && !Disposing) reloadConsumptionButton.Enabled = true;
+            }
+        }
+
+        private void ShowConsumption(WaterMeterConsumptionData result)
+        {
+            consumption = result;
+            selectingMeter = true;
+            consumptionGrid.SuspendLayout();
+            try
+            {
+                consumptionGrid.Rows.Clear();
+                consumptionGrid.Columns.Clear();
+                consumptionGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Building", HeaderText = "Building",
+                    ValueType = typeof(int), AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 74, SortMode = DataGridViewColumnSortMode.Automatic });
+                consumptionGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "MeterId", HeaderText = "Meter ID",
+                    ValueType = typeof(int), AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 94, SortMode = DataGridViewColumnSortMode.Automatic });
+                foreach (var month in result.Months)
+                    consumptionGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = $"M{month.Year}{month.Number:00}", HeaderText = month.ToString() + " (L)",
+                        ValueType = typeof(decimal), MinimumWidth = 112, SortMode = DataGridViewColumnSortMode.Automatic,
+                        DefaultCellStyle = new DataGridViewCellStyle { Format = "N0", NullValue = "—", Alignment = DataGridViewContentAlignment.MiddleRight } });
+                foreach (var usage in result.Meters)
+                {
+                    int index = consumptionGrid.Rows.Add();
+                    var row = consumptionGrid.Rows[index];
+                    row.Tag = usage;
+                    row.Cells[0].Value = usage.Meter.MapNumber;
+                    row.Cells[1].Value = usage.Meter.Id;
+                    for (int i = 0; i < result.Months.Count; i++)
+                    {
+                        var value = usage.Months[result.Months[i]];
+                        row.Cells[i + 2].Value = value.Litres;
+                        row.Cells[i + 2].Tag = value;
+                        row.Cells[i + 2].ToolTipText = value.Note;
+                    }
+                }
+                consumptionStatus.Text = result.Months.Count == 0 ? "No complete monthly readings yet."
+                    : $"{result.Meters.Count} meters · {result.Months.Count} months";
+            }
+            finally
+            {
+                consumptionGrid.ResumeLayout();
+                selectingMeter = false;
+            }
+            var selected = consumptionGrid.Rows.Cast<DataGridViewRow>().FirstOrDefault(r =>
+                (r.Tag as WaterMeterConsumptionData.MeterUsage)?.Meter.MapNumber == selectedNumber)
+                ?? consumptionGrid.Rows.Cast<DataGridViewRow>().FirstOrDefault();
+            if (selected != null) consumptionGrid.CurrentCell = selected.Cells[0];
+            ShowSelectedConsumption();
+        }
+
+        private void consumptionGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 2) return;
+            if (consumptionGrid.Rows[e.RowIndex].Cells[e.ColumnIndex].Tag is WaterMeterConsumptionData.Consumption { Litres: { } litres, Estimated: true })
+            {
+                e.Value = "≈ " + litres.ToString("N0");
+                e.FormattingApplied = true;
+            }
+        }
+
+        private void consumptionGrid_CurrentCellChanged(object? sender, EventArgs e)
+        {
+            if (selectingMeter) return;
+            ShowSelectedConsumption();
+            if (consumptionGrid.CurrentRow?.Tag is not WaterMeterConsumptionData.MeterUsage usage) return;
+            var building = buildings.FirstOrDefault(b => b.Number == usage.Meter.MapNumber);
+            if (building == null) return;
+            selectingMeter = true;
+            try { SelectBuilding(building, false); }
+            finally { selectingMeter = false; }
+        }
+
+        private void ShowSelectedConsumption()
+        {
+            consumptionChart.SetSeries();
+            if (consumption == null || consumptionGrid.CurrentRow?.Tag is not WaterMeterConsumptionData.MeterUsage usage)
+            {
+                consumptionChart.Heading = "Select a meter";
+                return;
+            }
+            consumptionChart.Heading = $"Building {usage.Meter.MapNumber} · {usage.Meter.Id}";
+            var points = consumption.Months.Where(m => usage.Months[m].Litres.HasValue)
+                .Select(m => new ChartPoint(WaterMeterConsumptionData.ChartTime(m), (double)usage.Months[m].Litres!.Value)).ToList();
+            consumptionChart.SetSeries(new ChartSeries("Consumption", Color.SteelBlue, points, TimeSpan.FromDays(40)));
+        }
+
         private void LayoutMap()
         {
-            mapPanel.Size = new Size(Math.Min(1100, Math.Max(1, ClientSize.Width - 48)),
-                Math.Min(620, Math.Max(1, ClientSize.Height - 72)));
-            mapPanel.Location = new Point((ClientSize.Width - mapPanel.Width) / 2, (ClientSize.Height - mapPanel.Height) / 2);
+            if (page == null) return;
+            float scale = DeviceDpi / 96f;
+            int gap = (int)(24 * scale);
+            int available = ClientSize.Width - gap * 2 - SystemInformation.VerticalScrollBarWidth;
+            int width = Math.Min((int)(1100 * scale), Math.Max((int)(280 * scale), available));
+            bool narrow = width < 900 * scale;
+            page.SuspendLayout();
+            consumptionPanel.SuspendLayout();
+            consumptionPanel.ColumnCount = 2;
+            consumptionPanel.RowCount = 2;
+            consumptionPanel.SetCellPosition(consumptionChart, narrow ? new TableLayoutPanelCellPosition(0, 1) : new TableLayoutPanelCellPosition(1, 0));
+            consumptionPanel.ColumnCount = narrow ? 1 : 2;
+            consumptionPanel.RowCount = narrow ? 2 : 1;
+            consumptionPanel.ColumnStyles.Clear();
+            consumptionPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, narrow ? 100 : 68));
+            if (!narrow) consumptionPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32));
+            consumptionPanel.RowStyles.Clear();
+            consumptionPanel.RowStyles.Add(new RowStyle(SizeType.Percent, narrow ? 55 : 100));
+            if (narrow) consumptionPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 45));
+            consumptionGrid.Margin = narrow ? new Padding(0, 0, 0, 10) : new Padding(0, 0, 10, 0);
+            page.RowStyles[0].Height = (float)Math.Clamp(width * .34, 300 * scale, 400 * scale);
+            page.RowStyles[1].Height = 38 * scale;
+            page.RowStyles[2].Height = (narrow ? 530 : 320) * scale;
+            page.RowStyles[3].Height = (narrow ? 48 : 32) * scale;
+            int height = page.RowStyles.Cast<RowStyle>().Sum(r => (int)r.Height);
+            page.Size = new Size(width, height);
+            page.Location = new Point(gap + Math.Max(0, (available-width)/2), gap + AutoScrollPosition.Y);
+            AutoScrollMinSize = new Size(0, height+gap*2);
+            consumptionPanel.ResumeLayout();
+            page.ResumeLayout();
         }
     }
 }

@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 namespace WaterNetworkMonitoring
 {
     partial class WaterMeters
@@ -14,7 +14,13 @@ namespace WaterNetworkMonitoring
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing) components?.Dispose();
+            if (disposing)
+            {
+                loadCancellation?.Cancel();
+                loadCancellation?.Dispose();
+                loadCancellation = null;
+                components?.Dispose();
+            }
             base.Dispose(disposing);
         }
 
@@ -27,6 +33,15 @@ namespace WaterNetworkMonitoring
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            page = new TableLayoutPanel();
+            consumptionToolbar = new FlowLayoutPanel();
+            consumptionTitle = new Label();
+            reloadConsumptionButton = new Button();
+            consumptionStatus = new Label();
+            consumptionPanel = new TableLayoutPanel();
+            consumptionGrid = new DataGridView();
+            consumptionChart = new DashboardChart();
+            consumptionNote = new Label();
             mapPanel = new Panel();
             map = new GMap.NET.WindowsForms.GMapControl();
             toolbar = new FlowLayoutPanel();
@@ -44,11 +59,91 @@ namespace WaterNetworkMonitoring
             toolbar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)buildingNumber).BeginInit();
             SuspendLayout();
+            // page
+            page.Name = "page";
+            page.ColumnCount = 1;
+            page.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            page.RowCount = 4;
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 360));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 310));
+            page.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
+            page.Controls.Add(mapPanel, 0, 0);
+            page.Controls.Add(consumptionToolbar, 0, 1);
+            page.Controls.Add(consumptionPanel, 0, 2);
+            page.Controls.Add(consumptionNote, 0, 3);
+            consumptionToolbar.Name = "consumptionToolbar";
+            consumptionToolbar.Dock = DockStyle.Fill;
+            consumptionToolbar.Margin = Padding.Empty;
+            consumptionToolbar.WrapContents = false;
+            consumptionToolbar.AutoScroll = true;
+            consumptionToolbar.Controls.Add(consumptionTitle);
+            consumptionToolbar.Controls.Add(reloadConsumptionButton);
+            consumptionToolbar.Controls.Add(consumptionStatus);
+            consumptionTitle.Name = "consumptionTitle";
+            consumptionTitle.Text = "Monthly consumption (L)";
+            consumptionTitle.AutoSize = true;
+            consumptionTitle.Margin = new Padding(0, 8, 16, 0);
+            reloadConsumptionButton.Name = "reloadConsumptionButton";
+            reloadConsumptionButton.Text = "Refresh";
+            reloadConsumptionButton.Size = new Size(80, 28);
+            reloadConsumptionButton.Click += reloadConsumptionButton_Click;
+            consumptionStatus.Name = "consumptionStatus";
+            consumptionStatus.AutoSize = true;
+            consumptionStatus.Margin = new Padding(12, 8, 0, 0);
+            consumptionStatus.ForeColor = Color.FromArgb(85, 95, 108);
+            consumptionPanel.Name = "consumptionPanel";
+            consumptionPanel.Dock = DockStyle.Fill;
+            consumptionPanel.Margin = Padding.Empty;
+            consumptionPanel.ColumnCount = 2;
+            consumptionPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68));
+            consumptionPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32));
+            consumptionPanel.RowCount = 1;
+            consumptionPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            consumptionPanel.Controls.Add(consumptionGrid, 0, 0);
+            consumptionPanel.Controls.Add(consumptionChart, 1, 0);
+            consumptionGrid.Name = "consumptionGrid";
+            consumptionGrid.Dock = DockStyle.Fill;
+            consumptionGrid.ReadOnly = true;
+            consumptionGrid.AllowUserToAddRows = false;
+            consumptionGrid.AllowUserToDeleteRows = false;
+            consumptionGrid.AllowUserToResizeRows = false;
+            consumptionGrid.MultiSelect = false;
+            consumptionGrid.RowHeadersVisible = false;
+            consumptionGrid.AutoGenerateColumns = false;
+            consumptionGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            consumptionGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            consumptionGrid.BackgroundColor = Color.White;
+            consumptionGrid.BorderStyle = BorderStyle.FixedSingle;
+            consumptionGrid.GridColor = Color.FromArgb(225, 228, 232);
+            consumptionGrid.EnableHeadersVisualStyles = false;
+            consumptionGrid.ColumnHeadersDefaultCellStyle.BackColor = SystemColors.Control;
+            consumptionGrid.ColumnHeadersHeight = 30;
+            consumptionGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            consumptionGrid.RowTemplate.Height = 26;
+            consumptionGrid.Margin = new Padding(0, 0, 10, 0);
+            consumptionGrid.CurrentCellChanged += consumptionGrid_CurrentCellChanged;
+            consumptionGrid.CellFormatting += consumptionGrid_CellFormatting;
+            consumptionChart.Name = "consumptionChart";
+            consumptionChart.Dock = DockStyle.Fill;
+            consumptionChart.Margin = Padding.Empty;
+            consumptionChart.Heading = "Select a meter";
+            consumptionChart.Unit = "L/month";
+            consumptionChart.NumberFormat = "N0";
+            consumptionChart.DateFormat = "MMM yyyy";
+            consumptionNote.Name = "consumptionNote";
+            consumptionNote.Dock = DockStyle.Fill;
+            consumptionNote.Font = new Font("Segoe UI", 8F);
+            consumptionNote.ForeColor = Color.FromArgb(85, 95, 108);
+            consumptionNote.Margin = new Padding(0, 6, 0, 0);
+            consumptionNote.Text = "≈ Estimated from readings around midnight. — Not enough readings. Select a row or building to see its chart.";
             // mapPanel
             mapPanel.BackColor = Color.White;
             mapPanel.BorderStyle = BorderStyle.FixedSingle;
             mapPanel.Location = new Point(24, 36);
             mapPanel.Name = "mapPanel";
+            mapPanel.Dock = DockStyle.Fill;
+            mapPanel.Margin = new Padding(0, 0, 0, 12);
             mapPanel.Size = new Size(1100, 620);
             mapPanel.Controls.Add(map);
             mapPanel.Controls.Add(statusLabel);
@@ -136,11 +231,13 @@ namespace WaterNetworkMonitoring
             // refreshTimer
             refreshTimer.Interval = 120;
             // WaterMeters
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1148, 692);
             BackColor = Color.FromArgb(245, 247, 251);
-            Controls.Add(mapPanel);
+            Font = new Font("Segoe UI", 9F);
+            AutoScroll = true;
+            Controls.Add(page);
             Name = "WaterMeters";
             Text = "Water Meters";
             Load += WaterMeters_Load;
@@ -152,6 +249,15 @@ namespace WaterNetworkMonitoring
         }
         #endregion
 
+        private TableLayoutPanel page;
+        private FlowLayoutPanel consumptionToolbar;
+        private Label consumptionTitle;
+        private Button reloadConsumptionButton;
+        private Label consumptionStatus;
+        private TableLayoutPanel consumptionPanel;
+        private DataGridView consumptionGrid;
+        private DashboardChart consumptionChart;
+        private Label consumptionNote;
         private Panel mapPanel;
         private GMap.NET.WindowsForms.GMapControl map;
         private FlowLayoutPanel toolbar;

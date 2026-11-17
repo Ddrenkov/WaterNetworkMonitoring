@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 
@@ -10,7 +10,7 @@ namespace WaterNetworkMonitoring
     public sealed class DashboardChart : Control
     {
         private IReadOnlyList<ChartSeries> series = Array.Empty<ChartSeries>();
-        private string heading = "Readings", unit = "";
+        private string heading = "Readings", unit = "", numberFormat = "0.##", dateFormat = "dd MMM";
         public DashboardChart()
         {
             DoubleBuffered = true;
@@ -24,6 +24,10 @@ namespace WaterNetworkMonitoring
         public string Heading { get => heading; set { heading = value; Invalidate(); } }
         [DefaultValue("")]
         public string Unit { get => unit; set { unit = value; Invalidate(); } }
+        [DefaultValue("0.##")]
+        public string NumberFormat { get => numberFormat; set { numberFormat = value; Invalidate(); } }
+        [DefaultValue("dd MMM")]
+        public string DateFormat { get => dateFormat; set { dateFormat = value; Invalidate(); } }
         [DefaultValue(true)]
         public bool StartAtZero { get; set; } = true;
         internal void SetSeries(params ChartSeries[] values) { series = values; Invalidate(); }
@@ -49,8 +53,6 @@ namespace WaterNetworkMonitoring
                 g.DrawString("No data", smallFont, muted, new RectangleF(0, 30 * s, Width, Height - 30 * s), centered);
                 return;
             }
-            var plot = new RectangleF(46 * s, 36 * s, Width - 68 * s, Height - (series.Count > 1 ? 82 : 62) * s);
-            if (plot.Width < 30 || plot.Height < 20) return;
             double max = values.Max(v => v.Value), min = StartAtZero ? Math.Min(0, values.Min(v => v.Value)) : values.Min(v => v.Value);
             double padding = Math.Max((max - min) * .12, StartAtZero ? .1 : .05);
             max += padding;
@@ -59,6 +61,11 @@ namespace WaterNetworkMonitoring
             var first = values.Min(p => p.Time);
             var last = values.Max(p => p.Time);
             double duration = Math.Max(1, (last - first).TotalSeconds);
+            var tickLabels = Enumerable.Range(0, 3).Select(i => (max-(max-min)*i/2).ToString(NumberFormat, CultureInfo.InvariantCulture)).ToArray();
+            float left = Math.Max(46*s, tickLabels.Max(label => g.MeasureString(label, smallFont).Width)+10*s);
+            float rightGap = Math.Max(22*s, g.MeasureString(last.ToString(DateFormat), smallFont).Width/2+4*s);
+            var plot = new RectangleF(left, 36*s, Width-left-rightGap, Height-(series.Count > 1 ? 82 : 62)*s);
+            if (plot.Width < 30 || plot.Height < 20) return;
             float X(DateTimeOffset time) => plot.Left + (float)((time - first).TotalSeconds / duration) * plot.Width;
             float Y(double value) => plot.Bottom - (float)((value - min) / (max - min)) * plot.Height;
             using var right = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
@@ -66,14 +73,14 @@ namespace WaterNetworkMonitoring
             {
                 float y = plot.Top + plot.Height * i / 2;
                 g.DrawLine(grid, plot.Left, y, plot.Right, y);
-                g.DrawString((max - (max - min) * i / 2).ToString("0.##", CultureInfo.InvariantCulture), smallFont, muted,
+                g.DrawString(tickLabels[i], smallFont, muted,
                     new RectangleF(2, y - 9 * s, plot.Left - 8 * s, 18 * s), right);
             }
             using var centeredLabel = new StringFormat { Alignment = StringAlignment.Center };
             for (int i = 0; i < 3; i++)
             {
                 var time = first.AddSeconds(duration * i / 2);
-                g.DrawString(time.ToString("dd MMM"), smallFont, muted, X(time), plot.Bottom + 7 * s, centeredLabel);
+                g.DrawString(time.ToString(DateFormat), smallFont, muted, X(time), plot.Bottom + 7 * s, centeredLabel);
             }
             foreach (var line in series)
             {
