@@ -95,7 +95,7 @@ namespace WaterNetworkMonitoring
             footerPanel.Controls.Add(statusLabel);
             footerPanel.Controls.Add(legendLabel);
             legendLabel.Name = "legendLabel";
-            legendLabel.Text = "Brown: street pipes    Dashed: building connections";
+            legendLabel.Text = "Brown: street pipes    Dashed: building connections    W1–W3: loggers";
             legendLabel.Dock = DockStyle.Top;
             legendLabel.Height = 22;
             legendLabel.Padding = new Padding(10, 3, 0, 0);

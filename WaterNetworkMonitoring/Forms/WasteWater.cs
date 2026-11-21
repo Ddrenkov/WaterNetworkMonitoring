@@ -11,6 +11,7 @@ namespace WaterNetworkMonitoring
         private readonly GMapOverlay streetPipes = new("wastewater-pipes");
         private readonly GMapOverlay junctions = new("wastewater-junctions");
         private readonly GMapOverlay buildingPins = new("wastewater-buildings");
+        private readonly GMapOverlay loggerPins = new("wastewater-loggers");
         private List<BuildingMapData.Building> buildings = new();
         private WasteWaterNetwork? network;
         private BlagoevgradNeighbourhoods.Zone? zapad;
@@ -45,11 +46,17 @@ namespace WaterNetworkMonitoring
                 zone.Points.Max(p=>p[1])+.0002,zone.Points.Min(p=>p[0])-.0002));
             statusLabel.Text = "Drawing the Zapad pipe graph…";
             map.Overlays.Add(streetPipes); map.Overlays.Add(junctions);
-            map.Overlays.Add(buildingPins);
+            map.Overlays.Add(buildingPins); map.Overlays.Add(loggerPins);
             map.OnMarkerClick += (marker, args) =>
             {
                 if (args.Button != MouseButtons.Left) return;
-                if (marker.Tag is BuildingMapData.Building building)
+                if (marker is WasteWaterLoggerPin)
+                {
+                    foreach (var pin in loggerPins.Markers)
+                        pin.ToolTipMode = pin == marker ? MarkerTooltipMode.Always : MarkerTooltipMode.OnMouseOver;
+                    statusLabel.Text = marker.ToolTipText.Replace("\n"," · ");
+                }
+                else if (marker.Tag is BuildingMapData.Building building)
                     statusLabel.Text = $"Building {building.Number} · connected to the street pipe";
                 map.Invalidate();
             };
@@ -93,6 +100,7 @@ namespace WaterNetworkMonitoring
             var degree = network.Pipes.SelectMany(p => new[] { p.From,p.To }).GroupBy(id=>id).ToDictionary(g=>g.Key,g=>g.Count());
             foreach (var node in network.Nodes.Values.Where(n => n.BuildingNumber==null && degree[n.Id]>=3))
                 junctions.Markers.Add(new WasteWaterJunctionPin(node.Position));
+            foreach (var logger in network.Loggers) loggerPins.Markers.Add(new WasteWaterLoggerPin(logger));
             UpdateBuildings();
         }
         private void UpdateBuildings()
@@ -115,7 +123,8 @@ namespace WaterNetworkMonitoring
                 foreach (var marker in overlay.Markers) map.UpdateMarkerLocalPosition(marker);
                 foreach (var route in overlay.Routes) map.UpdateRouteLocalPosition(route);
             }
-            statusLabel.Text = $"Zapad · {network.Nodes.Values.Count(n => n.BuildingNumber.HasValue)} building connections · {network.ComponentCount} pipe groups";
+            foreach (var pin in loggerPins.Markers) pin.ToolTipMode = MarkerTooltipMode.OnMouseOver;
+            statusLabel.Text = $"Zapad · {network.Nodes.Values.Count(n => n.BuildingNumber.HasValue)} building connections · {network.ComponentCount} pipe groups · 3 logger positions";
             map.Refresh();
         }
         private void resetButton_Click(object? sender,EventArgs e) => ResetView();

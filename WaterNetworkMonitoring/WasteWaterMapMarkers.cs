@@ -3,6 +3,36 @@ using GMap.NET.WindowsForms;
 
 namespace WaterNetworkMonitoring
 {
+    internal sealed class WasteWaterLoggerPin : GMapMarker
+    {
+        private readonly int number;
+        private readonly Color color;
+        public WasteWaterLoggerPin(WasteWaterNetwork.Logger logger) : base(logger.Position)
+        {
+            number = logger.Number;
+            color = number switch { 1 => Color.FromArgb(35,112,91), 2 => Color.FromArgb(110,70,150), _ => Color.FromArgb(40,87,155) };
+            Size = new Size(54,24);
+            Offset = new Point(-27,-36);
+            IsHitTestVisible = true;
+            ToolTipMode = MarkerTooltipMode.OnMouseOver;
+            ToolTipText = $"Wastewater logger W{number}\n{logger.Pipe.Street}\nPlacement only — no readings yet";
+        }
+        public override void OnRender(Graphics graphics)
+        {
+            var anchor = new Point(LocalPosition.X-Offset.X,LocalPosition.Y-Offset.Y);
+            using var fill = new SolidBrush(color);
+            using var pen = new Pen(color,2);
+            graphics.DrawLine(pen,anchor,new Point(LocalPosition.X+Size.Width/2,LocalPosition.Y+Size.Height));
+            graphics.FillEllipse(fill,anchor.X-4,anchor.Y-4,8,8);
+            var bounds = new Rectangle(LocalPosition,Size);
+            graphics.FillRectangle(fill,bounds);
+            graphics.DrawRectangle(Pens.White,bounds);
+            using var font = new Font("Segoe UI",9F);
+            using var format = new StringFormat { Alignment=StringAlignment.Center,LineAlignment=StringAlignment.Center };
+            graphics.DrawString($"W{number}",font,Brushes.White,bounds,format);
+        }
+    }
+
     internal sealed class WasteWaterJunctionPin : GMapMarker
     {
         public WasteWaterJunctionPin(PointLatLng position) : base(position)

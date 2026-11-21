@@ -11,18 +11,34 @@ namespace WaterNetworkMonitoring
     {
         internal sealed record Node(long Id, PointLatLng Position, int? BuildingNumber = null);
         internal sealed record Pipe(long From, long To, string Street, double LengthMetres, int? BuildingNumber = null);
+        internal sealed record Logger(int Number, PointLatLng Position, Pipe Pipe);
         public IReadOnlyDictionary<long, Node> Nodes { get; }
         public IReadOnlyList<Pipe> Pipes { get; }
         public int ComponentCount { get; }
+        public IReadOnlyList<Logger> Loggers { get; }
         private static readonly HashSet<string> ExcludedStreets = new(StringComparer.Ordinal)
         {
             "Иван Михайлов", "Александър Малинов", "бул. Свети Димитър Солунски", "Марица"
         };
-        private WasteWaterNetwork(Dictionary<long, Node> nodes, List<Pipe> pipes, int componentCount)
+        private WasteWaterNetwork(Dictionary<long, Node> nodes, List<Pipe> pipes, int componentCount, BlagoevgradNeighbourhoods.Zone zone)
         {
             Nodes = nodes;
             Pipes = pipes;
             ComponentCount = componentCount;
+            var candidates = pipes.Where(p => p.BuildingNumber == null && p.LengthMetres >= 15)
+                .OrderBy(p => p.From).ThenBy(p => p.To).ToArray();
+            if (candidates.Length == 0) throw new InvalidOperationException("No street pipes are available for logger placement.");
+            var random = new Random(20261121);
+            var placements = new List<Logger>();
+            for (int attempt = 0; attempt < 2000 && placements.Count < 3; attempt++)
+            {
+                var pipe = candidates[random.Next(candidates.Length)];
+                var point = Along(nodes[pipe.From].Position,nodes[pipe.To].Position,.25+random.NextDouble()*.5);
+                if (!BlagoevgradNeighbourhoods.Contains(zone,point) || placements.Any(l => Distance(l.Position,point) < 65)) continue;
+                placements.Add(new Logger(placements.Count+1,point,pipe));
+            }
+            if (placements.Count != 3) throw new InvalidOperationException("Three separate pipe locations are needed for the loggers.");
+            Loggers = placements;
         }
 
         private sealed class StreetPoint
@@ -116,7 +132,7 @@ namespace WaterNetworkMonitoring
             }
             pipes.AddRange(laterals);
             int componentCount = TrimUnusedBranches(nodes,pipes);
-            return new WasteWaterNetwork(nodes,pipes,componentCount);
+            return new WasteWaterNetwork(nodes,pipes,componentCount,zone);
         }
 
         private static int TrimUnusedBranches(Dictionary<long,Node> nodes,List<Pipe> pipes)
