@@ -13,10 +13,16 @@ namespace WaterNetworkMonitoring
         internal sealed record Pipe(long From, long To, string Street, double LengthMetres, int? BuildingNumber = null);
         public IReadOnlyDictionary<long, Node> Nodes { get; }
         public IReadOnlyList<Pipe> Pipes { get; }
-        private WasteWaterNetwork(Dictionary<long, Node> nodes, List<Pipe> pipes)
+        public int ComponentCount { get; }
+        private static readonly HashSet<string> ExcludedStreets = new(StringComparer.Ordinal)
+        {
+            "Иван Михайлов", "Александър Малинов", "бул. Свети Димитър Солунски", "Марица"
+        };
+        private WasteWaterNetwork(Dictionary<long, Node> nodes, List<Pipe> pipes, int componentCount)
         {
             Nodes = nodes;
             Pipes = pipes;
+            ComponentCount = componentCount;
         }
 
         private sealed class StreetPoint
@@ -33,11 +39,8 @@ namespace WaterNetworkMonitoring
         private sealed class Snapshot { public List<Street> Roads { get; set; } = new(); }
         private sealed record Segment(long From, long To, string Street);
 
-        public static WasteWaterNetwork CreateLeftHalf(List<BuildingMapData.Building> buildings, BlagoevgradNeighbourhoods.Zone zone)
+        public static WasteWaterNetwork Create(List<BuildingMapData.Building> buildings, BlagoevgradNeighbourhoods.Zone zone)
         {
-            var allBuildings = buildings;
-            double halfway = (zone.Points.Min(p => p[1])+zone.Points.Max(p => p[1]))/2;
-            buildings = buildings.Where(b => b.Longitude <= halfway).ToList();
             using var stream = typeof(WasteWaterNetwork).Assembly.GetManifestResourceStream("WaterNetworkMonitoring.Data.Maps.ZapadStreets.json")
                 ?? throw new InvalidOperationException("Zapad street geometry is missing.");
             var snapshot = JsonSerializer.Deserialize<Snapshot>(stream) ?? throw new InvalidOperationException("Invalid street geometry.");
@@ -47,8 +50,7 @@ namespace WaterNetworkMonitoring
             var area = factory.CreatePolygon(ring.ToArray()).Buffer(.0005);
             var nodes = new Dictionary<long, Node>();
             var segments = new Dictionary<(long,long), Segment>();
-            long boundaryId = -200000;
-            foreach (var street in snapshot.Roads)
+            foreach (var street in snapshot.Roads.Where(street => !ExcludedStreets.Contains(street.Name)))
                 for (int i = 1; i < street.Points.Count; i++)
                 {
                     var a = street.Points[i-1]; var b = street.Points[i];
@@ -57,15 +59,6 @@ namespace WaterNetworkMonitoring
                     if (!area.Covers(line)) continue;
                     var from = new Node(a.Id,new PointLatLng(a.Latitude,a.Longitude));
                     var to = new Node(b.Id,new PointLatLng(b.Latitude,b.Longitude));
-                    if (from.Position.Lng > halfway && to.Position.Lng > halfway) continue;
-                    // Stop crossing street segments at the centre of Zapad for this first stage.
-                    if (from.Position.Lng > halfway || to.Position.Lng > halfway)
-                    {
-                        double fraction = (halfway-from.Position.Lng)/(to.Position.Lng-from.Position.Lng);
-                        var end = new Node(boundaryId--,Along(from.Position,to.Position,fraction));
-                        if (from.Position.Lng > halfway) from = end;
-                        else to = end;
-                    }
                     if (Distance(from.Position,to.Position) < .01) continue;
                     nodes.TryAdd(from.Id,from);
                     nodes.TryAdd(to.Id,to);
@@ -73,26 +66,10 @@ namespace WaterNetworkMonitoring
                     segments.TryAdd(key,new Segment(key.Item1,key.Item2,street.Name));
                 }
             if (segments.Count == 0) throw new InvalidOperationException("No street graph is available in Zapad.");
-            // Disconnected parking aisles are omitted; all laterals join the connected street network.
-            var adjacency = nodes.Keys.ToDictionary(id => id, _ => new List<long>());
-            foreach (var segment in segments.Values)
-            {
-                adjacency[segment.From].Add(segment.To);
-                adjacency[segment.To].Add(segment.From);
-            }
-            var remaining = nodes.Keys.ToHashSet();
-            var components = new List<HashSet<long>>();
-            while (remaining.Count > 0)
-            {
-                var component = Reachable(adjacency,remaining.Min());
-                components.Add(component); remaining.ExceptWith(component);
-            }
-            var main = components.OrderByDescending(c => c.Count).First();
-            nodes = nodes.Where(n => main.Contains(n.Key)).ToDictionary();
-            var roads = segments.Values.Where(s => main.Contains(s.From)).OrderBy(s => s.From).ThenBy(s => s.To).ToArray();
+            var roads = segments.Values.OrderBy(s => s.From).ThenBy(s => s.To).ToArray();
             var splits = roads.ToDictionary(s => s, s => new List<(double Fraction,long Node)> { (0,s.From),(1,s.To) });
             var reader = new WKTReader();
-            var footprints = allBuildings.ToDictionary(b => b.Number,b => string.IsNullOrWhiteSpace(b.FootprintWkt) ? null :
+            var footprints = buildings.ToDictionary(b => b.Number,b => string.IsNullOrWhiteSpace(b.FootprintWkt) ? null :
                 PreparedGeometryFactory.Prepare(reader.Read(b.FootprintWkt).Buffer(-1e-9)));
             var laterals = new List<Pipe>();
             for (int index = 0; index < buildings.Count; index++)
@@ -138,11 +115,44 @@ namespace WaterNetworkMonitoring
                             Distance(nodes[points[i-1].Node].Position,nodes[points[i].Node].Position)));
             }
             pipes.AddRange(laterals);
-            var all = nodes.Keys.ToDictionary(id => id,_ => new List<long>());
-            foreach (var pipe in pipes) { all[pipe.From].Add(pipe.To); all[pipe.To].Add(pipe.From); }
-            if (Reachable(all,nodes.Keys.First()).Count != nodes.Count)
-                throw new InvalidOperationException("A building or pipe is disconnected.");
-            return new WasteWaterNetwork(nodes,pipes);
+            int componentCount = TrimUnusedBranches(nodes,pipes);
+            return new WasteWaterNetwork(nodes,pipes,componentCount);
+        }
+
+        private static int TrimUnusedBranches(Dictionary<long,Node> nodes,List<Pipe> pipes)
+        {
+            var adjacent = nodes.Keys.ToDictionary(id => id,_ => new List<long>());
+            foreach (var pipe in pipes) { adjacent[pipe.From].Add(pipe.To); adjacent[pipe.To].Add(pipe.From); }
+            var seen = new HashSet<long>();
+            var componentOf = new Dictionary<long,int>();
+            var streetCounts = new Dictionary<int,int>();
+            int groups = 0;
+            foreach (long id in nodes.Keys)
+            {
+                if (seen.Contains(id)) continue;
+                var component = Reachable(adjacent,id);
+                seen.UnionWith(component);
+                if (!component.Any(n => nodes[n].BuildingNumber.HasValue)) continue;
+                foreach (long node in component) componentOf[node] = groups;
+                streetCounts[groups] = pipes.Count(p => p.BuildingNumber == null && component.Contains(p.From));
+                groups++;
+            }
+            pipes.RemoveAll(p => !componentOf.ContainsKey(p.From));
+            foreach (long id in nodes.Keys.Where(id => !componentOf.ContainsKey(id)).ToArray()) nodes.Remove(id);
+            var attachments = pipes.Where(p => p.BuildingNumber.HasValue).SelectMany(p => new[] { p.From,p.To }).ToHashSet();
+            // Remove unused road-end extensions, preserving every building link and each local pipe group.
+            while (true)
+            {
+                var degree = pipes.SelectMany(p => new[] { p.From,p.To }).GroupBy(id => id).ToDictionary(g => g.Key,g => g.Count());
+                long? end = nodes.Keys.Where(id => !attachments.Contains(id) && degree.GetValueOrDefault(id) == 1 &&
+                    streetCounts[componentOf[id]] > 1).OrderBy(id => id).Select(id => (long?)id).FirstOrDefault();
+                if (!end.HasValue) break;
+                var pipe = pipes.Single(p => p.From == end.Value || p.To == end.Value);
+                pipes.Remove(pipe);
+                streetCounts[componentOf[end.Value]]--;
+                nodes.Remove(end.Value);
+            }
+            return groups;
         }
 
         private static HashSet<long> Reachable(Dictionary<long,List<long>> neighbours,long start)

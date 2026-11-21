@@ -56,7 +56,7 @@ namespace WaterNetworkMonitoring
             toolbar.Controls.Add(resetButton);
             toolbar.Controls.Add(numbersCheckBox);
             titleLabel.Name = "titleLabel";
-            titleLabel.Text = "Waste Water · Zapad · Step 1";
+            titleLabel.Text = "Waste Water · Zapad";
             titleLabel.AutoSize = true;
             titleLabel.Margin = new Padding(0, 7, 18, 0);
             zoomOutButton.Name = "zoomOutButton";

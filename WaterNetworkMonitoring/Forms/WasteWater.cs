@@ -43,7 +43,7 @@ namespace WaterNetworkMonitoring
             buildings = BuildingMapData.Load(zones);
             map.SetZoomToFitRect(RectLatLng.FromLTRB(zone.Points.Min(p=>p[1])-.0002,zone.Points.Max(p=>p[0])+.0002,
                 zone.Points.Max(p=>p[1])+.0002,zone.Points.Min(p=>p[0])-.0002));
-            statusLabel.Text = "Drawing the left-half pipe graph…";
+            statusLabel.Text = "Drawing the Zapad pipe graph…";
             map.Overlays.Add(streetPipes); map.Overlays.Add(junctions);
             map.Overlays.Add(buildingPins);
             map.OnMarkerClick += (marker, args) =>
@@ -64,7 +64,7 @@ namespace WaterNetworkMonitoring
             map.OnMarkerLeave += _ => map.Cursor = Cursors.Default;
             try
             {
-                var result = await Task.Run(() => WasteWaterNetwork.CreateLeftHalf(buildings,zone));
+                var result = await Task.Run(() => WasteWaterNetwork.Create(buildings,zone));
                 if (IsDisposed || Disposing) return;
                 network = result;
                 DrawNetwork();
@@ -115,7 +115,7 @@ namespace WaterNetworkMonitoring
                 foreach (var marker in overlay.Markers) map.UpdateMarkerLocalPosition(marker);
                 foreach (var route in overlay.Routes) map.UpdateRouteLocalPosition(route);
             }
-            statusLabel.Text = $"Step 1 · left half · {network.Nodes.Values.Count(n => n.BuildingNumber.HasValue)} building connections · in progress";
+            statusLabel.Text = $"Zapad · {network.Nodes.Values.Count(n => n.BuildingNumber.HasValue)} building connections · {network.ComponentCount} pipe groups";
             map.Refresh();
         }
         private void resetButton_Click(object? sender,EventArgs e) => ResetView();
