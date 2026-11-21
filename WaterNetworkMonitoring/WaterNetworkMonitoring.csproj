@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -11,6 +11,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Data\Maps\Neighbourhoods.json" />
     <EmbeddedResource Include="Data\Maps\Buildings.json" />
+    <EmbeddedResource Include="Data\Maps\ZapadStreets.json" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="GMap.NET.WinForms" Version="2.1.7" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.117" />

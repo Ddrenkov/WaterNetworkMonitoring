@@ -3,8 +3,6 @@ using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
-    // Fixed September/November 2026 example, imported once by its EF migration.
-    // Counter generation matches the earlier October seed so existing readings stay continuous.
     internal static class SepNovSeed
     {
         internal static readonly DateTimeOffset SeptemberStart = Local(new DateTime(2026, 9, 1));
@@ -24,7 +22,6 @@ namespace WaterNetworkMonitoring.Data
             var profiles = ZapadOctober2026Seed.Profiles;
             var firstDay = new DateOnly(2026, 8, 31);
             var counters = profiles.Select(p => 500000 + p.MapNumber * 10000).ToArray();
-            // Work backwards from the original counters at 30 September, 00:00.
             for (var day = firstDay; day < new DateOnly(2026, 9, 30); day = day.AddDays(1))
                 for (int i = 0; i < profiles.Length; i++) counters[i] -= Usage(profiles[i], day).Sum();
 
@@ -143,7 +140,6 @@ namespace WaterNetworkMonitoring.Data
                 return value;
             }
         }
-        // Fixed Sofia offsets keep this migration's output identical on every PC.
         private static DateTimeOffset Local(DateTime time) => new(time,
             TimeSpan.FromHours(time < new DateTime(2026, 10, 25, 4, 0, 0) ? 3 : 2));
         private static DateTimeOffset BulgariaTime(DateTimeOffset utc) => utc.ToOffset(TimeSpan.FromHours(

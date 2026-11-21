@@ -1,4 +1,4 @@
-namespace WaterNetworkMonitoring
+﻿namespace WaterNetworkMonitoring
 {
     partial class MainForm
     {
@@ -31,7 +31,7 @@ namespace WaterNetworkMonitoring
             panelSidebar = new Panel();
             btnLogout = new Button();
             btnAccountManagement = new Button();
-            btnReports = new Button();
+            btnWasteWater = new Button();
             btnWaterMeters = new Button();
             btnLoggers = new Button();
             btnDashboard = new Button();
@@ -47,7 +47,7 @@ namespace WaterNetworkMonitoring
             panelSidebar.Controls.Add(pictureBox1);
             panelSidebar.Controls.Add(btnLogout);
             panelSidebar.Controls.Add(btnAccountManagement);
-            panelSidebar.Controls.Add(btnReports);
+            panelSidebar.Controls.Add(btnWasteWater);
             panelSidebar.Controls.Add(btnWaterMeters);
             panelSidebar.Controls.Add(btnLoggers);
             panelSidebar.Controls.Add(btnDashboard);
@@ -84,17 +84,18 @@ namespace WaterNetworkMonitoring
             btnAccountManagement.UseVisualStyleBackColor = true;
             btnAccountManagement.Click += btnAccountManagement_Click;
             // 
-            // btnReports
+            // btnWasteWater
             // 
-            btnReports.Dock = DockStyle.Top;
-            btnReports.FlatAppearance.BorderSize = 0;
-            btnReports.FlatStyle = FlatStyle.Flat;
-            btnReports.Location = new Point(0, 307);
-            btnReports.Name = "btnReports";
-            btnReports.Size = new Size(260, 50);
-            btnReports.TabIndex = 2;
-            btnReports.Text = "Reports";
-            btnReports.UseVisualStyleBackColor = true;
+            btnWasteWater.Dock = DockStyle.Top;
+            btnWasteWater.FlatAppearance.BorderSize = 0;
+            btnWasteWater.FlatStyle = FlatStyle.Flat;
+            btnWasteWater.Location = new Point(0, 307);
+            btnWasteWater.Name = "btnWasteWater";
+            btnWasteWater.Size = new Size(260, 50);
+            btnWasteWater.TabIndex = 2;
+            btnWasteWater.Text = "Waste Water";
+            btnWasteWater.UseVisualStyleBackColor = true;
+            btnWasteWater.Click += btnWasteWater_Click;
             // 
             // btnWaterMeters
             // 
@@ -186,7 +187,7 @@ namespace WaterNetworkMonitoring
         private System.Windows.Forms.Button btnDashboard;
         private System.Windows.Forms.Button btnLoggers;
         private System.Windows.Forms.Button btnWaterMeters;
-        private System.Windows.Forms.Button btnReports;
+        private System.Windows.Forms.Button btnWasteWater;
         private System.Windows.Forms.Button btnAccountManagement;
         private System.Windows.Forms.Button btnLogout;
         private System.Windows.Forms.Label lblWaterNetwork;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -128,6 +128,19 @@ namespace WaterNetworkMonitoring
             };
             panelContent.Controls.Add(waterMeters);
             waterMeters.Show();
+        }
+
+        private void btnWasteWater_Click(object sender, EventArgs e)
+        {
+            foreach (Control content in panelContent.Controls.Cast<Control>().ToArray()) content.Dispose();
+            var wasteWater = new WasteWater
+            {
+                TopLevel = false,
+                FormBorderStyle = FormBorderStyle.None,
+                Dock = DockStyle.Fill
+            };
+            panelContent.Controls.Add(wasteWater);
+            wasteWater.Show();
         }
 
         private void MainForm_Load(object sender, EventArgs e)
