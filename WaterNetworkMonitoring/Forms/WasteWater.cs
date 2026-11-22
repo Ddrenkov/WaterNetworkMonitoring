@@ -136,6 +136,17 @@ namespace WaterNetworkMonitoring
             if (network != null)
                 statusLabel.Text = $"Zapad · {network.Nodes.Values.Count(n => n.BuildingNumber.HasValue)} building connections · {network.ComponentCount} pipe groups · {loggerLoadMessage}";
         }
+        private void ShowMaintenance(PressureLogger[] loggers, List<WasteWaterMaintenance.Alert> alerts)
+        {
+            maintenanceTitleLabel.Text = alerts.Count == 0 ? "" : "Possible blockage · cleaning required";
+            maintenanceDetailsLabel.Text = string.Join(Environment.NewLine, alerts.Select(alert =>
+            {
+                var logger = loggers.First(l => l.Id == alert.LoggerId);
+                return $"{logger.Name} ({logger.Id}) · flow {alert.FlowDropPercent:0}% below normal · water level +{alert.ExtraLevelMetres * 100:0} cm";
+            }));
+            maintenancePanel.Height = (int)((30 + alerts.Count * 22) * DeviceDpi / 96f);
+            maintenancePanel.Visible = alerts.Count > 0;
+        }
         private async void refreshLoggersButton_Click(object? sender,EventArgs e) => await LoadLoggersAsync();
         private async Task LoadLoggersAsync()
         {
@@ -152,12 +163,15 @@ namespace WaterNetworkMonitoring
                 if (IsDisposed || Disposing || token.IsCancellationRequested) return;
                 foreach (var pin in loggerPins.Markers) pin.Dispose();
                 loggerPins.Markers.Clear();
-                foreach (var logger in data.Loggers.Where(l => l.WaterSystem == WaterSystem.Wastewater &&
-                    double.IsFinite(l.Latitude) && double.IsFinite(l.Longitude) && l.Latitude != 0 && l.Longitude != 0 &&
+                var loggers = data.Loggers.Where(l => l.WaterSystem == WaterSystem.Wastewater && l.ZoneName == "Zapad").ToArray();
+                var ids = loggers.Select(l => l.Id).ToHashSet();
+                var alerts = WasteWaterMaintenance.FindAlerts(data.Readings.Where(r => ids.Contains(r.LoggerId)));
+                ShowMaintenance(loggers, alerts);
+                foreach (var logger in loggers.Where(l => double.IsFinite(l.Latitude) && double.IsFinite(l.Longitude) && l.Latitude != 0 && l.Longitude != 0 &&
                     Math.Abs(l.Latitude) <= 90 && Math.Abs(l.Longitude) <= 180))
                 {
                     var reading = data.LatestReadings.FirstOrDefault(r => r.LoggerId == logger.Id);
-                    loggerPins.Markers.Add(new WasteWaterLoggerPin(logger,reading));
+                    loggerPins.Markers.Add(new WasteWaterLoggerPin(logger,reading,alerts.FirstOrDefault(a => a.LoggerId == logger.Id)));
                 }
                 loggerLoadMessage = $"{loggerPins.Markers.Count} saved wastewater loggers";
             }
@@ -167,6 +181,7 @@ namespace WaterNetworkMonitoring
                 if (IsDisposed || Disposing || token.IsCancellationRequested) return;
                 foreach (var pin in loggerPins.Markers) pin.Dispose();
                 loggerPins.Markers.Clear();
+                ShowMaintenance(Array.Empty<PressureLogger>(), new List<WasteWaterMaintenance.Alert>());
                 loggerLoadMessage = "Loggers unavailable. Run Update-Database, then Refresh.";
                 System.Diagnostics.Trace.TraceWarning("Wastewater loggers: "+ex.Message);
             }

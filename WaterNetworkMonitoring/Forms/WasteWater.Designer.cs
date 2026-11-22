@@ -30,6 +30,9 @@ namespace WaterNetworkMonitoring
             components = new System.ComponentModel.Container();
             mapPanel = new Panel();
             toolbar = new FlowLayoutPanel();
+            maintenancePanel = new Panel();
+            maintenanceTitleLabel = new Label();
+            maintenanceDetailsLabel = new Label();
             titleLabel = new Label();
             resetButton = new Button();
             refreshLoggersButton = new Button();
@@ -51,6 +54,7 @@ namespace WaterNetworkMonitoring
             mapPanel.Controls.Add(map);
             mapPanel.Controls.Add(footerPanel);
             mapPanel.Controls.Add(attributionLabel);
+            mapPanel.Controls.Add(maintenancePanel);
             mapPanel.Controls.Add(toolbar);
             toolbar.Name = "toolbar";
             toolbar.Dock = DockStyle.Top;
@@ -88,6 +92,23 @@ namespace WaterNetworkMonitoring
             numbersCheckBox.AutoSize = true;
             numbersCheckBox.Margin = new Padding(14, 8, 0, 0);
             numbersCheckBox.CheckedChanged += numbersCheckBox_CheckedChanged;
+            maintenancePanel.Name = "maintenancePanel";
+            maintenancePanel.Dock = DockStyle.Top;
+            maintenancePanel.Height = 56;
+            maintenancePanel.Padding = new Padding(10, 5, 10, 3);
+            maintenancePanel.BackColor = Color.FromArgb(255, 239, 232);
+            maintenancePanel.Visible = false;
+            maintenancePanel.Controls.Add(maintenanceDetailsLabel);
+            maintenancePanel.Controls.Add(maintenanceTitleLabel);
+            maintenanceTitleLabel.Name = "maintenanceTitleLabel";
+            maintenanceTitleLabel.Dock = DockStyle.Top;
+            maintenanceTitleLabel.Height = 23;
+            maintenanceTitleLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            maintenanceTitleLabel.ForeColor = Color.Firebrick;
+            maintenanceDetailsLabel.Name = "maintenanceDetailsLabel";
+            maintenanceDetailsLabel.Dock = DockStyle.Fill;
+            maintenanceDetailsLabel.Font = new Font("Segoe UI", 8.5F);
+            maintenanceDetailsLabel.ForeColor = Color.FromArgb(120, 45, 25);
             map.Name = "map";
             map.Dock = DockStyle.Fill;
             map.Position = new GMap.NET.PointLatLng(42.0172, 23.0826);
@@ -143,6 +164,9 @@ namespace WaterNetworkMonitoring
         #endregion
         private Panel mapPanel;
         private FlowLayoutPanel toolbar;
+        private Panel maintenancePanel;
+        private Label maintenanceTitleLabel;
+        private Label maintenanceDetailsLabel;
         private Label titleLabel;
         private Button zoomOutButton;
         private Button zoomInButton;
