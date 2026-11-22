@@ -130,6 +130,13 @@ namespace WaterNetworkMonitoring.Migrations
                     b.Property<int?>("SuppliedWaterMeterId")
                         .HasColumnType("int");
 
+                    b.Property<string>("WaterSystem")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("CleanWater");
+
                     b.Property<string>("ZoneName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -144,6 +151,40 @@ namespace WaterNetworkMonitoring.Migrations
                     b.ToTable("Loggers", null, t =>
                         {
                             t.HasCheckConstraint("CK_Loggers_SixDigitId", "[Id] BETWEEN 100000 AND 999999");
+
+                            t.HasCheckConstraint("CK_Loggers_WaterSystem", "[WaterSystem] IN ('CleanWater', 'Wastewater')");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 300001,
+                            IsSimulated = true,
+                            Latitude = 42.016049462972902,
+                            Longitude = 23.083341027286686,
+                            Name = "W1",
+                            WaterSystem = "Wastewater",
+                            ZoneName = "Zapad"
+                        },
+                        new
+                        {
+                            Id = 300002,
+                            IsSimulated = true,
+                            Latitude = 42.017356784852041,
+                            Longitude = 23.083793084477268,
+                            Name = "W2",
+                            WaterSystem = "Wastewater",
+                            ZoneName = "Zapad"
+                        },
+                        new
+                        {
+                            Id = 300003,
+                            IsSimulated = true,
+                            Latitude = 42.017898909010135,
+                            Longitude = 23.084494568877314,
+                            Name = "W3",
+                            WaterSystem = "Wastewater",
+                            ZoneName = "Zapad"
                         });
                 });
 
@@ -184,6 +225,62 @@ namespace WaterNetworkMonitoring.Migrations
                             Date = new DateTime(2026, 10, 31, 18, 0, 0, 0, DateTimeKind.Unspecified),
                             Place = "Zapad - Skaptopara supply branch",
                             WaterSystem = "CleanWater"
+                        });
+                });
+
+            modelBuilder.Entity("WaterNetworkMonitoring.Models.WasteWaterReading", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("FlowM3PerHour")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<string>("IsRaining")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(3)")
+                        .HasDefaultValue("No")
+                        .HasColumnName("Rain");
+
+                    b.Property<bool>("IsSimulated")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LocalTakenAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2(2)")
+                        .HasColumnName("TakenAt")
+                        .HasComputedColumnSql("CONVERT(datetime2(2), [TakenAtUtc] AT TIME ZONE 'UTC' AT TIME ZONE 'FLE Standard Time')", false);
+
+                    b.Property<int>("LoggerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TakenAt")
+                        .HasColumnType("datetime2(2)")
+                        .HasColumnName("TakenAtUtc");
+
+                    b.Property<decimal>("WaterLevelMetres")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("decimal(6,3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoggerId", "TakenAt")
+                        .IsUnique();
+
+                    b.ToTable("WasteWaterReadings", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_WasteWaterReadings_Flow", "[FlowM3PerHour] >= 0");
+
+                            t.HasCheckConstraint("CK_WasteWaterReadings_Level", "[WaterLevelMetres] >= 0");
+
+                            t.HasCheckConstraint("CK_WasteWaterReadings_Rain", "[Rain] IN ('Yes', 'No')");
                         });
                 });
 
@@ -841,6 +938,17 @@ namespace WaterNetworkMonitoring.Migrations
                     b.Navigation("ParentLogger");
 
                     b.Navigation("SuppliedWaterMeter");
+                });
+
+            modelBuilder.Entity("WaterNetworkMonitoring.Models.WasteWaterReading", b =>
+                {
+                    b.HasOne("WaterNetworkMonitoring.Models.PressureLogger", "Logger")
+                        .WithMany()
+                        .HasForeignKey("LoggerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Logger");
                 });
 
             modelBuilder.Entity("WaterNetworkMonitoring.Models.WaterMeter", b =>

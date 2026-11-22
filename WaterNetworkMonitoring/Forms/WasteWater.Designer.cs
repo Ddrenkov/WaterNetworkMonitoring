@@ -14,7 +14,13 @@ namespace WaterNetworkMonitoring
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing) components?.Dispose();
+            if (disposing)
+            {
+                loadCancellation?.Cancel();
+                loadCancellation?.Dispose();
+                loadCancellation = null;
+                components?.Dispose();
+            }
             base.Dispose(disposing);
         }
 
@@ -26,6 +32,7 @@ namespace WaterNetworkMonitoring
             toolbar = new FlowLayoutPanel();
             titleLabel = new Label();
             resetButton = new Button();
+            refreshLoggersButton = new Button();
             zoomOutButton = new Button();
             zoomInButton = new Button();
             numbersCheckBox = new CheckBox();
@@ -54,6 +61,7 @@ namespace WaterNetworkMonitoring
             toolbar.Controls.Add(zoomOutButton);
             toolbar.Controls.Add(zoomInButton);
             toolbar.Controls.Add(resetButton);
+            toolbar.Controls.Add(refreshLoggersButton);
             toolbar.Controls.Add(numbersCheckBox);
             titleLabel.Name = "titleLabel";
             titleLabel.Text = "Waste Water · Zapad";
@@ -71,6 +79,10 @@ namespace WaterNetworkMonitoring
             resetButton.Text = "Reset view";
             resetButton.Size = new Size(92, 28);
             resetButton.Click += resetButton_Click;
+            refreshLoggersButton.Name = "refreshLoggersButton";
+            refreshLoggersButton.Text = "Refresh";
+            refreshLoggersButton.Size = new Size(78, 28);
+            refreshLoggersButton.Click += refreshLoggersButton_Click;
             numbersCheckBox.Name = "numbersCheckBox";
             numbersCheckBox.Text = "Building numbers";
             numbersCheckBox.AutoSize = true;
@@ -135,6 +147,7 @@ namespace WaterNetworkMonitoring
         private Button zoomOutButton;
         private Button zoomInButton;
         private Button resetButton;
+        private Button refreshLoggersButton;
         private CheckBox numbersCheckBox;
         private GMap.NET.WindowsForms.GMapControl map;
         private Panel footerPanel;

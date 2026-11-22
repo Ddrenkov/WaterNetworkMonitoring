@@ -92,7 +92,7 @@ namespace WaterNetworkMonitoring.Services
                 { ConnectTimeout = 5, ConnectRetryCount = 0 };
             db.Database.SetConnectionString(connection.ConnectionString);
             db.Database.SetCommandTimeout(10);
-            var loggers = await db.Loggers.AsNoTracking().Where(l => l.ZoneName == "Zapad")
+            var loggers = await db.Loggers.AsNoTracking().Where(l => l.ZoneName == "Zapad" && l.WaterSystem == WaterSystem.CleanWater)
                 .ToListAsync(cancellationToken);
             var ids = loggers.Select(l => l.Id).ToArray();
             // Load three calendar months, rather than cutting a month at an arbitrary row count.

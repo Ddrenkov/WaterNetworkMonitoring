@@ -11,6 +11,7 @@ namespace WaterNetworkMonitoring.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string ZoneName { get; set; } = string.Empty;
+        public WaterSystem WaterSystem { get; set; } = WaterSystem.CleanWater;
         public int? ParentLoggerId { get; set; }
         public int? SuppliedWaterMeterId { get; set; }
         public bool IsSimulated { get; set; }

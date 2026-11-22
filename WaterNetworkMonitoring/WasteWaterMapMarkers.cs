@@ -1,21 +1,25 @@
 ﻿using GMap.NET;
 using GMap.NET.WindowsForms;
+using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring
 {
     internal sealed class WasteWaterLoggerPin : GMapMarker
     {
-        private readonly int number;
+        private readonly string label;
+        public int LoggerId { get; }
         private readonly Color color;
-        public WasteWaterLoggerPin(WasteWaterNetwork.Logger logger) : base(logger.Position)
+        public WasteWaterLoggerPin(PressureLogger logger, WasteWaterReading? reading) : base(new PointLatLng(logger.Latitude,logger.Longitude))
         {
-            number = logger.Number;
-            color = number switch { 1 => Color.FromArgb(35,112,91), 2 => Color.FromArgb(110,70,150), _ => Color.FromArgb(40,87,155) };
+            LoggerId = logger.Id;
+            label = logger.Name;
+            color = logger.Id switch { 300001 => Color.FromArgb(35,112,91), 300002 => Color.FromArgb(110,70,150), _ => Color.FromArgb(40,87,155) };
             Size = new Size(54,24);
             Offset = new Point(-27,-36);
             IsHitTestVisible = true;
             ToolTipMode = MarkerTooltipMode.OnMouseOver;
-            ToolTipText = $"Wastewater logger W{number}\n{logger.Pipe.Street}\nPlacement only — no readings yet";
+            ToolTipText = $"Wastewater logger {logger.Name} ({logger.Id})\n" + (reading == null ? "No readings recorded"
+                : $"Flow: {reading.FlowM3PerHour:0.###} m³/h\nWater level: {reading.WaterLevelMetres:0.###} m\nRain during last 2 h: {(reading.IsRaining ? "Yes" : "No")}\n{reading.TakenAt:dd MMM yyyy HH:mm}");
         }
         public override void OnRender(Graphics graphics)
         {
@@ -29,7 +33,7 @@ namespace WaterNetworkMonitoring
             graphics.DrawRectangle(Pens.White,bounds);
             using var font = new Font("Segoe UI",9F);
             using var format = new StringFormat { Alignment=StringAlignment.Center,LineAlignment=StringAlignment.Center };
-            graphics.DrawString($"W{number}",font,Brushes.White,bounds,format);
+            graphics.DrawString(label,font,Brushes.White,bounds,format);
         }
     }
 

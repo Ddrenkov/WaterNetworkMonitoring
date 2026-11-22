@@ -2,12 +2,16 @@
 using GMap.NET.WindowsForms;
 using System.ComponentModel;
 using System.Drawing.Drawing2D;
+using WaterNetworkMonitoring.Models;
+using WaterNetworkMonitoring.Services;
 
 namespace WaterNetworkMonitoring
 {
     public partial class WasteWater : Form
     {
-        private readonly bool offlinePreview;
+        private readonly WasteWaterData? previewData;
+        private CancellationTokenSource? loadCancellation;
+        private string loggerLoadMessage = "No saved wastewater loggers";
         private readonly GMapOverlay streetPipes = new("wastewater-pipes");
         private readonly GMapOverlay junctions = new("wastewater-junctions");
         private readonly GMapOverlay buildingPins = new("wastewater-buildings");
@@ -29,14 +33,14 @@ namespace WaterNetworkMonitoring
             };
             LayoutMap();
         }
-        internal WasteWater(bool offline) : this() => offlinePreview = offline;
+        internal WasteWater(WasteWaterData preview) : this() => previewData = preview;
         private bool IsDesigner() => DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 
         private async void WasteWater_Load(object? sender, EventArgs e)
         {
             if (initialized || IsDesigner()) return;
             initialized = true;
-            GMaps.Instance.Mode = offlinePreview ? AccessMode.CacheOnly : AccessMode.ServerAndCache;
+            GMaps.Instance.Mode = previewData != null ? AccessMode.CacheOnly : AccessMode.ServerAndCache;
             map.MapProvider = OSMap.Instance;
             var zones = BlagoevgradNeighbourhoods.LoadZones();
             var zone = zones.Single(z => z.Name == "Zapad");
@@ -76,6 +80,7 @@ namespace WaterNetworkMonitoring
                 network = result;
                 DrawNetwork();
                 ResetView();
+                await LoadLoggersAsync();
             }
             catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
             {
@@ -100,7 +105,6 @@ namespace WaterNetworkMonitoring
             var degree = network.Pipes.SelectMany(p => new[] { p.From,p.To }).GroupBy(id=>id).ToDictionary(g=>g.Key,g=>g.Count());
             foreach (var node in network.Nodes.Values.Where(n => n.BuildingNumber==null && degree[n.Id]>=3))
                 junctions.Markers.Add(new WasteWaterJunctionPin(node.Position));
-            foreach (var logger in network.Loggers) loggerPins.Markers.Add(new WasteWaterLoggerPin(logger));
             UpdateBuildings();
         }
         private void UpdateBuildings()
@@ -124,9 +128,59 @@ namespace WaterNetworkMonitoring
                 foreach (var route in overlay.Routes) map.UpdateRouteLocalPosition(route);
             }
             foreach (var pin in loggerPins.Markers) pin.ToolTipMode = MarkerTooltipMode.OnMouseOver;
-            statusLabel.Text = $"Zapad · {network.Nodes.Values.Count(n => n.BuildingNumber.HasValue)} building connections · {network.ComponentCount} pipe groups · 3 logger positions";
+            ShowStatus();
             map.Refresh();
         }
+        private void ShowStatus()
+        {
+            if (network != null)
+                statusLabel.Text = $"Zapad · {network.Nodes.Values.Count(n => n.BuildingNumber.HasValue)} building connections · {network.ComponentCount} pipe groups · {loggerLoadMessage}";
+        }
+        private async void refreshLoggersButton_Click(object? sender,EventArgs e) => await LoadLoggersAsync();
+        private async Task LoadLoggersAsync()
+        {
+            loadCancellation?.Cancel();
+            loadCancellation?.Dispose();
+            loadCancellation = new CancellationTokenSource();
+            var token = loadCancellation.Token;
+            refreshLoggersButton.Enabled = false;
+            loggerLoadMessage = "Loading wastewater loggers…";
+            ShowStatus();
+            try
+            {
+                var data = previewData ?? await WasteWaterData.LoadAsync(token);
+                if (IsDisposed || Disposing || token.IsCancellationRequested) return;
+                foreach (var pin in loggerPins.Markers) pin.Dispose();
+                loggerPins.Markers.Clear();
+                foreach (var logger in data.Loggers.Where(l => l.WaterSystem == WaterSystem.Wastewater &&
+                    double.IsFinite(l.Latitude) && double.IsFinite(l.Longitude) && l.Latitude != 0 && l.Longitude != 0 &&
+                    Math.Abs(l.Latitude) <= 90 && Math.Abs(l.Longitude) <= 180))
+                {
+                    var reading = data.LatestReadings.FirstOrDefault(r => r.LoggerId == logger.Id);
+                    loggerPins.Markers.Add(new WasteWaterLoggerPin(logger,reading));
+                }
+                loggerLoadMessage = $"{loggerPins.Markers.Count} saved wastewater loggers";
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex) when (ex is Microsoft.Data.SqlClient.SqlException or InvalidOperationException or TimeoutException)
+            {
+                if (IsDisposed || Disposing || token.IsCancellationRequested) return;
+                foreach (var pin in loggerPins.Markers) pin.Dispose();
+                loggerPins.Markers.Clear();
+                loggerLoadMessage = "Loggers unavailable. Run Update-Database, then Refresh.";
+                System.Diagnostics.Trace.TraceWarning("Wastewater loggers: "+ex.Message);
+            }
+            finally
+            {
+                if (!IsDisposed && !Disposing && !token.IsCancellationRequested)
+                {
+                    refreshLoggersButton.Enabled = true;
+                    ShowStatus();
+                    map.Invalidate();
+                }
+            }
+        }
+
         private void resetButton_Click(object? sender,EventArgs e) => ResetView();
         private void zoomInButton_Click(object? sender,EventArgs e) => map.Zoom=Math.Min(map.MaxZoom,map.Zoom+1);
         private void zoomOutButton_Click(object? sender,EventArgs e) => map.Zoom=Math.Max(map.MinZoom,map.Zoom-1);

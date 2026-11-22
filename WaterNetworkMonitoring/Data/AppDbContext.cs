@@ -13,6 +13,7 @@ namespace WaterNetworkMonitoring.Data
         public DbSet<LoggerReading> LoggerReadings { get; set; }
         public DbSet<WaterMeterReading> WaterMeterReadings { get; set; }
         public DbSet<Repair> Repairs { get; set; }
+        public DbSet<WasteWaterReading> WasteWaterReadings { get; set; }
 
         public AppDbContext() { }
 
@@ -68,10 +69,16 @@ namespace WaterNetworkMonitoring.Data
 
             var loggers = modelBuilder.Entity<PressureLogger>();
             loggers.ToTable("Loggers", table =>
-                table.HasCheckConstraint("CK_Loggers_SixDigitId", "[Id] BETWEEN 100000 AND 999999"));
+            {
+                table.HasCheckConstraint("CK_Loggers_SixDigitId", "[Id] BETWEEN 100000 AND 999999");
+                table.HasCheckConstraint("CK_Loggers_WaterSystem", "[WaterSystem] IN ('CleanWater', 'Wastewater')");
+            });
             loggers.Property(l => l.Id).ValueGeneratedNever();
             loggers.Property(l => l.Name).HasMaxLength(100).IsRequired();
             loggers.Property(l => l.ZoneName).HasMaxLength(50).IsRequired();
+            loggers.Property(l => l.WaterSystem).HasConversion<string>().HasMaxLength(20)
+                .HasDefaultValue(WaterSystem.CleanWater).IsRequired();
+            loggers.HasData(WasteWaterSepSeed.GetLoggers());
             loggers.HasOne(l => l.ParentLogger).WithMany().HasForeignKey(l => l.ParentLoggerId)
                 .OnDelete(DeleteBehavior.Restrict);
             loggers.HasOne(l => l.SuppliedWaterMeter).WithMany().HasForeignKey(l => l.SuppliedWaterMeterId)
@@ -88,6 +95,23 @@ namespace WaterNetworkMonitoring.Data
             loggerReadings.Property(r => r.PressureBar).HasPrecision(6, 3);
             loggerReadings.HasIndex(r => new { r.LoggerId, r.TakenAt }).IsUnique();
             loggerReadings.HasOne(r => r.Logger).WithMany().HasForeignKey(r => r.LoggerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            var wasteReadings = modelBuilder.Entity<WasteWaterReading>();
+            ConfigureReadingTime(wasteReadings);
+            wasteReadings.ToTable("WasteWaterReadings", table =>
+            {
+                table.HasCheckConstraint("CK_WasteWaterReadings_Flow", "[FlowM3PerHour] >= 0");
+                table.HasCheckConstraint("CK_WasteWaterReadings_Level", "[WaterLevelMetres] >= 0");
+                table.HasCheckConstraint("CK_WasteWaterReadings_Rain", "[Rain] IN ('Yes', 'No')");
+            });
+            wasteReadings.Property(r => r.FlowM3PerHour).HasPrecision(12, 3);
+            wasteReadings.Property(r => r.WaterLevelMetres).HasPrecision(6, 3);
+            wasteReadings.Property(r => r.IsRaining).HasColumnName("Rain")
+                .HasConversion(value => value ? "Yes" : "No", value => value == "Yes")
+                .HasColumnType("varchar(3)").HasMaxLength(3).IsUnicode(false).HasDefaultValue(false);
+            wasteReadings.HasIndex(r => new { r.LoggerId, r.TakenAt }).IsUnique();
+            wasteReadings.HasOne(r => r.Logger).WithMany().HasForeignKey(r => r.LoggerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             var meterReadings = modelBuilder.Entity<WaterMeterReading>();
