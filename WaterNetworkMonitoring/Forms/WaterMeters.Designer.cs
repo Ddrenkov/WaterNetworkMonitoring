@@ -43,7 +43,7 @@ namespace WaterNetworkMonitoring
             consumptionChart = new DashboardChart();
             consumptionNote = new Label();
             mapPanel = new Panel();
-            map = new GMap.NET.WindowsForms.GMapControl();
+            map = new MapControl();
             toolbar = new FlowLayoutPanel();
             zoneSelector = new ComboBox();
             zoomOutButton = new Button();

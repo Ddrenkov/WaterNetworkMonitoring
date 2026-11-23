@@ -47,7 +47,7 @@
             mapFooter = new TableLayoutPanel();
             mapHint = new Label();
             attributionLabel = new LinkLabel();
-            map = new GMap.NET.WindowsForms.GMapControl();
+            map = new MapControl();
             leakPanel = new Panel();
             leakContent = new TableLayoutPanel();
             leakTextPanel = new TableLayoutPanel();

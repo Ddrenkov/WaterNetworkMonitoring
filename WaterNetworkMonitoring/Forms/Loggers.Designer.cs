@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 namespace WaterNetworkMonitoring
 {
     partial class Loggers
@@ -33,7 +33,7 @@ namespace WaterNetworkMonitoring
         private void InitializeComponent()
         {
             mapPanel = new Panel();
-            map = new GMap.NET.WindowsForms.GMapControl();
+            map = new MapControl();
             headerPanel = new Panel();
             titleLabel = new Label();
             resetButton = new Button();

@@ -46,7 +46,7 @@ namespace WaterNetworkMonitoring
             zoomOutButton = new Button();
             zoomInButton = new Button();
             numbersCheckBox = new CheckBox();
-            map = new GMap.NET.WindowsForms.GMapControl();
+            map = new MapControl();
             footerPanel = new Panel();
             legendLabel = new Label();
             statusLabel = new Label();
