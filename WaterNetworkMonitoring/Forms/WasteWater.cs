@@ -20,6 +20,7 @@ namespace WaterNetworkMonitoring
         private WasteWaterNetwork? network;
         private BlagoevgradNeighbourhoods.Zone? zapad;
         private bool initialized;
+        private bool layingOut;
 
         public WasteWater()
         {
@@ -136,16 +137,33 @@ namespace WaterNetworkMonitoring
             if (network != null)
                 statusLabel.Text = $"Zapad · {network.Nodes.Values.Count(n => n.BuildingNumber.HasValue)} building connections · {network.ComponentCount} pipe groups · {loggerLoadMessage}";
         }
-        private void ShowMaintenance(PressureLogger[] loggers, List<WasteWaterMaintenance.Alert> alerts)
+        private void ShowMaintenance(PressureLogger[] loggers, List<WasteWaterMaintenance.Alert> alerts,
+            List<WasteWaterReading> readings)
         {
-            maintenanceTitleLabel.Text = alerts.Count == 0 ? "" : "Possible blockage · cleaning required";
-            maintenanceDetailsLabel.Text = string.Join(Environment.NewLine, alerts.Select(alert =>
-            {
-                var logger = loggers.First(l => l.Id == alert.LoggerId);
-                return $"{logger.Name} ({logger.Id}) · flow {alert.FlowDropPercent:0}% below normal · water level +{alert.ExtraLevelMetres * 100:0} cm";
-            }));
-            maintenancePanel.Height = (int)((30 + alerts.Count * 22) * DeviceDpi / 96f);
+            maintenanceGrid.Rows.Clear();
             maintenancePanel.Visible = alerts.Count > 0;
+            maintenanceTitleLabel.Text = alerts.Count == 0 ? "" : "Possible blockage · cleaning required";
+            maintenanceDetailsLabel.Text = string.Join(" · ", alerts.Select(a =>
+                $"{loggers.First(l => l.Id == a.LoggerId).Name} ({a.LoggerId})"));
+            flowChangeLabel.Text = alerts.Count == 0 ? "" : "Flow: " + string.Join(" · ", alerts.Select(a =>
+                $"{a.FlowDropPercent:0}% below normal"));
+            levelChangeLabel.Text = alerts.Count == 0 ? "" : "Water level: " + string.Join(" · ", alerts.Select(a =>
+                $"+{a.ExtraLevelMetres * 100:0} cm above normal"));
+            checkedAtLabel.Text = alerts.Count == 0 ? "" : $"Last check: {alerts.Max(a => a.TakenAt):dd MMM yyyy HH:mm}";
+            maintenanceGrid.Columns["Logger"].Visible = alerts.Count > 1;
+            var ids = alerts.Select(a => a.LoggerId).ToHashSet();
+            var recent = readings.Where(r => ids.Contains(r.LoggerId)).GroupBy(r => r.LoggerId)
+                .SelectMany(g => g.OrderByDescending(r => r.TakenAt).Take(6))
+                .OrderBy(r => r.TakenAt).ThenBy(r => r.LoggerId);
+            foreach (var reading in recent)
+            {
+                var logger = loggers.First(l => l.Id == reading.LoggerId);
+                int row = maintenanceGrid.Rows.Add(logger.Name, reading.TakenAt.DateTime,
+                    reading.FlowM3PerHour, reading.WaterLevelMetres, reading.IsRaining ? "Yes" : "No");
+                maintenanceGrid.Rows[row].Tag = reading;
+            }
+            maintenanceGrid.ClearSelection();
+            LayoutMap();
         }
         private async void refreshLoggersButton_Click(object? sender,EventArgs e) => await LoadLoggersAsync();
         private async Task LoadLoggersAsync()
@@ -166,12 +184,11 @@ namespace WaterNetworkMonitoring
                 var loggers = data.Loggers.Where(l => l.WaterSystem == WaterSystem.Wastewater && l.ZoneName == "Zapad").ToArray();
                 var ids = loggers.Select(l => l.Id).ToHashSet();
                 var alerts = WasteWaterMaintenance.FindAlerts(data.Readings.Where(r => ids.Contains(r.LoggerId)));
-                ShowMaintenance(loggers, alerts);
+                ShowMaintenance(loggers, alerts, data.Readings);
                 foreach (var logger in loggers.Where(l => double.IsFinite(l.Latitude) && double.IsFinite(l.Longitude) && l.Latitude != 0 && l.Longitude != 0 &&
                     Math.Abs(l.Latitude) <= 90 && Math.Abs(l.Longitude) <= 180))
                 {
-                    var reading = data.LatestReadings.FirstOrDefault(r => r.LoggerId == logger.Id);
-                    loggerPins.Markers.Add(new WasteWaterLoggerPin(logger,reading,alerts.FirstOrDefault(a => a.LoggerId == logger.Id)));
+                    loggerPins.Markers.Add(new WasteWaterLoggerPin(logger));
                 }
                 loggerLoadMessage = $"{loggerPins.Markers.Count} saved wastewater loggers";
             }
@@ -181,7 +198,7 @@ namespace WaterNetworkMonitoring
                 if (IsDisposed || Disposing || token.IsCancellationRequested) return;
                 foreach (var pin in loggerPins.Markers) pin.Dispose();
                 loggerPins.Markers.Clear();
-                ShowMaintenance(Array.Empty<PressureLogger>(), new List<WasteWaterMaintenance.Alert>());
+                ShowMaintenance(Array.Empty<PressureLogger>(), new List<WasteWaterMaintenance.Alert>(), new List<WasteWaterReading>());
                 loggerLoadMessage = "Loggers unavailable. Run Update-Database, then Refresh.";
                 System.Diagnostics.Trace.TraceWarning("Wastewater loggers: "+ex.Message);
             }
@@ -204,14 +221,33 @@ namespace WaterNetworkMonitoring
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.openstreetmap.org/copyright") { UseShellExecute=true });
         private void LayoutMap()
         {
-            if (mapPanel == null) return;
-            float scale=DeviceDpi/96f;
-            int gap=(int)(24*scale);
-            int width=Math.Min((int)(1200*scale),Math.Max(1,ClientSize.Width-gap*2));
-            int height=Math.Min((int)(760*scale),Math.Max(1,ClientSize.Height-gap*2));
-            mapPanel.Bounds=new Rectangle((ClientSize.Width-width)/2,(ClientSize.Height-height)/2,width,height);
-            toolbar.WrapContents=width<650*scale;
-            toolbar.Height=(int)((width<650*scale ? 76 : 42)*scale);
+            if (page == null || contentPanel == null || layingOut) return;
+            layingOut = true;
+            try
+            {
+                float scale = DeviceDpi / 96f;
+                int gap = (int)(24 * scale), space = (int)(16 * scale);
+                bool details = maintenancePanel.Visible;
+                bool stacked = details && page.Width < 1100 * scale;
+                int mapHeight = stacked
+                    ? (int)(420 * scale)
+                    : Math.Min((int)(760 * scale), Math.Max((int)(400 * scale), page.Height - gap * 2));
+                int detailsHeight = (int)(370 * scale);
+                int height = stacked ? mapHeight + space + detailsHeight : Math.Max(mapHeight, details ? detailsHeight : 0);
+                int viewportWidth = page.Width - (height + gap * 2 > page.Height ? SystemInformation.VerticalScrollBarWidth : 0);
+                int width = Math.Min((int)(1480 * scale), Math.Max(1, viewportWidth - gap * 2));
+                int detailsWidth = (int)(360 * scale);
+                page.AutoScrollMinSize = new Size(0, height + gap * 2);
+                contentPanel.Bounds = new Rectangle((viewportWidth - width) / 2 + page.AutoScrollPosition.X,
+                    gap + page.AutoScrollPosition.Y, width, height);
+                mapPanel.Bounds = new Rectangle(0, 0, details && !stacked ? width - detailsWidth - space : width, mapHeight);
+                maintenancePanel.Bounds = stacked
+                    ? new Rectangle(0, mapHeight + space, width, detailsHeight)
+                    : new Rectangle(width - detailsWidth, 0, detailsWidth, detailsHeight);
+                toolbar.WrapContents = mapPanel.Width < 650 * scale;
+                toolbar.Height = (int)((toolbar.WrapContents ? 76 : 42) * scale);
+            }
+            finally { layingOut = false; }
         }
     }
 }

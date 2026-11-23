@@ -1,7 +1,6 @@
 ﻿using GMap.NET;
 using GMap.NET.WindowsForms;
 using WaterNetworkMonitoring.Models;
-using WaterNetworkMonitoring.Services;
 
 namespace WaterNetworkMonitoring
 {
@@ -9,23 +8,17 @@ namespace WaterNetworkMonitoring
     {
         private readonly string label;
         public int LoggerId { get; }
-        public bool NeedsCleaning { get; }
         private readonly Color color;
-        public WasteWaterLoggerPin(PressureLogger logger, WasteWaterReading? reading) : this(logger, reading, null) { }
-        public WasteWaterLoggerPin(PressureLogger logger, WasteWaterReading? reading,
-            WasteWaterMaintenance.Alert? alert) : base(new PointLatLng(logger.Latitude,logger.Longitude))
+        public WasteWaterLoggerPin(PressureLogger logger) : base(new PointLatLng(logger.Latitude,logger.Longitude))
         {
             LoggerId = logger.Id;
-            NeedsCleaning = alert != null;
             label = logger.Name;
-            color = NeedsCleaning ? Color.Firebrick : logger.Id switch { 300001 => Color.FromArgb(35,112,91), 300002 => Color.FromArgb(110,70,150), _ => Color.FromArgb(40,87,155) };
+            color = logger.Id switch { 300001 => Color.FromArgb(35,112,91), 300002 => Color.FromArgb(110,70,150), _ => Color.FromArgb(40,87,155) };
             Size = new Size(54,24);
             Offset = new Point(-27,-36);
             IsHitTestVisible = true;
             ToolTipMode = MarkerTooltipMode.OnMouseOver;
-            ToolTipText = $"Wastewater logger {logger.Name} ({logger.Id})\n" + (reading == null ? "No readings recorded"
-                : $"Flow: {reading.FlowM3PerHour:0.###} m³/h\nWater level: {reading.WaterLevelMetres:0.###} m\nRain during last 2 h: {(reading.IsRaining ? "Yes" : "No")}\n{reading.TakenAt:dd MMM yyyy HH:mm}");
-            if (NeedsCleaning) ToolTipText += "\nPossible blockage — cleaning required";
+            ToolTipText = $"Wastewater logger {logger.Name} ({logger.Id})";
         }
         public override void OnRender(Graphics graphics)
         {
