@@ -60,10 +60,10 @@
             // 
             // btnLogout
             // 
-            btnLogout.Dock = DockStyle.Top;
+            btnLogout.Dock = DockStyle.Bottom;
             btnLogout.FlatAppearance.BorderSize = 0;
             btnLogout.FlatStyle = FlatStyle.Flat;
-            btnLogout.Location = new Point(0, 407);
+            btnLogout.Location = new Point(0, 400);
             btnLogout.Name = "btnLogout";
             btnLogout.Size = new Size(260, 50);
             btnLogout.TabIndex = 0;
@@ -170,6 +170,7 @@
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            MinimumSize = new Size(800, 520);
             Controls.Add(panelContent);
             Controls.Add(panelSidebar);
             Name = "MainForm";
