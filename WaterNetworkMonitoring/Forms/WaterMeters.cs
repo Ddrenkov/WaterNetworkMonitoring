@@ -291,7 +291,7 @@ namespace WaterNetworkMonitoring
 
         private void LayoutMap()
         {
-            if (page == null) return;
+            if (page == null || IsDesigner()) return;
             float scale = DeviceDpi / 96f;
             int gap = (int)(24 * scale);
             int available = ClientSize.Width - gap * 2 - SystemInformation.VerticalScrollBarWidth;

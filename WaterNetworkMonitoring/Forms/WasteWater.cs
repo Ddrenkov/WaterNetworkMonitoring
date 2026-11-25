@@ -26,6 +26,7 @@ namespace WaterNetworkMonitoring
         {
             Program.ConfigureTraceOutput();
             InitializeComponent();
+            if (!IsDesigner()) maintenancePanel.Visible = false;
             Resize += (_, _) => LayoutMap();
             map.SizeChanged += (_, _) =>
             {
@@ -221,7 +222,7 @@ namespace WaterNetworkMonitoring
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.openstreetmap.org/copyright") { UseShellExecute=true });
         private void LayoutMap()
         {
-            if (page == null || contentPanel == null || layingOut) return;
+            if (page == null || contentPanel == null || layingOut || IsDesigner()) return;
             layingOut = true;
             try
             {

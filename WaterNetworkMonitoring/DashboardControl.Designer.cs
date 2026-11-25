@@ -207,7 +207,7 @@
             map.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
 
             leakPanel.Name = "leakPanel";
-            leakPanel.BackColor = SystemColors.Control;
+            leakPanel.BackColor = Color.White;
             leakPanel.Dock = DockStyle.Fill;
             leakPanel.Padding = new Padding(10, 6, 10, 6);
             leakPanel.Margin = new Padding(0, 0, 0, 10);
@@ -332,7 +332,7 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoScroll = true;
-            BackColor = SystemColors.Control;
+            BackColor = Color.White;
             ForeColor = Color.FromArgb(36, 45, 56);
             Font = new Font("Segoe UI", 9F);
             Size = new Size(1200, 800);

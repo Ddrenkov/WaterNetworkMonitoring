@@ -270,7 +270,7 @@ namespace WaterNetworkMonitoring
 
         private void ClearReadings(string title, string detail)
         {
-            leakPanel.BackColor = SystemColors.Control;
+            leakPanel.BackColor = Color.White;
             leakStatus.Text = title;
             leakStatus.ForeColor = ForeColor;
             leakDetails.Text = detail;

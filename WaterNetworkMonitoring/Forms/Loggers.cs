@@ -22,6 +22,8 @@ namespace WaterNetworkMonitoring
         {
             Program.ConfigureTraceOutput();
             InitializeComponent();
+            if (!DesignMode && LicenseManager.UsageMode != LicenseUsageMode.Designtime)
+                chartsPanel.Visible = false;
             map.Load += map_Load;
             Resize += (_, _) =>
             {
@@ -264,7 +266,7 @@ namespace WaterNetworkMonitoring
         }
         private void LayoutMap()
         {
-            if(mapPanel==null || chartsPanel==null) return;
+            if(mapPanel==null || chartsPanel==null || DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime) return;
             float s=DeviceDpi/96f;
             int gap=(int)(16*s), width=Math.Min((int)(1500*s),Math.Max(1,ClientSize.Width-(int)(48*s)));
             int height=Math.Min((int)(760*s),Math.Max(1,ClientSize.Height-(int)(48*s)));

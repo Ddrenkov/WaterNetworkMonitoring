@@ -40,6 +40,9 @@ namespace WaterNetworkMonitoring
             consumptionStatus = new Label();
             consumptionPanel = new TableLayoutPanel();
             consumptionGrid = new DataGridView();
+            buildingColumn = new DataGridViewTextBoxColumn();
+            meterIdColumn = new DataGridViewTextBoxColumn();
+            monthlyUseColumn = new DataGridViewTextBoxColumn();
             consumptionChart = new DashboardChart();
             consumptionNote = new Label();
             mapPanel = new Panel();
@@ -55,12 +58,20 @@ namespace WaterNetworkMonitoring
             statusLabel = new Label();
             attributionLabel = new Label();
             refreshTimer = new System.Windows.Forms.Timer(components);
+            page.SuspendLayout();
+            consumptionToolbar.SuspendLayout();
+            consumptionPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)consumptionGrid).BeginInit();
             mapPanel.SuspendLayout();
             toolbar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)buildingNumber).BeginInit();
             SuspendLayout();
             // page
             page.Name = "page";
+            page.Location = new Point(24, 24);
+            page.Size = new Size(935, 742);
+            page.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            page.Margin = Padding.Empty;
             page.ColumnCount = 1;
             page.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             page.RowCount = 4;
@@ -102,7 +113,25 @@ namespace WaterNetworkMonitoring
             consumptionPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             consumptionPanel.Controls.Add(consumptionGrid, 0, 0);
             consumptionPanel.Controls.Add(consumptionChart, 1, 0);
+            buildingColumn.Name = "Building";
+            buildingColumn.HeaderText = "Building";
+            buildingColumn.ValueType = typeof(int);
+            buildingColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            buildingColumn.Width = 74;
+            meterIdColumn.Name = "MeterId";
+            meterIdColumn.HeaderText = "Meter ID";
+            meterIdColumn.ValueType = typeof(int);
+            meterIdColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            meterIdColumn.Width = 94;
+            monthlyUseColumn.Name = "MonthlyUse";
+            monthlyUseColumn.HeaderText = "Consumption (L)";
+            monthlyUseColumn.ValueType = typeof(decimal);
+            monthlyUseColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            monthlyUseColumn.MinimumWidth = 112;
+            monthlyUseColumn.DefaultCellStyle.Format = "N0";
+            monthlyUseColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             consumptionGrid.Name = "consumptionGrid";
+            consumptionGrid.Columns.AddRange(new DataGridViewColumn[] { buildingColumn, meterIdColumn, monthlyUseColumn });
             consumptionGrid.Dock = DockStyle.Fill;
             consumptionGrid.ReadOnly = true;
             consumptionGrid.AllowUserToAddRows = false;
@@ -140,11 +169,11 @@ namespace WaterNetworkMonitoring
             // mapPanel
             mapPanel.BackColor = Color.White;
             mapPanel.BorderStyle = BorderStyle.FixedSingle;
-            mapPanel.Location = new Point(24, 36);
+            mapPanel.Location = new Point(0, 0);
             mapPanel.Name = "mapPanel";
             mapPanel.Dock = DockStyle.Fill;
             mapPanel.Margin = new Padding(0, 0, 0, 12);
-            mapPanel.Size = new Size(1100, 620);
+            mapPanel.Size = new Size(935, 348);
             mapPanel.Controls.Add(map);
             mapPanel.Controls.Add(statusLabel);
             mapPanel.Controls.Add(attributionLabel);
@@ -233,7 +262,7 @@ namespace WaterNetworkMonitoring
             // WaterMeters
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1148, 692);
+            ClientSize = new Size(1000, 800);
             BackColor = Color.FromArgb(245, 247, 251);
             Font = new Font("Segoe UI", 9F);
             AutoScroll = true;
@@ -241,10 +270,16 @@ namespace WaterNetworkMonitoring
             Name = "WaterMeters";
             Text = "Water Meters";
             Load += WaterMeters_Load;
+            ((System.ComponentModel.ISupportInitialize)consumptionGrid).EndInit();
             ((System.ComponentModel.ISupportInitialize)buildingNumber).EndInit();
+            consumptionPanel.ResumeLayout(false);
+            consumptionToolbar.ResumeLayout(false);
+            consumptionToolbar.PerformLayout();
             toolbar.ResumeLayout(false);
             toolbar.PerformLayout();
             mapPanel.ResumeLayout(false);
+            page.ResumeLayout(false);
+            page.PerformLayout();
             ResumeLayout(false);
         }
         #endregion
@@ -256,6 +291,9 @@ namespace WaterNetworkMonitoring
         private Label consumptionStatus;
         private TableLayoutPanel consumptionPanel;
         private DataGridView consumptionGrid;
+        private DataGridViewTextBoxColumn buildingColumn;
+        private DataGridViewTextBoxColumn meterIdColumn;
+        private DataGridViewTextBoxColumn monthlyUseColumn;
         private DashboardChart consumptionChart;
         private Label consumptionNote;
         private Panel mapPanel;
