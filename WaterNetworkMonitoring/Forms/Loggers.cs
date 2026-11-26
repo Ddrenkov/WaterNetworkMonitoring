@@ -1,4 +1,4 @@
-﻿using GMap.NET;
+using GMap.NET;
 using GMap.NET.WindowsForms;
 using System.ComponentModel;
 using WaterNetworkMonitoring.Services;
@@ -56,7 +56,6 @@ namespace WaterNetworkMonitoring
             loggerPins = LoggerMapPin.CreateOverlay();
             map.Overlays.Add(loggerPins);
             foreach (var polygon in neighbourhoods.Polygons) map.UpdatePolygonLocalPosition(polygon);
-            foreach (var marker in neighbourhoods.Markers) map.UpdateMarkerLocalPosition(marker);
             zoneSelector.Items.Add("All regions");
             foreach (var polygon in neighbourhoods.Polygons) zoneSelector.Items.Add(polygon.Name);
             zoneSelector.SelectedIndex = 0;
@@ -80,15 +79,11 @@ namespace WaterNetworkMonitoring
                     LoggerMapPin.Select(loggerPins, logger);
                     map.Invalidate();
                 }
-                else if (marker.Tag is BlagoevgradNeighbourhoods.Zone zone) SelectZone(zone);
             };
             map.OnPolygonEnter += _ => map.Cursor = Cursors.Hand;
             map.OnPolygonLeave += _ => map.Cursor = Cursors.Default;
             map.OnMarkerEnter += _ => map.Cursor = Cursors.Hand;
             map.OnMarkerLeave += _ => map.Cursor = Cursors.Default;
-            map.OnMapZoomChanged += UpdateLabelVisibility;
-            map.OnPositionChanged += _ => UpdateLabelVisibility();
-            UpdateLabelVisibility();
             map.Refresh();
             _ = LoadLoggerReadingsAsync();
         }
@@ -153,7 +148,7 @@ namespace WaterNetworkMonitoring
             if(neighbourhoods==null) return;
             selectedZoneName=null; LoggerMapPin.Select(loggerPins,null);
             foreach(var polygon in neighbourhoods.Polygons) BlagoevgradNeighbourhoods.StylePolygon(polygon,false);
-            UpdateCharts(); CenterOnBlagoevgrad(); UpdateLabelVisibility(); map.Refresh();
+            UpdateCharts(); CenterOnBlagoevgrad(); map.Refresh();
         }
 
         private void FitZone(BlagoevgradNeighbourhoods.Zone zone)
@@ -180,7 +175,6 @@ namespace WaterNetworkMonitoring
                 if (selectedZoneName != null && neighbourhoods != null)
                     FitZone((BlagoevgradNeighbourhoods.Zone)neighbourhoods.Polygons.Single(p => p.Name == selectedZoneName).Tag);
                 else CenterOnBlagoevgrad();
-                UpdateLabelVisibility();
             }));
         }
 
@@ -196,7 +190,6 @@ namespace WaterNetworkMonitoring
             updatingSelection = false;
             selectionLabel.Text = zone.Name + " — " + zone.BoundaryNote;
             UpdateCharts();
-            UpdateLabelVisibility();
             map.Refresh();
         }
 
@@ -243,27 +236,6 @@ namespace WaterNetworkMonitoring
             map.Zoom = Math.Max(map.MinZoom, map.Zoom - 1);
         }
 
-        private void labelsCheckBox_CheckedChanged(object? sender, EventArgs e)
-        {
-            UpdateLabelVisibility();
-            map.Refresh();
-        }
-
-        private void UpdateLabelVisibility()
-        {
-            if (neighbourhoods == null) return;
-            var occupied = new List<Rectangle>();
-            foreach (var marker in neighbourhoods.Markers.OrderByDescending(m =>
-                ((BlagoevgradNeighbourhoods.Zone)m.Tag).Name == selectedZoneName))
-            {
-                map.UpdateMarkerLocalPosition(marker);
-                var bounds = new Rectangle(marker.LocalPosition, marker.Size);
-                bounds.Inflate(4, 3);
-                bool visible = labelsCheckBox.Checked && !occupied.Any(r => r.IntersectsWith(bounds));
-                marker.IsVisible = visible;
-                if (visible) occupied.Add(bounds);
-            }
-        }
         private void LayoutMap()
         {
             if(mapPanel==null || chartsPanel==null || DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime) return;

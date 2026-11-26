@@ -3,8 +3,7 @@ using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
-    // Frozen sample-data version used by AddZapadOctober2026Readings. Do not change after release:
-    // a later scenario belongs in a new migration. No map JSON, current date, network or Random dependency.
+    // Repeatable October example data, extended to four loggers by ZapadFourLoggerSeed.
     internal static class ZapadOctober2026Seed
     {
         internal const int InletLoggerId = 200001;
@@ -92,126 +91,236 @@ namespace WaterNetworkMonitoring.Data
             new(100068, 67, 1555328968, "yes", 7),
         };
 
+        private static readonly DateTime HistoryStart = new DateTime(2026, 9, 30, 12, 0, 0);
+        private static readonly DateTime HistoryEnd = new DateTime(2026, 11, 1, 6, 0, 0);
+        private const int MinutesPerReading = 15;
+        private const int SlotsPerDay = 96;
+        private const int LeakedLitresPerReading = 125;
+
+        // ID, whole-zone measurement, normal pressure, pressure per litre, leak pressure drop.
+        private sealed record LoggerSettings(int Id, bool WholeZone, decimal Pressure,
+            decimal PressurePerLitre, decimal LeakPressureDrop);
+        private static readonly LoggerSettings[] LoggerProfiles =
+        {
+            new(InletLoggerId,  true,  4.5m, 0.00005m, 0.12m),
+            new(BranchLoggerId, false, 4.1m, 0.0004m,  0.45m)
+        };
+
+        private sealed record DailyVolume(string Kind, int Litres);
+        private static readonly DailyVolume[] SpecialDailyVolumes =
+        {
+            new("roof", 0),
+            new("service", 100),
+            new("sports_hall", 4000),
+            new("clinic", 2400),
+            new("market", 900)
+        };
+
+        private sealed record ActivityHours(string Kind, int Opens, int Closes, decimal NightWeight);
+        private static readonly ActivityHours[] Activities =
+        {
+            new("sports_hall", 8, 22, 0.04m),
+            new("clinic",      7, 20, 0.08m),
+            new("market",      7, 20, 0.08m),
+            new("service",     7, 20, 0.08m)
+        };
+
+        private sealed record HourPeriod(int BeforeHour, decimal Weight);
+        private static readonly HourPeriod[] ResidentialHours =
+        {
+            new(6,  0.18m),
+            new(10, 1.8m),
+            new(17, 0.9m),
+            new(22, 1.6m),
+            new(24, 0.55m)
+        };
+
+        private sealed record IntervalTotals(int TotalLitres, int BranchLitres);
+
         internal static SampleData Generate()
         {
-            var loggers = new[]
-            {
-                new PressureLogger { Id = InletLoggerId, Name = "Zapad inlet", ZoneName = "Zapad", IsSimulated = true },
-                new PressureLogger { Id = BranchLoggerId, Name = "Skaptopara supply branch", ZoneName = "Zapad",
-                    ParentLoggerId = InletLoggerId, SuppliedWaterMeterId = SkaptoparaMeterId, IsSimulated = true }
-            };
-            var loggerReadings = new List<LoggerReading>();
-            var meterReadings = new List<WaterMeterReading>();
-            var counters = Profiles.Select(p => 500000 + p.MapNumber * 10000).ToArray();
-            var historyStart = new DateTime(2026, 9, 30, 12, 0, 0);
-            var historyEnd = new DateTime(2026, 11, 1, 6, 0, 0);
-            long loggerReadingId = 1, meterReadingId = 1;
+            var result = new SampleData(CreateBaseLoggers(),
+                new List<LoggerReading>(), new List<WaterMeterReading>());
+            var counters = new int[Profiles.Length];
+            for (int i = 0; i < Profiles.Length; i++)
+                counters[i] = 500000 + Profiles[i].MapNumber * 10000;
 
-            for (var day = new DateOnly(2026, 9, 30); day <= new DateOnly(2026, 11, 8); day = day.AddDays(1))
+            var firstDay = new DateOnly(2026, 9, 30);
+            var lastDay = DateOnly.FromDateTime(SnapshotAt);
+            for (var day = firstDay; day <= lastDay; day = day.AddDays(1))
             {
-                var dayStart = new DateTime(day.Year, day.Month, day.Day);
-                var next = day.AddDays(1);
-                var dayEnd = new DateTime(next.Year, next.Month, next.Day);
-                int slots = (int)((dayEnd - dayStart).TotalMinutes / 15);
-                var usage = new int[Profiles.Length, slots];
-
-                // Allocate each day's volume across 96 local quarter hours.
+                var dayStart = day.ToDateTime(TimeOnly.MinValue);
+                var dailyUsage = new int[Profiles.Length][];
                 for (int i = 0; i < Profiles.Length; i++)
+                    dailyUsage[i] = CreateDailyUsage(Profiles[i], day);
+
+                for (int slot = 0; slot < SlotsPerDay; slot++)
                 {
-                    var profile = Profiles[i];
-                    var weights = new decimal[slots];
-                    for (int slot = 0; slot < slots; slot++)
-                    {
-                        int hour = dayStart.AddMinutes(slot * 15).Hour;
-                        weights[slot] = HourWeight(profile.Kind, hour) *
-                            (0.90m + Noise(profile.Id, day.DayNumber, slot) % 21 / 100m);
-                    }
-                    decimal dailyLitres = DailyLitres(profile) *
-                        (0.90m + Noise(profile.Id, day.DayNumber, 101) % 21 / 100m);
-                    decimal totalWeight = weights.Sum(), runningWeight = 0;
-                    int assigned = 0;
-                    for (int slot = 0; slot < slots; slot++)
-                    {
-                        runningWeight += weights[slot];
-                        int target = (int)decimal.Round(dailyLitres * runningWeight / totalWeight, 0,
-                            MidpointRounding.AwayFromZero);
-                        usage[i, slot] = target - assigned;
-                        assigned = target;
-                    }
-                }
+                    var time = dayStart.AddMinutes((slot + 1) * MinutesPerReading);
+                    if (time > SnapshotAt) break;
 
-                for (int slot = 0; slot < slots; slot++)
-                {
-                    var intervalStart = dayStart.AddMinutes(slot * 15);
-                    var takenAt = intervalStart.AddMinutes(15);
-                    if (takenAt > SnapshotAt) break;
-                    int totalLitres = 0, branchLitres = 0;
-                    for (int i = 0; i < Profiles.Length; i++)
-                    {
-                        var profile = Profiles[i];
-                        int litres = usage[i, slot];
-                        counters[i] += litres;
-                        totalLitres += litres;
-                        if (profile.Id == SkaptoparaMeterId) branchLitres = litres;
-
-                        // Alternate fixed local schedules: 02/14 and 06/18. Skaptopara uses 06/18.
-                        int firstHour = profile.MapNumber % 2 == 0 && profile.Id != SkaptoparaMeterId ? 2 : 6;
-                        bool scheduled = takenAt.Minute == 0 &&
-                            (takenAt.Hour == firstHour || takenAt.Hour == firstHour + 12);
-                        bool inOctober = takenAt >= MonthStart && takenAt < MonthEnd;
-                        bool boundary = (takenAt.Date == new DateTime(2026, 9, 30) && takenAt.Hour == firstHour + 12) ||
-                            (takenAt.Date == new DateTime(2026, 11, 1) && takenAt.Hour == firstHour);
-                        if ((scheduled && (inOctober || boundary)) || takenAt == SnapshotAt)
-                        {
-                            meterReadings.Add(new WaterMeterReading
-                            {
-                                Id = meterReadingId++, WaterMeterId = profile.Id,
-                                Reading = counters[i].ToString("D8", CultureInfo.InvariantCulture),
-                                TakenAt = takenAt, IsSimulated = true
-                            });
-                        }
-                    }
-
-                    if (takenAt > historyStart && takenAt <= historyEnd)
-                    {
-                        bool leaking = intervalStart >= LeakStart;
-                        int leakedLitres = leaking ? 125 : 0; // 500 L/hour, upstream of the building meter.
-                        decimal jitter = ((int)(Noise(200001, day.DayNumber, slot) % 41) - 20) / 1000m;
-                        loggerReadings.Add(new LoggerReading
-                        {
-                            Id = loggerReadingId++, LoggerId = InletLoggerId, TakenAt = takenAt,
-                            FlowM3PerHour = (totalLitres + leakedLitres) * 0.004m,
-                            PressureBar = decimal.Round(4.5m - totalLitres * 0.00005m + jitter -
-                                (leaking ? 0.12m : 0), 3), IsSimulated = true
-                        });
-                        loggerReadings.Add(new LoggerReading
-                        {
-                            Id = loggerReadingId++, LoggerId = BranchLoggerId, TakenAt = takenAt,
-                            FlowM3PerHour = (branchLitres + leakedLitres) * 0.004m,
-                            PressureBar = decimal.Round(4.1m - branchLitres * 0.0004m + jitter -
-                                (leaking ? 0.45m : 0), 3), IsSimulated = true
-                        });
-                    }
+                    var totals = AddMeterReadings(result.MeterReadings, counters, dailyUsage, slot, time);
+                    if (time > HistoryStart && time <= HistoryEnd)
+                        AddLoggerReadings(result.LoggerReadings, totals, day, slot, time);
                 }
             }
-            return new SampleData(loggers, loggerReadings, meterReadings);
+            return result;
         }
 
-        private static decimal DailyLitres(MeterProfile profile) => profile.Kind switch
+        private static PressureLogger[] CreateBaseLoggers()
         {
-            "roof" => 0, "service" => 100, "sports_hall" => 4000,
-            "clinic" => 2400, "market" => 900,
-            _ => profile.AssumedOccupants * LitresPerPersonPerDay
-        };
+            // L3 and L4 are added by ZapadFourLoggerSeed.
+            return new[]
+            {
+                new PressureLogger
+                {
+                    Id = InletLoggerId, Name = "Zapad inlet",
+                    ZoneName = "Zapad", IsSimulated = true
+                },
+                new PressureLogger
+                {
+                    Id = BranchLoggerId, Name = "Skaptopara supply branch", ZoneName = "Zapad",
+                    ParentLoggerId = InletLoggerId, SuppliedWaterMeterId = SkaptoparaMeterId,
+                    IsSimulated = true
+                }
+            };
+        }
+
+        private static IntervalTotals AddMeterReadings(List<WaterMeterReading> readings,
+            int[] counters, int[][] dailyUsage, int slot, DateTime time)
+        {
+            int totalLitres = 0;
+            int branchLitres = 0;
+            for (int i = 0; i < Profiles.Length; i++)
+            {
+                var profile = Profiles[i];
+                int litres = dailyUsage[i][slot];
+                counters[i] += litres;
+                totalLitres += litres;
+                if (profile.Id == SkaptoparaMeterId) branchLitres = litres;
+
+                if (ShouldSaveMeterReading(profile, time))
+                {
+                    readings.Add(new WaterMeterReading
+                    {
+                        Id = readings.Count + 1L,
+                        WaterMeterId = profile.Id,
+                        Reading = counters[i].ToString("D8", CultureInfo.InvariantCulture),
+                        TakenAt = time,
+                        IsSimulated = true
+                    });
+                }
+            }
+            return new IntervalTotals(totalLitres, branchLitres);
+        }
+
+        private static bool ShouldSaveMeterReading(MeterProfile profile, DateTime time)
+        {
+            if (time == SnapshotAt) return true;
+            if (time.Minute != 0) return false;
+
+            int morningHour = 6;
+            if (profile.MapNumber % 2 == 0 && profile.Id != SkaptoparaMeterId)
+                morningHour = 2;
+            int eveningHour = morningHour + 12;
+            if (time.Hour != morningHour && time.Hour != eveningHour) return false;
+
+            if (time >= MonthStart && time < MonthEnd) return true;
+            // The surrounding observations allow consumption at month boundaries to be estimated.
+            if (time.Date == MonthStart.AddDays(-1) && time.Hour == eveningHour) return true;
+            if (time.Date == MonthEnd && time.Hour == morningHour) return true;
+            return false;
+        }
+
+        private static void AddLoggerReadings(List<LoggerReading> readings, IntervalTotals totals,
+            DateOnly day, int slot, DateTime time)
+        {
+            bool leaking = time.AddMinutes(-MinutesPerReading) >= LeakStart;
+            int leakedLitres = 0;
+            if (leaking) leakedLitres = LeakedLitresPerReading;
+            decimal variation = ((int)(Noise(InletLoggerId, day.DayNumber, slot) % 41) - 20) / 1000m;
+
+            foreach (var logger in LoggerProfiles)
+            {
+                int usedLitres = totals.BranchLitres;
+                if (logger.WholeZone) usedLitres = totals.TotalLitres;
+                decimal pressure = logger.Pressure - usedLitres * logger.PressurePerLitre + variation;
+                if (leaking) pressure -= logger.LeakPressureDrop;
+
+                readings.Add(new LoggerReading
+                {
+                    Id = readings.Count + 1L,
+                    LoggerId = logger.Id,
+                    TakenAt = time,
+                    FlowM3PerHour = (usedLitres + leakedLitres) * 0.004m,
+                    PressureBar = decimal.Round(pressure, 3),
+                    IsSimulated = true
+                });
+            }
+        }
+
+        internal static int[] CreateDailyUsage(MeterProfile profile, DateOnly day)
+        {
+            // Give each quarter-hour a relative weight, then divide the daily litres between them.
+            var dayStart = day.ToDateTime(TimeOnly.MinValue);
+            var weights = new decimal[SlotsPerDay];
+            decimal totalWeight = 0;
+            for (int slot = 0; slot < SlotsPerDay; slot++)
+            {
+                int hour = dayStart.AddMinutes(slot * MinutesPerReading).Hour;
+                decimal variation = 0.90m + Noise(profile.Id, day.DayNumber, slot) % 21 / 100m;
+                weights[slot] = HourWeight(profile.Kind, hour) * variation;
+                totalWeight += weights[slot];
+            }
+
+            decimal dailyVariation = 0.90m + Noise(profile.Id, day.DayNumber, 101) % 21 / 100m;
+            decimal dailyLitres = DailyLitres(profile) * dailyVariation;
+            decimal runningWeight = 0;
+            int assignedLitres = 0;
+            var usage = new int[SlotsPerDay];
+            for (int slot = 0; slot < SlotsPerDay; slot++)
+            {
+                runningWeight += weights[slot];
+                int targetLitres = (int)decimal.Round(dailyLitres * runningWeight / totalWeight,
+                    0, MidpointRounding.AwayFromZero);
+                usage[slot] = targetLitres - assignedLitres;
+                assignedLitres = targetLitres;
+            }
+            return usage;
+        }
+
+        internal static decimal PressureVariation(DateTime time)
+        {
+            int dayNumber = DateOnly.FromDateTime(time.Date).DayNumber;
+            int slot = time.Hour * 4 + time.Minute / MinutesPerReading;
+            return ((int)(Noise(InletLoggerId, dayNumber, slot) % 41) - 20) / 1000m;
+        }
+
+        private static decimal DailyLitres(MeterProfile profile)
+        {
+            foreach (var setting in SpecialDailyVolumes)
+            {
+                if (setting.Kind == profile.Kind) return setting.Litres;
+            }
+            return profile.AssumedOccupants * LitresPerPersonPerDay;
+        }
 
         private static decimal HourWeight(string kind, int hour)
         {
-            if (kind == "sports_hall") return hour is >= 8 and < 22 ? 1m : 0.04m;
-            if (kind is "clinic" or "market" or "service") return hour is >= 7 and < 20 ? 1m : 0.08m;
-            return hour switch { < 6 => 0.18m, < 10 => 1.8m, < 17 => 0.9m, < 22 => 1.6m, _ => 0.55m };
+            foreach (var activity in Activities)
+            {
+                if (activity.Kind != kind) continue;
+                if (hour >= activity.Opens && hour < activity.Closes) return 1m;
+                return activity.NightWeight;
+            }
+            foreach (var period in ResidentialHours)
+            {
+                if (hour < period.BeforeHour) return period.Weight;
+            }
+            return 0.55m;
         }
 
-        // A fixed integer mixer keeps the dataset repeatable across runs and .NET versions.
+        // Keep the same repeatable variation so existing demo readings do not change.
         private static uint Noise(int meterId, int dayNumber, int slot)
         {
             unchecked
@@ -223,6 +332,5 @@ namespace WaterNetworkMonitoring.Data
                 return value;
             }
         }
-
     }
 }

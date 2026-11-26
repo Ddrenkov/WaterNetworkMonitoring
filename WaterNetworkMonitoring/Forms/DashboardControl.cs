@@ -72,8 +72,6 @@ namespace WaterNetworkMonitoring
             GMaps.Instance.Mode = previewData == null ? AccessMode.ServerAndCache : AccessMode.CacheOnly;
             map.MapProvider = OSMap.Instance;
             var regions = BlagoevgradNeighbourhoods.CreateOverlay();
-            // The map header already names Zapad; omit the large label over its buildings.
-            regions.Markers.Clear();
             map.Overlays.Add(regions);
             try
             {

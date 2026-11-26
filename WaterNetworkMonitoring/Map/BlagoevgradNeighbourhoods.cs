@@ -55,7 +55,6 @@ namespace WaterNetworkMonitoring
                 };
                 StylePolygon(polygon, false);
                 overlay.Polygons.Add(polygon);
-                overlay.Markers.Add(new NeighbourhoodLabel(zone));
             }
             return overlay;
         }
@@ -123,35 +122,5 @@ namespace WaterNetworkMonitoring
             polygon.Fill = new SolidBrush(Color.FromArgb(selected ? 40 : 16, 65, 145, 235));
         }
 
-        private sealed class NeighbourhoodLabel : GMapMarker
-        {
-            private readonly string name;
-            public NeighbourhoodLabel(Zone zone) : base(new PointLatLng(zone.Latitude, zone.Longitude))
-            {
-                name = zone.Name;
-                Tag = zone;
-                ToolTipText = zone.Name + "\n" + zone.BoundaryNote;
-                Size = new Size(TextRenderer.MeasureText(name, SystemFonts.DefaultFont).Width + 16, 26);
-                Offset = new Point(-Size.Width / 2, -Size.Height / 2);
-                IsHitTestVisible = true;
-            }
-
-            public override void OnRender(Graphics graphics)
-            {
-                var bounds = new Rectangle(LocalPosition.X, LocalPosition.Y, Size.Width, Size.Height);
-                using var background = new SolidBrush(Color.FromArgb(235, Color.White));
-                using var border = new Pen(Color.FromArgb(180, 145, 180, 225));
-                graphics.FillRectangle(background, bounds);
-                graphics.DrawRectangle(border, bounds);
-                using var textBrush = new SolidBrush(Color.FromArgb(25, 65, 110));
-                using var format = new StringFormat
-                {
-                    Alignment = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Center
-                };
-                graphics.DrawString(name, SystemFonts.DefaultFont, textBrush, bounds, format);
-            }
-        }
     }
 }
-

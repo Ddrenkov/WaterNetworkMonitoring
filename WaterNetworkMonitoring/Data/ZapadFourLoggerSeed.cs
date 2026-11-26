@@ -3,71 +3,156 @@ using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
-    // Frozen four-logger prototype. Historical meter counters and reading schedules are preserved.
     internal static class ZapadFourLoggerSeed
     {
+        private const int InletLoggerId = 200001;
+        private const int BranchLoggerId = 200002;
+        private const int NorthLoggerId = 200003;
+        private const int SouthLoggerId = 200004;
+        private const int SkaptoparaMeterId = 100058;
+
         private static readonly HashSet<int> NorthMeters = new()
         {
-            100001,100002,100003,100004,100005,100006,100007,100008,100009,100010,
-            100011,100012,100013,100014,100015,100016,100017,100018,100021,100022,
-            100023,100042,100043,100045,100046,100047,100048,100049,100050,100051,
-            100053,100055,100056,100057,100061,100062,100064,100065,100067,100068
+            100001, 100002, 100003, 100004, 100005, 100006, 100007, 100008, 100009, 100010,
+            100011, 100012, 100013, 100014, 100015, 100016, 100017, 100018, 100021, 100022,
+            100023, 100042, 100043, 100045, 100046, 100047, 100048, 100049, 100050, 100051,
+            100053, 100055, 100056, 100057, 100061, 100062, 100064, 100065, 100067, 100068
         };
 
-        public static int LoggerForMeter(int meterId) => meterId == 100058 ? 200002 :
-            NorthMeters.Contains(meterId) ? 200003 : 200004;
-
-        public static PressureLogger[] GetLoggers() => new[]
+        private sealed record BranchSettings(int LoggerId, decimal Pressure, decimal PressurePerFlow);
+        private static readonly BranchSettings[] Branches =
         {
-            new PressureLogger { Id=200001, Name="Zapad inlet", ZoneName="Zapad", Latitude=42.0176, Longitude=23.0795, IsSimulated=true },
-            new PressureLogger { Id=200002, Name="Skaptopara supply branch", ZoneName="Zapad", ParentLoggerId=200001,
-                SuppliedWaterMeterId=100058, Latitude=42.01701, Longitude=23.08290, IsSimulated=true },
-            new PressureLogger { Id=200003, Name="Zapad North", ZoneName="Zapad", ParentLoggerId=200001,
-                Latitude=42.0181, Longitude=23.0826, IsSimulated=true },
-            new PressureLogger { Id=200004, Name="Zapad South", ZoneName="Zapad", ParentLoggerId=200001,
-                Latitude=42.0161, Longitude=23.0836, IsSimulated=true }
+            new(NorthLoggerId, 4.3m, 0.005m),
+            new(SouthLoggerId, 4.3m, 0.005m)
         };
+
+        public static int LoggerForMeter(int meterId)
+        {
+            if (meterId == SkaptoparaMeterId) return BranchLoggerId;
+            if (NorthMeters.Contains(meterId)) return NorthLoggerId;
+            return SouthLoggerId;
+        }
+
+        public static PressureLogger[] GetLoggers()
+        {
+            return new[]
+            {
+                new PressureLogger
+                {
+                    Id = InletLoggerId, Name = "Zapad inlet", ZoneName = "Zapad",
+                    Latitude = 42.0176, Longitude = 23.0795, IsSimulated = true
+                },
+                new PressureLogger
+                {
+                    Id = BranchLoggerId, Name = "Skaptopara supply branch", ZoneName = "Zapad",
+                    ParentLoggerId = InletLoggerId, SuppliedWaterMeterId = SkaptoparaMeterId,
+                    Latitude = 42.01701, Longitude = 23.08290, IsSimulated = true
+                },
+                new PressureLogger
+                {
+                    Id = NorthLoggerId, Name = "Zapad North", ZoneName = "Zapad",
+                    ParentLoggerId = InletLoggerId,
+                    Latitude = 42.0181, Longitude = 23.0826, IsSimulated = true
+                },
+                new PressureLogger
+                {
+                    Id = SouthLoggerId, Name = "Zapad South", ZoneName = "Zapad",
+                    ParentLoggerId = InletLoggerId,
+                    Latitude = 42.0161, Longitude = 23.0836, IsSimulated = true
+                }
+            };
+        }
 
         public static List<LoggerReading> GenerateReadings()
         {
-            var original = ZapadOctober2026Seed.Generate();
-            var result = original.LoggerReadings;
-            var histories = original.MeterReadings.GroupBy(r => r.WaterMeterId)
-                .ToDictionary(g => g.Key, g => g.OrderBy(r => r.TakenAt).ToArray());
-            var skaptopara = result.Where(r => r.LoggerId == 200002).ToDictionary(r => r.TakenAt);
-            var newRows = new List<LoggerReading>();
-            foreach (var inlet in result.Where(r => r.LoggerId == 200001 &&
-                r.TakenAt > ZapadOctober2026Seed.MonthStart && r.TakenAt <= ZapadOctober2026Seed.MonthEnd))
+            // The October seed provides the original inlet and Skaptopara readings.
+            var october = ZapadOctober2026Seed.Generate();
+            var histories = GroupMeterReadings(october.MeterReadings);
+            var skaptoparaReadings = new Dictionary<DateTime, LoggerReading>();
+            foreach (var reading in october.LoggerReadings)
             {
-                decimal childSum = skaptopara[inlet.TakenAt].FlowM3PerHour;
-                foreach (int loggerId in new[] { 200003, 200004 })
-                {
-                    decimal litres = histories.Where(h => LoggerForMeter(h.Key) == loggerId).Sum(h =>
-                        CounterAt(h.Value, inlet.TakenAt) - CounterAt(h.Value, inlet.TakenAt.AddMinutes(-15)));
-                    decimal flow = decimal.Round(litres * .004m, 3);
-                    childSum += flow;
-                    newRows.Add(new LoggerReading
-                    {
-                        LoggerId=loggerId, TakenAt=inlet.TakenAt, FlowM3PerHour=flow,
-                        PressureBar=decimal.Round(4.3m-flow*.005m+(inlet.TakenAt.Minute/15-1)*.003m,3), IsSimulated=true
-                    });
-                }
-                // Every outlet is covered. The Skaptopara loss is downstream of L2, not on the common inlet.
-                inlet.FlowM3PerHour = childSum;
+                if (reading.LoggerId == BranchLoggerId)
+                    skaptoparaReadings.Add(reading.TakenAt, reading);
             }
-            result.AddRange(newRows);
-            return result;
+
+            var addedReadings = new List<LoggerReading>();
+            foreach (var inlet in october.LoggerReadings)
+            {
+                if (inlet.LoggerId != InletLoggerId) continue;
+                if (inlet.TakenAt <= ZapadOctober2026Seed.MonthStart ||
+                    inlet.TakenAt > ZapadOctober2026Seed.MonthEnd) continue;
+
+                decimal totalFlow = skaptoparaReadings[inlet.TakenAt].FlowM3PerHour;
+                foreach (var branch in Branches)
+                {
+                    decimal flow = FlowForBranch(branch.LoggerId, histories, inlet.TakenAt);
+                    decimal pressureVariation = (inlet.TakenAt.Minute / 15 - 1) * 0.003m;
+                    decimal pressure = branch.Pressure - flow * branch.PressurePerFlow + pressureVariation;
+                    addedReadings.Add(new LoggerReading
+                    {
+                        LoggerId = branch.LoggerId,
+                        TakenAt = inlet.TakenAt,
+                        FlowM3PerHour = flow,
+                        PressureBar = decimal.Round(pressure, 3),
+                        IsSimulated = true
+                    });
+                    totalFlow += flow;
+                }
+                // All three branch flows pass through the common inlet.
+                inlet.FlowM3PerHour = totalFlow;
+            }
+            october.LoggerReadings.AddRange(addedReadings);
+            return october.LoggerReadings;
         }
 
-        private static decimal CounterAt(WaterMeterReading[] rows, DateTime time)
+        private static Dictionary<int, List<WaterMeterReading>> GroupMeterReadings(List<WaterMeterReading> readings)
         {
-            var left = rows.Last(r => r.TakenAt <= time);
-            if (left.TakenAt == time) return decimal.Parse(left.Reading, CultureInfo.InvariantCulture);
-            var right = rows.First(r => r.TakenAt > time);
-            decimal fraction = (decimal)((time-left.TakenAt).TotalSeconds/(right.TakenAt-left.TakenAt).TotalSeconds);
-            decimal start = decimal.Parse(left.Reading, CultureInfo.InvariantCulture);
-            // Linear interpolation is a demo estimate between the existing 12-hour meter observations.
-            return start+(decimal.Parse(right.Reading, CultureInfo.InvariantCulture)-start)*fraction;
+            var histories = new Dictionary<int, List<WaterMeterReading>>();
+            foreach (var reading in readings)
+            {
+                if (!histories.ContainsKey(reading.WaterMeterId))
+                    histories[reading.WaterMeterId] = new List<WaterMeterReading>();
+                histories[reading.WaterMeterId].Add(reading);
+            }
+            foreach (var history in histories.Values)
+                history.Sort((first, second) => first.TakenAt.CompareTo(second.TakenAt));
+            return histories;
+        }
+
+        private static decimal FlowForBranch(int loggerId,
+            Dictionary<int, List<WaterMeterReading>> histories, DateTime time)
+        {
+            decimal litres = 0;
+            foreach (var history in histories)
+            {
+                if (LoggerForMeter(history.Key) != loggerId) continue;
+                decimal before = CounterAt(history.Value, time.AddMinutes(-15));
+                decimal after = CounterAt(history.Value, time);
+                litres += after - before;
+            }
+            // Convert litres in 15 minutes to cubic metres per hour.
+            return decimal.Round(litres * 0.004m, 3);
+        }
+
+        internal static decimal CounterAt(IReadOnlyList<WaterMeterReading> readings, DateTime time)
+        {
+            WaterMeterReading? before = null;
+            WaterMeterReading? after = null;
+            foreach (var reading in readings)
+            {
+                if (reading.TakenAt <= time) before = reading;
+                if (after == null && reading.TakenAt > time) after = reading;
+            }
+            if (before == null) throw new InvalidOperationException("An earlier meter reading is needed.");
+
+            decimal firstCounter = decimal.Parse(before.Reading, CultureInfo.InvariantCulture);
+            if (before.TakenAt == time) return firstCounter;
+            if (after == null) throw new InvalidOperationException("A later meter reading is needed.");
+
+            decimal lastCounter = decimal.Parse(after.Reading, CultureInfo.InvariantCulture);
+            decimal fraction = (decimal)((time - before.TakenAt).TotalSeconds /
+                (after.TakenAt - before.TakenAt).TotalSeconds);
+            return firstCounter + (lastCounter - firstCounter) * fraction;
         }
     }
 }

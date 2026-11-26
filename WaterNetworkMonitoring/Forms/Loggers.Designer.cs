@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 namespace WaterNetworkMonitoring
 {
     partial class Loggers
@@ -41,7 +41,6 @@ namespace WaterNetworkMonitoring
             zoomOutButton = new Button();
             zoomInButton = new Button();
             resetButton = new Button();
-            labelsCheckBox = new CheckBox();
             headerPanel = new Panel();
             titleLabel = new Label();
             chartsPanel = new TableLayoutPanel();
@@ -131,7 +130,6 @@ namespace WaterNetworkMonitoring
             toolbar.Controls.Add(zoomOutButton);
             toolbar.Controls.Add(zoomInButton);
             toolbar.Controls.Add(resetButton);
-            toolbar.Controls.Add(labelsCheckBox);
             toolbar.Dock = DockStyle.Top;
             toolbar.Location = new Point(0, 48);
             toolbar.Name = "toolbar";
@@ -176,19 +174,6 @@ namespace WaterNetworkMonitoring
             resetButton.TabIndex = 3;
             resetButton.Text = "Reset view";
             resetButton.Click += resetButton_Click;
-            // 
-            // labelsCheckBox
-            // 
-            labelsCheckBox.AutoSize = true;
-            labelsCheckBox.Checked = true;
-            labelsCheckBox.CheckState = CheckState.Checked;
-            labelsCheckBox.Location = new Point(442, 14);
-            labelsCheckBox.Margin = new Padding(14, 9, 0, 0);
-            labelsCheckBox.Name = "labelsCheckBox";
-            labelsCheckBox.Size = new Size(114, 24);
-            labelsCheckBox.TabIndex = 4;
-            labelsCheckBox.Text = "Show names";
-            labelsCheckBox.CheckedChanged += labelsCheckBox_CheckedChanged;
             // 
             // headerPanel
             // 
@@ -319,7 +304,6 @@ namespace WaterNetworkMonitoring
         private ComboBox zoneSelector;
         private Button zoomInButton;
         private Button zoomOutButton;
-        private CheckBox labelsCheckBox;
         private TableLayoutPanel chartsPanel;
         private Panel chartHeader;
         private ComboBox periodSelector;
