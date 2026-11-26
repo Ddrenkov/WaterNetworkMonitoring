@@ -3,7 +3,6 @@ using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
-    // Repeatable October example data, extended to four loggers by ZapadFourLoggerSeed.
     internal static class ZapadOctober2026Seed
     {
         internal const int InletLoggerId = 200001;
@@ -19,7 +18,6 @@ namespace WaterNetworkMonitoring.Data
         internal sealed record SampleData(PressureLogger[] Loggers, List<LoggerReading> LoggerReadings,
             List<WaterMeterReading> MeterReadings);
 
-        // Assumed occupancy is for the demo; OSM footprints do not establish real residents or meters.
         internal static readonly MeterProfile[] Profiles =
         {
             new(100001, 1, 179455066, "roof", 0),

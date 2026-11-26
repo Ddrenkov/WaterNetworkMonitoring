@@ -2,7 +2,6 @@ using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
-    // Fixed September example data for the wastewater migrations.
     internal static class WasteWaterSepSeed
     {
         public static readonly DateTime Start = new(2026, 9, 1, 0, 0, 0);
@@ -19,7 +18,6 @@ namespace WaterNetworkMonitoring.Data
         };
 
         internal sealed record RainPeriod(DateTime Start, DateTime End);
-        // Invented rain events for the project, not historical weather observations.
         internal static readonly RainPeriod[] RainPeriods =
         {
             new(Start.AddDays(5).AddHours(6), Start.AddDays(5).AddHours(9)),
@@ -52,7 +50,6 @@ namespace WaterNetworkMonitoring.Data
             return result;
         }
 
-        // Retained unchanged so the first migration can still reproduce its original data.
         public static List<WasteWaterReading> GenerateReadings()
         {
             var result = new List<WasteWaterReading>();

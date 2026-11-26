@@ -4,7 +4,6 @@ namespace WaterNetworkMonitoring
     {
         internal static void ConfigureTraceOutput()
         {
-            // The Visual Studio designer's listener displays ordinary traces as dialogs.
             for (int i = System.Diagnostics.Trace.Listeners.Count - 1; i >= 0; i--)
             {
                 var listenerType = System.Diagnostics.Trace.Listeners[i].GetType();

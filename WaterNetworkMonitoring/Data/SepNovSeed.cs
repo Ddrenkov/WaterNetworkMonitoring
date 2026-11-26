@@ -44,16 +44,16 @@ namespace WaterNetworkMonitoring.Data
 
         internal static SampleData Generate()
         {
-            // 1. Create continuous meter counters and group their observations by meter.
+            // Created continuous meter counters and group their observations by meter.
             var allMeterReadings = CreateMeterReadings(out var skaptoparaUsage);
             var meterHistories = GroupMeterReadings(allMeterReadings);
 
-            // 2. Create healthy logger readings for September and November.
+            // Created healthy logger readings for September and November.
             var loggerReadings = new List<LoggerReading>();
             AddMonthReadings(loggerReadings, SeptemberStart, skaptoparaUsage, meterHistories);
             AddMonthReadings(loggerReadings, NovemberStart, skaptoparaUsage, meterHistories);
 
-            // 3. Restore the October readings after the recorded repair.
+            // Restored the October readings after the recorded repair.
             AddReadingsAfterRepair(loggerReadings);
 
             // October meter readings are provided by its own seed.

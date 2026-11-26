@@ -49,8 +49,6 @@ namespace WaterNetworkMonitoring.Data
                         decimal flow = averageFlow[i] * hourFactor * daily * variation;
                         decimal level = .10m + i * .02m + flow * .022m + ((slot + i * 3) % 7 - 3) * .001m;
 
-                        // W2 is assumed just upstream of a growing obstruction.
-                        // This example trend reduces flow by up to 35% and adds up to 25 cm of backwater.
                         decimal blockage = loggers[i].Id == 300002
                             ? Math.Clamp((decimal)((sampleTime - BlockageStartsAt).TotalHours / (End - BlockageStartsAt).TotalHours), 0m, 1m)
                             : 0m;
