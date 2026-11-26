@@ -1,7 +1,9 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.Migrations;
-using WaterNetworkMonitoring.Data;
+using WaterNetworkMonitoring.Migrations.Historical;
 using WaterNetworkMonitoring.Models;
+using LoggerReading = WaterNetworkMonitoring.Migrations.Historical.LoggerReading;
+using WaterMeterReading = WaterNetworkMonitoring.Migrations.Historical.WaterMeterReading;
 
 #nullable disable
 

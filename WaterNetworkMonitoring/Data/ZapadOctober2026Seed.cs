@@ -11,10 +11,10 @@ namespace WaterNetworkMonitoring.Data
         internal const int BranchLoggerId = 200002;
         internal const int SkaptoparaMeterId = 100058;
         internal const int LitresPerPersonPerDay = 149;
-        internal static readonly DateTimeOffset MonthStart = Local(2026, 10, 1);
-        internal static readonly DateTimeOffset MonthEnd = Local(2026, 11, 1);
-        internal static readonly DateTimeOffset LeakStart = Local(2026, 10, 30, 6);
-        internal static readonly DateTimeOffset SnapshotAt = Local(2026, 11, 8, 22);
+        internal static readonly DateTime MonthStart = new DateTime(2026, 10, 1);
+        internal static readonly DateTime MonthEnd = new DateTime(2026, 11, 1);
+        internal static readonly DateTime LeakStart = new DateTime(2026, 10, 30, 6, 0, 0);
+        internal static readonly DateTime SnapshotAt = new DateTime(2026, 11, 8, 22, 0, 0);
 
         internal sealed record MeterProfile(int Id, int MapNumber, long OsmId, string Kind, int AssumedOccupants);
         internal sealed record SampleData(PressureLogger[] Loggers, List<LoggerReading> LoggerReadings,
@@ -103,26 +103,26 @@ namespace WaterNetworkMonitoring.Data
             var loggerReadings = new List<LoggerReading>();
             var meterReadings = new List<WaterMeterReading>();
             var counters = Profiles.Select(p => 500000 + p.MapNumber * 10000).ToArray();
-            var historyStart = Local(2026, 9, 30, 12);
-            var historyEnd = Local(2026, 11, 1, 6);
+            var historyStart = new DateTime(2026, 9, 30, 12, 0, 0);
+            var historyEnd = new DateTime(2026, 11, 1, 6, 0, 0);
             long loggerReadingId = 1, meterReadingId = 1;
 
             for (var day = new DateOnly(2026, 9, 30); day <= new DateOnly(2026, 11, 8); day = day.AddDays(1))
             {
-                var dayStart = Local(day.Year, day.Month, day.Day).ToUniversalTime();
+                var dayStart = new DateTime(day.Year, day.Month, day.Day);
                 var next = day.AddDays(1);
-                var dayEnd = Local(next.Year, next.Month, next.Day).ToUniversalTime();
+                var dayEnd = new DateTime(next.Year, next.Month, next.Day);
                 int slots = (int)((dayEnd - dayStart).TotalMinutes / 15);
                 var usage = new int[Profiles.Length, slots];
 
-                // Allocate each day's volume across real quarter hours. The DST day has 100 slots.
+                // Allocate each day's volume across 96 local quarter hours.
                 for (int i = 0; i < Profiles.Length; i++)
                 {
                     var profile = Profiles[i];
                     var weights = new decimal[slots];
                     for (int slot = 0; slot < slots; slot++)
                     {
-                        int hour = BulgariaTime(dayStart.AddMinutes(slot * 15)).Hour;
+                        int hour = dayStart.AddMinutes(slot * 15).Hour;
                         weights[slot] = HourWeight(profile.Kind, hour) *
                             (0.90m + Noise(profile.Id, day.DayNumber, slot) % 21 / 100m);
                     }
@@ -143,7 +143,7 @@ namespace WaterNetworkMonitoring.Data
                 for (int slot = 0; slot < slots; slot++)
                 {
                     var intervalStart = dayStart.AddMinutes(slot * 15);
-                    var takenAt = BulgariaTime(intervalStart.AddMinutes(15));
+                    var takenAt = intervalStart.AddMinutes(15);
                     if (takenAt > SnapshotAt) break;
                     int totalLitres = 0, branchLitres = 0;
                     for (int i = 0; i < Profiles.Length; i++)
@@ -224,12 +224,5 @@ namespace WaterNetworkMonitoring.Data
             }
         }
 
-        // Frozen Europe/Sofia offsets for this dataset only: DST ends 25 October 2026 at 01:00 UTC.
-        private static DateTimeOffset Local(int year, int month, int day, int hour = 0) =>
-            new(year, month, day, hour, 0, 0, TimeSpan.FromHours(
-                new DateTime(year, month, day, hour, 0, 0) < new DateTime(2026, 10, 25, 4, 0, 0) ? 3 : 2));
-
-        private static DateTimeOffset BulgariaTime(DateTimeOffset utc) => utc.ToOffset(TimeSpan.FromHours(
-            utc < new DateTimeOffset(2026, 10, 25, 1, 0, 0, TimeSpan.Zero) ? 3 : 2));
     }
 }

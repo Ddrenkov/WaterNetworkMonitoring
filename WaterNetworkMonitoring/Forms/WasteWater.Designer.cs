@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 namespace WaterNetworkMonitoring
 {
     partial class WasteWater
@@ -201,7 +201,7 @@ namespace WaterNetworkMonitoring
             timeColumn.MinimumWidth = 90;
             timeColumn.ValueType = typeof(DateTime);
             timeColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
-            timeCellStyle.Format = "dd MMM HH:mm";
+            timeCellStyle.Format = "dd MMM HH:mm:ss";
             timeColumn.DefaultCellStyle = timeCellStyle;
             flowColumn.Name = "Flow";
             flowColumn.HeaderText = "Flow (m³/h)";

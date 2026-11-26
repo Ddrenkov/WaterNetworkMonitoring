@@ -59,7 +59,7 @@ namespace WaterNetworkMonitoring.Data
             return result;
         }
 
-        private static decimal CounterAt(WaterMeterReading[] rows, DateTimeOffset time)
+        private static decimal CounterAt(WaterMeterReading[] rows, DateTime time)
         {
             var left = rows.Last(r => r.TakenAt <= time);
             if (left.TakenAt == time) return decimal.Parse(left.Reading, CultureInfo.InvariantCulture);

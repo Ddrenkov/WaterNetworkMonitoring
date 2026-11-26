@@ -1,9 +1,9 @@
-﻿using System.Globalization;
+using System.Globalization;
 using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Services
 {
-    public sealed record BranchBalance(DateTimeOffset From, DateTimeOffset To,
+    public sealed record BranchBalance(DateTime From, DateTime To,
         decimal SuppliedM3, decimal ConsumedM3, decimal ExcessM3PerHour,
         decimal Cusum, bool LeakSuspected, bool PressureDrop)
     {
@@ -14,7 +14,7 @@ namespace WaterNetworkMonitoring.Services
     {
         public static IReadOnlyList<BranchBalance> AnalyzeBranch(PressureLogger branch,
             IEnumerable<LoggerReading> loggerReadings, IEnumerable<WaterMeterReading> meterReadings,
-            DateTimeOffset baselineEnd)
+            DateTime baselineEnd)
         {
             if (branch.SuppliedWaterMeterId is not int id)
                 throw new ArgumentException("Choose a logger with an assigned meter.");
@@ -24,12 +24,12 @@ namespace WaterNetworkMonitoring.Services
 
         public static IReadOnlyList<BranchBalance> AnalyzeSubzone(PressureLogger branch,
             IEnumerable<LoggerReading> loggerReadings, IEnumerable<WaterMeter> meters,
-            IEnumerable<WaterMeterReading> meterReadings, DateTimeOffset baselineEnd)
+            IEnumerable<WaterMeterReading> meterReadings, DateTime baselineEnd)
             => AnalyzeMeterBalance(branch, loggerReadings, meters.Where(m => m.LoggerId == branch.Id), meterReadings, baselineEnd);
 
         public static IReadOnlyList<BranchBalance> AnalyzeMeterBalance(PressureLogger supply,
             IEnumerable<LoggerReading> loggerReadings, IEnumerable<WaterMeter> meters,
-            IEnumerable<WaterMeterReading> meterReadings, DateTimeOffset baselineEnd, bool requireBaseline = true)
+            IEnumerable<WaterMeterReading> meterReadings, DateTime baselineEnd, bool requireBaseline = true)
         {
             var ids = meters.Select(m => m.Id).ToHashSet();
             if (ids.Count == 0) throw new ArgumentException("No meters are assigned to this logger.");
@@ -78,7 +78,7 @@ namespace WaterNetworkMonitoring.Services
         }
 
         public static IReadOnlyList<BranchBalance> AnalyzeInlet(PressureLogger inlet,
-            IEnumerable<PressureLogger> loggers, IEnumerable<LoggerReading> readings, DateTimeOffset baselineEnd)
+            IEnumerable<PressureLogger> loggers, IEnumerable<LoggerReading> readings, DateTime baselineEnd)
         {
             var children = loggers.Where(l => l.ParentLoggerId == inlet.Id).Select(l => l.Id).ToHashSet();
             if (children.Count == 0) throw new ArgumentException("No downstream loggers are configured.");
@@ -97,7 +97,7 @@ namespace WaterNetworkMonitoring.Services
             return ApplyCusum(balances, baselineEnd);
         }
 
-        private static decimal? CounterAt(WaterMeterReading[] rows, DateTimeOffset time)
+        private static decimal? CounterAt(WaterMeterReading[] rows, DateTime time)
         {
             var left = rows.LastOrDefault(r => r.TakenAt <= time);
             if (left == null) return null;
@@ -114,7 +114,7 @@ namespace WaterNetworkMonitoring.Services
         }
 
         private static IReadOnlyList<BranchBalance> ApplyCusum(List<(BranchBalance Balance, decimal Pressure)> balances,
-            DateTimeOffset baselineEnd, bool requireBaseline = true)
+            DateTime baselineEnd, bool requireBaseline = true)
         {
             var baseline = balances.Where(b => b.Balance.To <= baselineEnd).ToArray();
             if(baseline.Length<10) baseline=balances.Take(10).ToArray();
@@ -132,7 +132,7 @@ namespace WaterNetworkMonitoring.Services
             decimal threshold = Math.Max(0.20m, sigma * 5m);
             decimal baselinePressure = baseline.Average(b => b.Pressure);
             decimal cusum = 0;
-            DateTimeOffset? previousEnd = null;
+            DateTime? previousEnd = null;
             var result = new List<BranchBalance>();
             foreach (var (balance, pressure) in balances)
             {

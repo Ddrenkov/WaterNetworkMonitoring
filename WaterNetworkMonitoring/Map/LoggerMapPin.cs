@@ -1,4 +1,4 @@
-﻿using GMap.NET;
+using GMap.NET;
 using GMap.NET.WindowsForms;
 using WaterNetworkMonitoring.Models;
 using WaterNetworkMonitoring.Services;
@@ -39,7 +39,7 @@ namespace WaterNetworkMonitoring
         public static GMapOverlay CreateOverlay() => new GMapOverlay("zapad-loggers");
 
         public static void UpdateReadings(GMapOverlay? overlay, DashboardData? data,
-            DateTimeOffset? through = null, int? flaggedLoggerId = null, BuildingPipeGraph? pipeline = null)
+            DateTime? through = null, int? flaggedLoggerId = null, BuildingPipeGraph? pipeline = null)
         {
             if (overlay == null) return;
             var loggers = data?.Loggers.Where(l => double.IsFinite(l.Latitude) && double.IsFinite(l.Longitude) &&
@@ -82,7 +82,7 @@ namespace WaterNetworkMonitoring
             }
             ToolTipText = $"{logger?.Name ?? defaultName} ({LoggerId})\n" + (reading == null
                 ? "No reading available"
-                : $"Flow: {reading.FlowM3PerHour:0.###} m³/h\nPressure: {reading.PressureBar:0.###} bar\n{reading.TakenAt:dd MMM yyyy HH:mm}")
+                : $"Flow: {reading.FlowM3PerHour:0.###} m³/h\nPressure: {reading.PressureBar:0.###} bar\n{reading.TakenAt:dd MMM yyyy HH:mm:ss}")
                 + "\nApproximate project location";
         }
 

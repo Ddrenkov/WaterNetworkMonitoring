@@ -1,4 +1,4 @@
-﻿using GMap.NET;
+using GMap.NET;
 using GMap.NET.WindowsForms;
 using System.ComponentModel;
 using WaterNetworkMonitoring.Services;
@@ -112,7 +112,7 @@ namespace WaterNetworkMonitoring
                         var reading = data.MeterReadings.Where(r => r.WaterMeterId == meter.Id &&
                             r.TakenAt.Year == month.Year && r.TakenAt.Month == month.Number).OrderByDescending(r => r.TakenAt).FirstOrDefault();
                         mapHint.Text = reading == null ? $"Building {building.Number} · meter {meter.Id} · no reading this month"
-                            : $"Building {building.Number} · meter {meter.Id} · {reading.Reading} L · {reading.TakenAt:dd MMM HH:mm}";
+                            : $"Building {building.Number} · meter {meter.Id} · {reading.Reading} L · {reading.TakenAt:dd MMM HH:mm:ss}";
                     }
                 }
                 UpdatePins(building.Number);
@@ -209,7 +209,7 @@ namespace WaterNetworkMonitoring
             var report = data.Report(month);
             var repair = data.LatestCleanWaterRepair(month);
             repairLabel.Text = repair == null ? "Last clean-water repair: none recorded"
-                : $"Last clean-water repair: {repair.Date:dd MMM yyyy HH:mm}\n{repair.Place}";
+                : $"Last clean-water repair: {repair.Date:dd MMM yyyy HH:mm:ss}\n{repair.Place}";
             mapHint.Text = $"{buildings.Count} buildings · click a building for its meter reading";
             statusLabel.Text = report.CompleteMonth ? "" : "Partial period";
             var selectedId = (comparisonSelector.SelectedItem as DashboardData.MeterScope)?.LoggerId ?? report.FlaggedLoggerId;
@@ -234,7 +234,7 @@ namespace WaterNetworkMonitoring
             var balances = comparison.Balances;
             var last = balances.LastOrDefault();
             var monthEnd = data.LoggerReadings.Where(r => r.TakenAt.Year == month.Year && r.TakenAt.Month == month.Number)
-                .Select(r => (DateTimeOffset?)r.TakenAt).Max();
+                .Select(r => (DateTime?)r.TakenAt).Max();
             LoggerMapPin.UpdateReadings(loggerPins, data, last?.To ?? monthEnd,
                 last?.LeakSuspected == true ? scope.LoggerId : null, pipeGraph);
             LoggerMapPin.Select(loggerPins, null);
@@ -260,7 +260,7 @@ namespace WaterNetworkMonitoring
                 : last.LeakSuspected ? "Possible leak" : "No unusual difference";
             if (last.LeakSuspected) leakStatus.ForeColor = Color.FromArgb(149,72,24);
             leakDetails.Text = $"{last.SuppliedM3:0.##} m³ supplied · {last.ConsumedM3:0.##} m³ used · {(last.To-last.From).TotalHours:0.#} h";
-            leakLocation.Text = $"{scope.Name} · {last.From:dd MMM HH:mm}–{last.To:dd MMM HH:mm}" +
+            leakLocation.Text = $"{scope.Name} · {last.From:dd MMM HH:mm:ss}–{last.To:dd MMM HH:mm:ss}" +
                 (comparison.Estimated ? " · estimated meter use" : "");
             leakRate.Text = $"{last.ExcessM3PerHour*1000:N0} L/h";
             if (last.LeakSuspected && scope.MeterCount == 1)

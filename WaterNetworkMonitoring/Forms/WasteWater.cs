@@ -1,4 +1,4 @@
-﻿using GMap.NET;
+using GMap.NET;
 using GMap.NET.WindowsForms;
 using System.ComponentModel;
 using System.Drawing.Drawing2D;
@@ -150,7 +150,7 @@ namespace WaterNetworkMonitoring
                 $"{a.FlowDropPercent:0}% below normal"));
             levelChangeLabel.Text = alerts.Count == 0 ? "" : "Water level: " + string.Join(" · ", alerts.Select(a =>
                 $"+{a.ExtraLevelMetres * 100:0} cm above normal"));
-            checkedAtLabel.Text = alerts.Count == 0 ? "" : $"Last check: {alerts.Max(a => a.TakenAt):dd MMM yyyy HH:mm}";
+            checkedAtLabel.Text = alerts.Count == 0 ? "" : $"Last check: {alerts.Max(a => a.TakenAt):dd MMM yyyy HH:mm:ss}";
             maintenanceGrid.Columns["Logger"].Visible = alerts.Count > 1;
             var ids = alerts.Select(a => a.LoggerId).ToHashSet();
             var recent = readings.Where(r => ids.Contains(r.LoggerId)).GroupBy(r => r.LoggerId)
@@ -159,7 +159,7 @@ namespace WaterNetworkMonitoring
             foreach (var reading in recent)
             {
                 var logger = loggers.First(l => l.Id == reading.LoggerId);
-                int row = maintenanceGrid.Rows.Add(logger.Name, reading.TakenAt.DateTime,
+                int row = maintenanceGrid.Rows.Add(logger.Name, reading.TakenAt,
                     reading.FlowM3PerHour, reading.WaterLevelMetres, reading.IsRaining ? "Yes" : "No");
                 maintenanceGrid.Rows[row].Tag = reading;
             }

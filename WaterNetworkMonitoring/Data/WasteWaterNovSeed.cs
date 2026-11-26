@@ -1,21 +1,21 @@
-﻿using WaterNetworkMonitoring.Models;
+using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
     internal static class WasteWaterNovSeed
     {
-        internal static readonly DateTimeOffset Start = Local(new DateTime(2026, 11, 1));
-        internal static readonly DateTimeOffset End = Local(new DateTime(2026, 12, 1));
+        internal static readonly DateTime Start = new DateTime(2026, 11, 1);
+        internal static readonly DateTime End = new DateTime(2026, 12, 1);
 
-        internal sealed record RainPeriod(DateTimeOffset Start, DateTimeOffset End);
+        internal sealed record RainPeriod(DateTime Start, DateTime End);
         // Example rain dates, not historical weather observations.
         internal static readonly RainPeriod[] RainPeriods =
         {
-            new(Local(new DateTime(2026, 11, 3, 6, 0, 0)), Local(new DateTime(2026, 11, 3, 9, 0, 0))),
-            new(Local(new DateTime(2026, 11, 9, 16, 0, 0)), Local(new DateTime(2026, 11, 9, 19, 0, 0))),
-            new(Local(new DateTime(2026, 11, 15, 8, 0, 0)), Local(new DateTime(2026, 11, 15, 10, 0, 0))),
-            new(Local(new DateTime(2026, 11, 21, 18, 0, 0)), Local(new DateTime(2026, 11, 21, 21, 0, 0))),
-            new(Local(new DateTime(2026, 11, 27, 6, 0, 0)), Local(new DateTime(2026, 11, 27, 9, 0, 0)))
+            new(new DateTime(2026, 11, 3, 6, 0, 0), new DateTime(2026, 11, 3, 9, 0, 0)),
+            new(new DateTime(2026, 11, 9, 16, 0, 0), new DateTime(2026, 11, 9, 19, 0, 0)),
+            new(new DateTime(2026, 11, 15, 8, 0, 0), new DateTime(2026, 11, 15, 10, 0, 0)),
+            new(new DateTime(2026, 11, 21, 18, 0, 0), new DateTime(2026, 11, 21, 21, 0, 0)),
+            new(new DateTime(2026, 11, 27, 6, 0, 0), new DateTime(2026, 11, 27, 9, 0, 0))
         };
 
         public static List<WasteWaterReading> GenerateReadings()
@@ -63,6 +63,5 @@ namespace WaterNetworkMonitoring.Data
             return result;
         }
 
-        private static DateTimeOffset Local(DateTime time) => new(time, TimeSpan.FromHours(2));
     }
 }

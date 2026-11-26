@@ -75,12 +75,6 @@ namespace WaterNetworkMonitoring.Migrations
                     b.Property<bool>("IsSimulated")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("LocalTakenAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2(2)")
-                        .HasColumnName("TakenAt")
-                        .HasComputedColumnSql("CONVERT(datetime2(2), [TakenAtUtc] AT TIME ZONE 'UTC' AT TIME ZONE 'FLE Standard Time')", false);
-
                     b.Property<int>("LoggerId")
                         .HasColumnType("int");
 
@@ -89,8 +83,7 @@ namespace WaterNetworkMonitoring.Migrations
                         .HasColumnType("decimal(6,3)");
 
                     b.Property<DateTime>("TakenAt")
-                        .HasColumnType("datetime2(2)")
-                        .HasColumnName("TakenAtUtc");
+                        .HasColumnType("datetime2(0)");
 
                     b.HasKey("Id");
 
@@ -252,18 +245,11 @@ namespace WaterNetworkMonitoring.Migrations
                     b.Property<bool>("IsSimulated")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("LocalTakenAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2(2)")
-                        .HasColumnName("TakenAt")
-                        .HasComputedColumnSql("CONVERT(datetime2(2), [TakenAtUtc] AT TIME ZONE 'UTC' AT TIME ZONE 'FLE Standard Time')", false);
-
                     b.Property<int>("LoggerId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("TakenAt")
-                        .HasColumnType("datetime2(2)")
-                        .HasColumnName("TakenAtUtc");
+                        .HasColumnType("datetime2(0)");
 
                     b.Property<decimal>("WaterLevelMetres")
                         .HasPrecision(6, 3)
@@ -292,12 +278,6 @@ namespace WaterNetworkMonitoring.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 100001L);
 
-                    b.Property<DateTime>("LocalTakenAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2(2)")
-                        .HasColumnName("TakenAt")
-                        .HasComputedColumnSql("CONVERT(datetime2(2), [TakenAtUtc] AT TIME ZONE 'UTC' AT TIME ZONE 'FLE Standard Time')", false);
-
                     b.Property<int?>("LoggerId")
                         .HasColumnType("int");
 
@@ -312,8 +292,7 @@ namespace WaterNetworkMonitoring.Migrations
                         .IsFixedLength();
 
                     b.Property<DateTime>("TakenAt")
-                        .HasColumnType("datetime2(2)")
-                        .HasColumnName("TakenAtUtc");
+                        .HasColumnType("datetime2(0)");
 
                     b.HasKey("Id");
 
@@ -338,7 +317,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 1,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -346,7 +325,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 2,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -354,7 +333,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 3,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -362,7 +341,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 4,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -370,7 +349,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 5,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -378,7 +357,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 6,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -386,7 +365,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 7,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -394,7 +373,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 8,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -402,7 +381,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 9,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -410,7 +389,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 10,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -418,7 +397,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 11,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -426,7 +405,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 12,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -434,7 +413,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 13,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -442,7 +421,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 14,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -450,7 +429,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 15,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -458,7 +437,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 16,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -466,7 +445,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 17,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -474,7 +453,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 18,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -482,7 +461,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 19,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -490,7 +469,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 20,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -498,7 +477,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 21,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -506,7 +485,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 22,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -514,7 +493,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 23,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -522,7 +501,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 24,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -530,7 +509,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 25,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -538,7 +517,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 26,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -546,7 +525,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 27,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -554,7 +533,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 28,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -562,7 +541,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 29,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -570,7 +549,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 30,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -578,7 +557,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 31,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -586,7 +565,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 32,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -594,7 +573,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 33,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -602,7 +581,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 34,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -610,7 +589,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 35,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -618,7 +597,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 36,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -626,7 +605,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 37,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -634,7 +613,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 38,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -642,7 +621,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 39,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -650,7 +629,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 40,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -658,7 +637,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 41,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -666,7 +645,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 42,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -674,7 +653,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 43,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -682,7 +661,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 44,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -690,7 +669,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 45,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -698,7 +677,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 46,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -706,7 +685,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 47,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -714,7 +693,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 48,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -722,7 +701,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 49,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -730,7 +709,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 50,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -738,7 +717,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 51,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -746,7 +725,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 52,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -754,7 +733,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 53,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -762,7 +741,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 54,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -770,7 +749,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 55,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -778,7 +757,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 56,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -786,7 +765,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200002,
                             MapNumber = 57,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -794,7 +773,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 58,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -802,7 +781,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 59,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -810,7 +789,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 60,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -818,7 +797,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 61,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -826,7 +805,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 62,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -834,7 +813,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 63,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -842,7 +821,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 64,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -850,7 +829,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200004,
                             MapNumber = 65,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -858,7 +837,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 66,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
@@ -866,7 +845,7 @@ namespace WaterNetworkMonitoring.Migrations
                             LoggerId = 200003,
                             MapNumber = 67,
                             Reading = "00000000",
-                            TakenAt = new DateTime(2026, 11, 8, 20, 0, 0, 0, DateTimeKind.Utc)
+                            TakenAt = new DateTime(2026, 11, 8, 22, 0, 0, 0, DateTimeKind.Unspecified)
                         });
                 });
 
@@ -881,12 +860,6 @@ namespace WaterNetworkMonitoring.Migrations
                     b.Property<bool>("IsSimulated")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("LocalTakenAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2(2)")
-                        .HasColumnName("TakenAt")
-                        .HasComputedColumnSql("CONVERT(datetime2(2), [TakenAtUtc] AT TIME ZONE 'UTC' AT TIME ZONE 'FLE Standard Time')", false);
-
                     b.Property<string>("Reading")
                         .IsRequired()
                         .HasMaxLength(8)
@@ -895,8 +868,7 @@ namespace WaterNetworkMonitoring.Migrations
                         .IsFixedLength();
 
                     b.Property<DateTime>("TakenAt")
-                        .HasColumnType("datetime2(2)")
-                        .HasColumnName("TakenAtUtc");
+                        .HasColumnType("datetime2(0)");
 
                     b.Property<int>("WaterMeterId")
                         .HasColumnType("int");

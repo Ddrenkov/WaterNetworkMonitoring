@@ -1,21 +1,21 @@
-﻿using WaterNetworkMonitoring.Models;
+using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
     internal static class WasteWaterOctSeed
     {
-        internal static readonly DateTimeOffset Start = Local(new DateTime(2026, 10, 1));
-        internal static readonly DateTimeOffset End = Local(new DateTime(2026, 11, 1));
-        internal static readonly DateTimeOffset BlockageStartsAt = Local(new DateTime(2026, 10, 12));
+        internal static readonly DateTime Start = new DateTime(2026, 10, 1);
+        internal static readonly DateTime End = new DateTime(2026, 11, 1);
+        internal static readonly DateTime BlockageStartsAt = new DateTime(2026, 10, 12);
 
-        internal sealed record RainPeriod(DateTimeOffset Start, DateTimeOffset End);
+        internal sealed record RainPeriod(DateTime Start, DateTime End);
         // Example rain dates, not historical weather observations.
         internal static readonly RainPeriod[] RainPeriods =
         {
-            new(Local(new DateTime(2026, 10, 4, 6, 0, 0)), Local(new DateTime(2026, 10, 4, 9, 0, 0))),
-            new(Local(new DateTime(2026, 10, 11, 16, 0, 0)), Local(new DateTime(2026, 10, 11, 19, 0, 0))),
-            new(Local(new DateTime(2026, 10, 20, 6, 0, 0)), Local(new DateTime(2026, 10, 20, 8, 0, 0))),
-            new(Local(new DateTime(2026, 10, 28, 18, 0, 0)), Local(new DateTime(2026, 10, 28, 21, 0, 0)))
+            new(new DateTime(2026, 10, 4, 6, 0, 0), new DateTime(2026, 10, 4, 9, 0, 0)),
+            new(new DateTime(2026, 10, 11, 16, 0, 0), new DateTime(2026, 10, 11, 19, 0, 0)),
+            new(new DateTime(2026, 10, 20, 6, 0, 0), new DateTime(2026, 10, 20, 8, 0, 0)),
+            new(new DateTime(2026, 10, 28, 18, 0, 0), new DateTime(2026, 10, 28, 21, 0, 0))
         };
 
         public static List<WasteWaterReading> GenerateReadings()
@@ -23,11 +23,11 @@ namespace WaterNetworkMonitoring.Data
             var result = new List<WasteWaterReading>();
             var loggers = WasteWaterSepSeed.GetLoggers();
             decimal[] averageFlow = { 3.6m, 6.2m, 4.5m };
-            // Readings stay at 02:00, 04:00, ... local time, including the clock change.
-            for (var clock = Start.DateTime.AddHours(2); clock <= End.DateTime; clock = clock.AddHours(2))
+            // Readings stay at 02:00, 04:00, ... local time.
+            for (var clock = Start.AddHours(2); clock <= End; clock = clock.AddHours(2))
             {
-                var time = Local(clock);
-                var from = Local(clock.AddHours(-2));
+                var time = clock;
+                var from = clock.AddHours(-2);
                 double rainMinutes = RainPeriods.Sum(r => Math.Max(0,
                     ((r.End < time ? r.End : time) - (r.Start > from ? r.Start : from)).TotalMinutes));
                 decimal wetFraction = (decimal)(rainMinutes / (time - from).TotalMinutes);
@@ -35,10 +35,10 @@ namespace WaterNetworkMonitoring.Data
                 for (int i = 0; i < loggers.Length; i++)
                 {
                     decimal flowTotal = 0, levelTotal = 0;
-                    // Actual elapsed time includes the repeated hour on 25 October.
-                    for (var utc = from.ToUniversalTime(); utc < time; utc = utc.AddMinutes(15))
+                    // Average eight quarter-hour samples for each two-hour reading.
+                    for (var sampleTime = from; sampleTime < time; sampleTime = sampleTime.AddMinutes(15))
                     {
-                        var local = BulgariaTime(utc);
+                        var local = sampleTime;
                         int slot = local.Hour * 4 + local.Minute / 15;
                         decimal hourFactor = local.Hour switch
                         {
@@ -52,7 +52,7 @@ namespace WaterNetworkMonitoring.Data
                         // W2 is assumed just upstream of a growing obstruction.
                         // This example trend reduces flow by up to 35% and adds up to 25 cm of backwater.
                         decimal blockage = loggers[i].Id == 300002
-                            ? Math.Clamp((decimal)((utc - BlockageStartsAt).TotalHours / (End - BlockageStartsAt).TotalHours), 0m, 1m)
+                            ? Math.Clamp((decimal)((sampleTime - BlockageStartsAt).TotalHours / (End - BlockageStartsAt).TotalHours), 0m, 1m)
                             : 0m;
                         flowTotal += flow * (1 - .35m * blockage);
                         levelTotal += level + .25m * blockage;
@@ -69,9 +69,5 @@ namespace WaterNetworkMonitoring.Data
             return result;
         }
 
-        private static DateTimeOffset Local(DateTime time) => new(time,
-            TimeSpan.FromHours(time < new DateTime(2026, 10, 25, 4, 0, 0) ? 3 : 2));
-        private static DateTimeOffset BulgariaTime(DateTimeOffset utc) => utc.ToOffset(TimeSpan.FromHours(
-            utc < new DateTimeOffset(2026, 10, 25, 1, 0, 0, TimeSpan.Zero) ? 3 : 2));
     }
 }

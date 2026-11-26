@@ -1,7 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using System.Globalization;
-using WaterNetworkMonitoring.Data;
+using WaterNetworkMonitoring.Migrations.Historical;
 
 #nullable disable
 

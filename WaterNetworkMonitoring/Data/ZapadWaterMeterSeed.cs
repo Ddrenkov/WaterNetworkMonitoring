@@ -6,8 +6,8 @@ namespace WaterNetworkMonitoring.Data
     {
         public static WaterMeter[] GetReadings()
         {
-            // Zapad prototype readings, taken on 8 November 2026 at 10 PM (UTC+02:00).
-            var takenAt = new DateTimeOffset(2026, 11, 8, 22, 0, 0, TimeSpan.FromHours(2));
+            // Zapad prototype readings, taken on 8 November 2026 at 22:00:00.
+            var takenAt = new DateTime(2026, 11, 8, 22, 0, 0);
 
             return new WaterMeter[]
             {

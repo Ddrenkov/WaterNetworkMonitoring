@@ -1,14 +1,14 @@
-﻿using System.Globalization;
+using System.Globalization;
 using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
     internal static class SepNovSeed
     {
-        internal static readonly DateTimeOffset SeptemberStart = Local(new DateTime(2026, 9, 1));
-        internal static readonly DateTimeOffset OctoberStart = Local(new DateTime(2026, 10, 1));
-        internal static readonly DateTimeOffset NovemberStart = Local(new DateTime(2026, 11, 1));
-        internal static readonly DateTimeOffset DecemberStart = Local(new DateTime(2026, 12, 1));
+        internal static readonly DateTime SeptemberStart = new DateTime(2026, 9, 1);
+        internal static readonly DateTime OctoberStart = new DateTime(2026, 10, 1);
+        internal static readonly DateTime NovemberStart = new DateTime(2026, 11, 1);
+        internal static readonly DateTime DecemberStart = new DateTime(2026, 12, 1);
         internal sealed record SampleData(List<LoggerReading> LoggerReadings, List<WaterMeterReading> MeterReadings);
 
         internal static Repair[] GetRepairs() => new[]
@@ -26,14 +26,14 @@ namespace WaterNetworkMonitoring.Data
                 for (int i = 0; i < profiles.Length; i++) counters[i] -= Usage(profiles[i], day).Sum();
 
             var meters = new List<WaterMeterReading>();
-            var branchUsage = new Dictionary<DateTimeOffset, int>();
+            var branchUsage = new Dictionary<DateTime, int>();
             for (var day = firstDay; day <= new DateOnly(2026, 12, 1); day = day.AddDays(1))
             {
-                var start = Local(day.ToDateTime(TimeOnly.MinValue)).ToUniversalTime();
+                var start = day.ToDateTime(TimeOnly.MinValue);
                 var usage = profiles.Select(p => Usage(p, day)).ToArray();
                 for (int slot = 0; slot < usage[0].Length; slot++)
                 {
-                    var time = BulgariaTime(start.AddMinutes((slot + 1) * 15));
+                    var time = start.AddMinutes((slot + 1) * 15);
                     if (time > DecemberStart.AddHours(6)) break;
                     for (int i = 0; i < profiles.Length; i++)
                     {
@@ -56,9 +56,9 @@ namespace WaterNetworkMonitoring.Data
                 .ToDictionary(g => g.Key, g => g.OrderBy(r => r.TakenAt).ToArray());
             var loggers = new List<LoggerReading>();
             foreach (var range in new[] { (SeptemberStart, OctoberStart), (NovemberStart, DecemberStart) })
-                for (var utc = range.Item1.ToUniversalTime().AddMinutes(15); utc <= range.Item2; utc = utc.AddMinutes(15))
+                for (var sampleTime = range.Item1.AddMinutes(15); sampleTime <= range.Item2; sampleTime = sampleTime.AddMinutes(15))
                 {
-                    var time = BulgariaTime(utc);
+                    var time = sampleTime;
                     decimal branch = branchUsage[time] * .004m;
                     decimal north = Flow(200003, histories, time), south = Flow(200004, histories, time);
                     decimal inlet = branch + north + south;
@@ -70,7 +70,7 @@ namespace WaterNetworkMonitoring.Data
                 }
             // The example readings return to normal after the seeded repair record.
             var repair = GetRepairs().Single(r => r.WaterSystem == WaterSystem.CleanWater);
-            var repairTime = Local(repair.Date);
+            var repairTime = repair.Date;
             foreach (var old in ZapadFourLoggerSeed.GenerateReadings().Where(r =>
                 r.LoggerId is 200001 or 200002 && r.TakenAt > repairTime && r.TakenAt <= NovemberStart))
                 loggers.Add(Row(old.LoggerId, old.TakenAt, old.FlowM3PerHour - .5m,
@@ -78,15 +78,15 @@ namespace WaterNetworkMonitoring.Data
             return new SampleData(loggers, meters.Where(r => r.TakenAt < OctoberStart || r.TakenAt >= NovemberStart).ToList());
         }
 
-        private static LoggerReading Row(int id, DateTimeOffset time, decimal flow, decimal pressure) =>
+        private static LoggerReading Row(int id, DateTime time, decimal flow, decimal pressure) =>
             new() { LoggerId = id, TakenAt = time, FlowM3PerHour = flow,
                 PressureBar = decimal.Round(pressure, 3), IsSimulated = true };
 
-        private static decimal Flow(int loggerId, Dictionary<int, WaterMeterReading[]> histories, DateTimeOffset time) =>
+        private static decimal Flow(int loggerId, Dictionary<int, WaterMeterReading[]> histories, DateTime time) =>
             decimal.Round(histories.Where(h => ZapadFourLoggerSeed.LoggerForMeter(h.Key) == loggerId)
                 .Sum(h => CounterAt(h.Value, time) - CounterAt(h.Value, time.AddMinutes(-15))) * .004m, 3);
 
-        private static decimal CounterAt(WaterMeterReading[] rows, DateTimeOffset time)
+        private static decimal CounterAt(WaterMeterReading[] rows, DateTime time)
         {
             var left = rows.Last(r => r.TakenAt <= time);
             decimal value = decimal.Parse(left.Reading, CultureInfo.InvariantCulture);
@@ -98,11 +98,11 @@ namespace WaterNetworkMonitoring.Data
 
         private static int[] Usage(ZapadOctober2026Seed.MeterProfile profile, DateOnly day)
         {
-            var start = Local(day.ToDateTime(TimeOnly.MinValue)).ToUniversalTime();
-            var end = Local(day.AddDays(1).ToDateTime(TimeOnly.MinValue)).ToUniversalTime();
+            var start = day.ToDateTime(TimeOnly.MinValue);
+            var end = day.AddDays(1).ToDateTime(TimeOnly.MinValue);
             int slots = (int)(end - start).TotalMinutes / 15;
             var weights = Enumerable.Range(0, slots).Select(slot =>
-                HourWeight(profile.Kind, BulgariaTime(start.AddMinutes(slot * 15)).Hour) *
+                HourWeight(profile.Kind, start.AddMinutes(slot * 15).Hour) *
                 (.90m + Noise(profile.Id, day.DayNumber, slot) % 21 / 100m)).ToArray();
             decimal daily = DailyLitres(profile) * (.90m + Noise(profile.Id, day.DayNumber, 101) % 21 / 100m);
             decimal total = weights.Sum(), running = 0;
@@ -140,9 +140,5 @@ namespace WaterNetworkMonitoring.Data
                 return value;
             }
         }
-        private static DateTimeOffset Local(DateTime time) => new(time,
-            TimeSpan.FromHours(time < new DateTime(2026, 10, 25, 4, 0, 0) ? 3 : 2));
-        private static DateTimeOffset BulgariaTime(DateTimeOffset utc) => utc.ToOffset(TimeSpan.FromHours(
-            utc < new DateTimeOffset(2026, 10, 25, 1, 0, 0, TimeSpan.Zero) ? 3 : 2));
     }
 }

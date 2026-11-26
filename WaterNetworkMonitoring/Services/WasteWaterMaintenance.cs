@@ -1,11 +1,11 @@
-﻿using WaterNetworkMonitoring.Models;
+using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Services
 {
     internal static class WasteWaterMaintenance
     {
         internal sealed record Alert(int LoggerId, decimal FlowDropPercent,
-            decimal ExtraLevelMetres, DateTimeOffset TakenAt);
+            decimal ExtraLevelMetres, DateTime TakenAt);
 
         public static List<Alert> FindAlerts(IEnumerable<WasteWaterReading> readings)
         {

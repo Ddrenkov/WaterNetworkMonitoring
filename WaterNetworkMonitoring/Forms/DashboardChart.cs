@@ -1,10 +1,10 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 
 namespace WaterNetworkMonitoring
 {
-    internal sealed record ChartPoint(DateTimeOffset Time, double Value);
+    internal sealed record ChartPoint(DateTime Time, double Value);
     internal sealed record ChartSeries(string Name, Color Color, IReadOnlyList<ChartPoint> Points, TimeSpan MaximumGap);
 
     public sealed class DashboardChart : Control
@@ -66,7 +66,7 @@ namespace WaterNetworkMonitoring
             float rightGap = Math.Max(22*s, g.MeasureString(last.ToString(DateFormat), smallFont).Width/2+4*s);
             var plot = new RectangleF(left, 36*s, Width-left-rightGap, Height-(series.Count > 1 ? 82 : 62)*s);
             if (plot.Width < 30 || plot.Height < 20) return;
-            float X(DateTimeOffset time) => plot.Left + (float)((time - first).TotalSeconds / duration) * plot.Width;
+            float X(DateTime time) => plot.Left + (float)((time - first).TotalSeconds / duration) * plot.Width;
             float Y(double value) => plot.Bottom - (float)((value - min) / (max - min)) * plot.Height;
             using var right = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
             for (int i = 0; i <= 2; i++)

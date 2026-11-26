@@ -4,7 +4,7 @@ namespace WaterNetworkMonitoring.Models
     {
         public long Id { get; set; }
         public int LoggerId { get; set; }
-        public DateTimeOffset TakenAt { get; set; }
+        public DateTime TakenAt { get; set; }
         // Average flow during the preceding 15 minutes, in cubic metres per hour.
         public decimal FlowM3PerHour { get; set; }
         public decimal PressureBar { get; set; }

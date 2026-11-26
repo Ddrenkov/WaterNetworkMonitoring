@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-using WaterNetworkMonitoring.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
+using WaterNetworkMonitoring.Migrations.Historical;
 
 #nullable disable
 

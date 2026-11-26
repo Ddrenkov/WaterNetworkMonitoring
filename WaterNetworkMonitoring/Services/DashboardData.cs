@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using WaterNetworkMonitoring.Data;
 using WaterNetworkMonitoring.Models;
@@ -50,8 +50,8 @@ namespace WaterNetworkMonitoring.Services
             var logger = Loggers.Single(l => l.Id == loggerId);
             var scope = MeterScopes.Single(s => s.LoggerId == loggerId);
             var meters = SuppliedMeters(logger);
-            var start = Local(new DateTime(month.Year,month.Number,1));
-            var end = Local(new DateTime(month.Year,month.Number,1).AddMonths(1));
+            var start = new DateTime(month.Year,month.Number,1);
+            var end = new DateTime(month.Year,month.Number,1).AddMonths(1);
             try
             {
                 var comparisonReadings = LoggerReadings;
@@ -81,7 +81,7 @@ namespace WaterNetworkMonitoring.Services
                 return new MeterComparison(scope,Array.Empty<BranchBalance>(),false,"Matching logger and meter readings are needed.");
             }
         }
-        public List<Month> Months => LoggerReadings.GroupBy(r => new { SofiaDate(r.TakenAt.AddTicks(-1)).Year, Month = SofiaDate(r.TakenAt.AddTicks(-1)).Month })
+        public List<Month> Months => LoggerReadings.GroupBy(r => new { ReadingDate(r.TakenAt.AddTicks(-1)).Year, Month = ReadingDate(r.TakenAt.AddTicks(-1)).Month })
             .Select(g => new Month(g.Key.Year, g.Key.Month, g.Count()))
             .OrderByDescending(m => m.Year).ThenByDescending(m => m.Number).ToList();
 
@@ -97,13 +97,13 @@ namespace WaterNetworkMonitoring.Services
             var ids = loggers.Select(l => l.Id).ToArray();
             // Load three calendar months, rather than cutting a month at an arbitrary row count.
             var latest = await db.LoggerReadings.AsNoTracking().Where(r => ids.Contains(r.LoggerId))
-                .OrderByDescending(r => r.TakenAt).Select(r => (DateTimeOffset?)r.TakenAt)
+                .OrderByDescending(r => r.TakenAt).Select(r => (DateTime?)r.TakenAt)
                 .FirstOrDefaultAsync(cancellationToken);
             var readings = new List<LoggerReading>();
             if (latest.HasValue)
             {
-                var date = SofiaDate(latest.Value.AddTicks(-1));
-                var from = Local(new DateTime(date.Year, date.Month, 1).AddMonths(-2)).AddDays(-1);
+                var date = ReadingDate(latest.Value.AddTicks(-1));
+                var from = new DateTime(date.Year, date.Month, 1).AddMonths(-2).AddDays(-1);
                 readings = await db.LoggerReadings.AsNoTracking()
                     .Where(r => ids.Contains(r.LoggerId) && r.TakenAt > from && r.TakenAt <= latest.Value)
                     .OrderBy(r => r.TakenAt).ToListAsync(cancellationToken);
@@ -127,8 +127,8 @@ namespace WaterNetworkMonitoring.Services
 
         public DashboardReport Report(Month month)
         {
-            var start = Local(new DateTime(month.Year, month.Number, 1));
-            var end = Local(new DateTime(month.Year, month.Number, 1).AddMonths(1));
+            var start = new DateTime(month.Year, month.Number, 1);
+            var end = new DateTime(month.Year, month.Number, 1).AddMonths(1);
             var readings = LoggerReadings.Where(r => r.TakenAt > start && r.TakenAt <= end).ToList();
             var inlet = Loggers.FirstOrDefault(l => l.ParentLoggerId == null);
             var inletReadings = readings.Where(r => r.LoggerId == inlet?.Id).ToList();
@@ -157,7 +157,7 @@ namespace WaterNetworkMonitoring.Services
             var firstLeak = latestLeak == null ? null : allBalances.FirstOrDefault(b => b.LeakSuspected && b.To <= latestLeak.To);
             var assigned = Meters.Where(m => m.LoggerId == selected?.Id).ToList();
             var singleMeter = assigned.Count == 1 ? assigned[0] : null;
-            var inletDays = inletReadings.GroupBy(r => SofiaDate(r.TakenAt.AddTicks(-1))).ToArray();
+            var inletDays = inletReadings.GroupBy(r => ReadingDate(r.TakenAt.AddTicks(-1))).ToArray();
             bool complete = inletDays.Length == DateTime.DaysInMonth(month.Year, month.Number) &&
                 inletDays.All(g => CompleteDay(g.Key, g.ToList()));
             string location = "";
@@ -190,21 +190,19 @@ namespace WaterNetworkMonitoring.Services
         }
 
         private static List<ChartPoint> Daily(List<LoggerReading> rows, Func<LoggerReading, decimal> value) =>
-            rows.GroupBy(r => SofiaDate(r.TakenAt.AddTicks(-1))).OrderBy(g => g.Key)
-                .Select(g => new ChartPoint(Local(g.Key.ToDateTime(new TimeOnly(12, 0))), (double)g.Average(value))).ToList();
+            rows.GroupBy(r => ReadingDate(r.TakenAt.AddTicks(-1))).OrderBy(g => g.Key)
+                .Select(g => new ChartPoint(g.Key.ToDateTime(new TimeOnly(12, 0)), (double)g.Average(value))).ToList();
 
         private static bool CompleteDay(DateOnly day, List<LoggerReading> readings)
         {
-            var from = Local(day.ToDateTime(TimeOnly.MinValue));
-            var to = Local(day.AddDays(1).ToDateTime(TimeOnly.MinValue));
+            var from = day.ToDateTime(TimeOnly.MinValue);
+            var to = day.AddDays(1).ToDateTime(TimeOnly.MinValue);
             var ordered = readings.OrderBy(r => r.TakenAt).ToArray();
             return ordered.Length == (to - from).TotalMinutes / 15 &&
                 ordered.Select((r, i) => r.TakenAt == from.AddMinutes((i + 1) * 15)).All(b => b);
         }
 
-        private static readonly TimeZoneInfo Sofia = TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time");
-        private static DateOnly SofiaDate(DateTimeOffset timestamp) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timestamp, Sofia).DateTime);
-        private static DateTimeOffset Local(DateTime local) => new(local, Sofia.GetUtcOffset(local));
+        private static DateOnly ReadingDate(DateTime timestamp) => DateOnly.FromDateTime(timestamp);
     }
 
     internal sealed class DashboardReport
@@ -228,6 +226,6 @@ namespace WaterNetworkMonitoring.Services
         public string? AnalysisNote { get; init; }
         public decimal SuppliedM3 { get; init; }
         public bool CompleteMonth { get; init; }
-        public DateTimeOffset? LastReading { get; init; }
+        public DateTime? LastReading { get; init; }
     }
 }

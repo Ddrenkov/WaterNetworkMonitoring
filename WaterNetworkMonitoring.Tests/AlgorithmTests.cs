@@ -1,7 +1,9 @@
-﻿using System.Globalization;
+using System.Globalization;
 using WaterNetworkMonitoring.Models;
 using WaterNetworkMonitoring.Services;
 using NUnit.Framework;
+using Microsoft.EntityFrameworkCore;
+using WaterNetworkMonitoring.Data;
 
 namespace WaterNetworkMonitoring.Tests;
 
@@ -121,7 +123,7 @@ public class AlgorithmTests
     [Test]
     public void MonthlyConsumption_IsDifferenceBetweenCounters()
     {
-        var start = new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.FromHours(2));
+        var start = new DateTime(2026, 11, 1, 0, 0, 0);
         var usage = Consumption(start, start.AddMonths(1), 100000, 105000);
 
         Assert.That(usage.Litres, Is.EqualTo(5000m));
@@ -129,35 +131,119 @@ public class AlgorithmTests
     }
 
     [Test]
-    public void OctoberConsumption_UsesLocalMonthAcrossClockChange()
+    public void OctoberConsumption_UsesPlainLocalMonthBoundaries()
     {
-        var start = new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.FromHours(3));
-        var end = new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.FromHours(2));
+        var start = new DateTime(2026, 10, 1, 0, 0, 0);
+        var end = new DateTime(2026, 11, 1, 0, 0, 0);
 
-        var usage = Consumption(start, end, 100000, 174500);
+        var usage = Consumption(start, end, 100000, 174400);
 
-        Assert.That(usage.Litres, Is.EqualTo(74500m));
+        Assert.That(usage.Litres, Is.EqualTo(74400m));
         Assert.That(usage.Estimated, Is.False);
     }
 
     [Test]
     public void MissingMonthBoundary_DoesNotInventConsumption()
     {
-        var start = new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.FromHours(2));
+        var start = new DateTime(2026, 11, 1, 0, 0, 0);
         var usage = Consumption(start.AddDays(1), start.AddMonths(1), 100000, 105000);
 
         Assert.That(usage.Litres, Is.Null);
         Assert.That(usage.Note, Is.Not.Empty);
     }
 
+    [Test]
+    public void ReadingModels_UseOnePlainLocalTimestamp()
+    {
+        using var db = new AppDbContext();
+        foreach (var type in new[] { typeof(WaterMeter), typeof(LoggerReading),
+            typeof(WaterMeterReading), typeof(WasteWaterReading) })
+        {
+            var entity = db.Model.FindEntityType(type)!;
+            var time = entity.FindProperty("TakenAt")!;
+            Assert.That(time.ClrType, Is.EqualTo(typeof(DateTime)));
+            Assert.That(time.GetColumnType(), Is.EqualTo("datetime2(0)"));
+            Assert.That(time.GetValueConverter(), Is.Null);
+            Assert.That(entity.FindProperty("LocalTakenAt"), Is.Null);
+        }
+        Assert.That(db.Database.HasPendingModelChanges(), Is.False);
+    }
+
+    [Test]
+    public void OctoberSeeds_KeepRegularLocalClockIntervals()
+    {
+        var clean = ZapadFourLoggerSeed.GenerateReadings().Where(r =>
+            r.TakenAt > new DateTime(2026, 10, 1) && r.TakenAt <= new DateTime(2026, 11, 1));
+        foreach (var group in clean.GroupBy(r => r.LoggerId))
+        {
+            var times = group.Select(r => r.TakenAt).Order().ToArray();
+            Assert.That(times, Has.Length.EqualTo(31 * 96));
+            Assert.That(times.All(t => t.Kind == DateTimeKind.Unspecified), Is.True);
+            Assert.That(times.Zip(times.Skip(1), (a, b) => b - a),
+                Is.All.EqualTo(TimeSpan.FromMinutes(15)));
+        }
+        foreach (var group in WasteWaterOctSeed.GenerateReadings().GroupBy(r => r.LoggerId))
+        {
+            var times = group.Select(r => r.TakenAt).Order().ToArray();
+            Assert.That(times, Has.Length.EqualTo(31 * 12));
+            Assert.That(times.Zip(times.Skip(1), (a, b) => b - a),
+                Is.All.EqualTo(TimeSpan.FromHours(2)));
+        }
+    }
+
+    [Test]
+    public void ThreeMonthCleanWaterSeeds_PreserveLeakAndRepairResults()
+    {
+        var october = ZapadOctober2026Seed.Generate();
+        var other = SepNovSeed.Generate();
+        var meters = ZapadWaterMeterSeed.GetReadings();
+        foreach (var meter in meters) meter.LoggerId = ZapadFourLoggerSeed.LoggerForMeter(meter.Id);
+        var data = new DashboardData
+        {
+            Loggers = ZapadFourLoggerSeed.GetLoggers().ToList(), Meters = meters.ToList(),
+            LoggerReadings = ZapadFourLoggerSeed.GenerateReadings().Concat(other.LoggerReadings)
+                .GroupBy(r => (r.LoggerId, r.TakenAt)).Select(g => g.Last()).ToList(),
+            MeterReadings = october.MeterReadings.Concat(other.MeterReadings)
+                .GroupBy(r => (r.WaterMeterId, r.TakenAt)).Select(g => g.Last()).ToList(),
+            Repairs = SepNovSeed.GetRepairs().ToList()
+        };
+        var september = data.Report(new(2026, 9, 0));
+        var octoberReport = data.Report(new(2026, 10, 0));
+        var november = data.Report(new(2026, 11, 0));
+        Assert.That(september.LatestLeak, Is.Null);
+        Assert.That(november.LatestLeak, Is.Null);
+        Assert.That(octoberReport.FlaggedLoggerId, Is.EqualTo(200002));
+        Assert.That(octoberReport.LatestLeak!.ExcessM3PerHour, Is.EqualTo(.5m).Within(.001m));
+        Assert.That(new[] { september, octoberReport, november }.All(r => r.CompleteMonth), Is.True);
+        var usage = new WaterMeterConsumptionData(meters, data.MeterReadings);
+        Assert.That(usage.Months, Has.Count.EqualTo(3));
+        Assert.That(usage.Meters.All(m => usage.Months.All(month => m.Months[month].Litres >= 0)), Is.True);
+    }
+
+    [Test]
+    public void WastewaterSeeds_PreserveHealthySeptemberAndBlockedNovember()
+    {
+        var september = WasteWaterSepSeed.GenerateTwoHourReadings();
+        var october = WasteWaterOctSeed.GenerateReadings();
+        var november = WasteWaterNovSeed.GenerateReadings();
+        Assert.That(september, Has.Count.EqualTo(3 * 30 * 12));
+        Assert.That(november, Has.Count.EqualTo(3 * 30 * 12));
+        Assert.That(WasteWaterMaintenance.FindAlerts(september), Is.Empty);
+        var alerts = WasteWaterMaintenance.FindAlerts(september.Concat(october).Concat(november));
+        Assert.That(alerts, Has.Count.EqualTo(1));
+        Assert.That(alerts[0].LoggerId, Is.EqualTo(300002));
+        Assert.That(alerts[0].FlowDropPercent, Is.GreaterThan(60m));
+        Assert.That(alerts[0].ExtraLevelMetres, Is.GreaterThan(.45m));
+    }
+
     // Independent examples: no database, map controls or project seeds are loaded.
     private sealed record CleanWaterExample(PressureLogger Logger, WaterMeter Meter,
         List<LoggerReading> LoggerReadings, List<WaterMeterReading> MeterReadings,
-        DateTimeOffset BaselineEnd);
+        DateTime BaselineEnd);
 
     private static CleanWaterExample CleanWaterReadings(bool leak = false)
     {
-        var start = new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.FromHours(2));
+        var start = new DateTime(2026, 2, 1, 0, 0, 0);
         var logger = new PressureLogger { Id = 200001 };
         var meter = new WaterMeter { Id = 100001, LoggerId = logger.Id };
         var loggerReadings = new List<LoggerReading>();
@@ -187,7 +273,7 @@ public class AlgorithmTests
 
     private static List<WasteWaterReading> WastewaterReadings()
     {
-        var start = new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.FromHours(2));
+        var start = new DateTime(2026, 2, 1, 0, 0, 0);
         return Enumerable.Range(1, 120).Select(slot =>
         {
             var time = start.AddHours(slot * 2);
@@ -209,7 +295,7 @@ public class AlgorithmTests
     }
 
     private static WaterMeterConsumptionData.Consumption Consumption(
-        DateTimeOffset first, DateTimeOffset last, int firstCounter, int lastCounter)
+        DateTime first, DateTime last, int firstCounter, int lastCounter)
     {
         var meter = new WaterMeter { Id = 100001, MapNumber = 1 };
         var readings = new[]

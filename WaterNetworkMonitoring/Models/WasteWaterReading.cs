@@ -1,10 +1,10 @@
-﻿namespace WaterNetworkMonitoring.Models
+namespace WaterNetworkMonitoring.Models
 {
     public class WasteWaterReading
     {
         public long Id { get; set; }
         public int LoggerId { get; set; }
-        public DateTimeOffset TakenAt { get; set; }
+        public DateTime TakenAt { get; set; }
         // Average flow over the preceding two hours.
         public decimal FlowM3PerHour { get; set; }
         public decimal WaterLevelMetres { get; set; }

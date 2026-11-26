@@ -1,12 +1,12 @@
-﻿using WaterNetworkMonitoring.Models;
+using WaterNetworkMonitoring.Models;
 
 namespace WaterNetworkMonitoring.Data
 {
     // Fixed September example data for the wastewater migrations.
     internal static class WasteWaterSepSeed
     {
-        public static readonly DateTimeOffset Start = new(2026, 9, 1, 0, 0, 0, TimeSpan.FromHours(3));
-        public static readonly DateTimeOffset End = new(2026, 10, 1, 0, 0, 0, TimeSpan.FromHours(3));
+        public static readonly DateTime Start = new(2026, 9, 1, 0, 0, 0);
+        public static readonly DateTime End = new(2026, 10, 1, 0, 0, 0);
 
         public static PressureLogger[] GetLoggers() => new[]
         {
@@ -18,7 +18,7 @@ namespace WaterNetworkMonitoring.Data
                 Latitude = 42.017898909010135, Longitude = 23.084494568877314, IsSimulated = true }
         };
 
-        internal sealed record RainPeriod(DateTimeOffset Start, DateTimeOffset End);
+        internal sealed record RainPeriod(DateTime Start, DateTime End);
         // Invented rain events for the project, not historical weather observations.
         internal static readonly RainPeriod[] RainPeriods =
         {

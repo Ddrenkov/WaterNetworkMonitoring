@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace WaterNetworkMonitoring.Models
 {
@@ -7,7 +7,7 @@ namespace WaterNetworkMonitoring.Models
         public int Id { get; set; }
         public int MapNumber { get; set; }
         public string Reading { get; set; } = "00000000";
-        public DateTimeOffset TakenAt { get; set; }
+        public DateTime TakenAt { get; set; }
         public int? LoggerId { get; set; }
         public PressureLogger? Logger { get; set; }
     }

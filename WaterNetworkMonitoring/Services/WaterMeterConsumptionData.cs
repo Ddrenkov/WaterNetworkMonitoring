@@ -16,13 +16,12 @@ namespace WaterNetworkMonitoring.Services
         internal sealed record MeterUsage(WaterMeter Meter, Dictionary<Month, Consumption> Months);
         public List<Month> Months { get; } = new();
         public List<MeterUsage> Meters { get; } = new();
-        private static readonly TimeZoneInfo Sofia = TimeZoneInfo.FindSystemTimeZoneById("FLE Standard Time");
 
         internal WaterMeterConsumptionData(IEnumerable<WaterMeter> meters, IEnumerable<WaterMeterReading> readings)
         {
             var histories = readings.GroupBy(r => r.WaterMeterId)
                 .ToDictionary(g => g.Key, g => g.OrderBy(r => r.TakenAt).ToArray());
-            var times = histories.Values.SelectMany(r => r).Select(r => TimeZoneInfo.ConvertTime(r.TakenAt, Sofia).DateTime).ToArray();
+            var times = histories.Values.SelectMany(r => r).Select(r => r.TakenAt).ToArray();
             if (times.Length > 0)
             {
                 var first = new DateTime(times.Min().Year, times.Min().Month, 1);
@@ -50,12 +49,12 @@ namespace WaterNetworkMonitoring.Services
             var meters = await db.WaterMeters.AsNoTracking().OrderBy(m => m.MapNumber).ToListAsync(cancellationToken);
             var ids = meters.Select(m => m.Id).ToArray();
             var latest = await db.WaterMeterReadings.AsNoTracking().Where(r => ids.Contains(r.WaterMeterId))
-                .OrderByDescending(r => r.TakenAt).Select(r => (DateTimeOffset?)r.TakenAt).FirstOrDefaultAsync(cancellationToken);
+                .OrderByDescending(r => r.TakenAt).Select(r => (DateTime?)r.TakenAt).FirstOrDefaultAsync(cancellationToken);
             var readings = new List<WaterMeterReading>();
             if (latest.HasValue)
             {
-                var date = TimeZoneInfo.ConvertTime(latest.Value, Sofia).DateTime;
-                var from = Local(new DateTime(date.Year, date.Month, 1).AddMonths(-12)).AddDays(-2);
+                var date = latest.Value;
+                var from = new DateTime(date.Year, date.Month, 1).AddMonths(-12).AddDays(-2);
                 readings = await db.WaterMeterReadings.AsNoTracking()
                     .Where(r => ids.Contains(r.WaterMeterId) && r.TakenAt >= from && r.TakenAt <= latest.Value)
                     .OrderBy(r => r.TakenAt).ToListAsync(cancellationToken);
@@ -65,8 +64,8 @@ namespace WaterNetworkMonitoring.Services
 
         private static Consumption Calculate(WaterMeterReading[] history, Month month)
         {
-            var from = Local(new DateTime(month.Year, month.Number, 1));
-            var to = Local(new DateTime(month.Year, month.Number, 1).AddMonths(1));
+            var from = new DateTime(month.Year, month.Number, 1);
+            var to = new DateTime(month.Year, month.Number, 1).AddMonths(1);
             var left = history.LastOrDefault(r => r.TakenAt <= from);
             var right = history.FirstOrDefault(r => r.TakenAt >= to);
             if (left == null || right == null) return new(null, false, "Readings before and after the month are needed.");
@@ -87,7 +86,7 @@ namespace WaterNetworkMonitoring.Services
                 : "Difference between recorded counters at both month boundaries.");
         }
 
-        private static decimal? CounterAt(WaterMeterReading[] rows, DateTimeOffset time, double typicalGap)
+        private static decimal? CounterAt(WaterMeterReading[] rows, DateTime time, double typicalGap)
         {
             var left = rows.LastOrDefault(r => r.TakenAt <= time);
             if (left == null) return null;
@@ -98,7 +97,6 @@ namespace WaterNetworkMonitoring.Services
                 (decimal)((time-left.TakenAt).TotalSeconds/(right.TakenAt-left.TakenAt).TotalSeconds);
         }
         private static decimal Counter(WaterMeterReading row) => decimal.Parse(row.Reading, CultureInfo.InvariantCulture);
-        private static DateTimeOffset Local(DateTime time) => new(time, Sofia.GetUtcOffset(time));
-        internal static DateTimeOffset ChartTime(Month month) => Local(new DateTime(month.Year, month.Number, 1, 12, 0, 0));
+        internal static DateTime ChartTime(Month month) => new DateTime(month.Year, month.Number, 1, 12, 0, 0);
     }
 }
