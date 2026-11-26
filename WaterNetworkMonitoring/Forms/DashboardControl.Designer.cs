@@ -66,6 +66,7 @@
             lossChart = new DashboardChart();
             statusLabel = new Label();
             SuspendLayout();
+            comparisonHeader.SuspendLayout();
             page.SuspendLayout();
             headerPanel.SuspendLayout();
             mapPanel.SuspendLayout();
@@ -79,7 +80,8 @@
 
             page.Name = "page";
             page.Location = new Point(24, 24);
-            page.Size = new Size(1120, 760);
+            page.Size = new Size(952, 798);
+            page.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             page.ColumnCount = 1;
             page.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             page.RowCount = 7;
@@ -273,6 +275,7 @@
             leakRateCaption.Margin = Padding.Empty;
 
             repairLabel.Name = "repairLabel";
+            repairLabel.Text = "Latest clean-water repair";
             repairLabel.Dock = DockStyle.Fill;
             repairLabel.Font = new Font("Segoe UI", 8F);
             repairLabel.ForeColor = Color.FromArgb(55, 65, 78);
@@ -335,9 +338,10 @@
             BackColor = Color.White;
             ForeColor = Color.FromArgb(36, 45, 56);
             Font = new Font("Segoe UI", 9F);
-            Size = new Size(1200, 800);
+            Size = new Size(1000, 846);
             Name = "DashboardControl";
             Controls.Add(page);
+            comparisonHeader.ResumeLayout(false);
             graphGrid.ResumeLayout(false);
             lossPanel.ResumeLayout(false);
             leakTextPanel.ResumeLayout(false);
@@ -349,6 +353,7 @@
             mapPanel.ResumeLayout(false);
             headerPanel.ResumeLayout(false);
             page.ResumeLayout(false);
+            page.PerformLayout();
             ResumeLayout(false);
         }
 

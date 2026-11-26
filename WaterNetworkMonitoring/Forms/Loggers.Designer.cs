@@ -59,6 +59,7 @@ namespace WaterNetworkMonitoring
             // 
             // mapPanel
             // 
+            mapPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             mapPanel.BackColor = Color.White;
             mapPanel.BorderStyle = BorderStyle.FixedSingle;
             mapPanel.Controls.Add(map);
@@ -69,7 +70,6 @@ namespace WaterNetworkMonitoring
             mapPanel.Location = new Point(24, 24);
             mapPanel.Name = "mapPanel";
             mapPanel.Size = new Size(734, 644);
-            mapPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             mapPanel.TabIndex = 0;
             // 
             // map
@@ -95,7 +95,7 @@ namespace WaterNetworkMonitoring
             map.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
             map.SelectedAreaFillColor = Color.FromArgb(33, 65, 105, 225);
             map.ShowTileGridLines = false;
-            map.Size = new Size(1098, 450);
+            map.Size = new Size(732, 474);
             map.TabIndex = 0;
             map.Zoom = 0D;
             // 
@@ -104,10 +104,10 @@ namespace WaterNetworkMonitoring
             selectionLabel.BackColor = Color.FromArgb(240, 246, 255);
             selectionLabel.Dock = DockStyle.Bottom;
             selectionLabel.ForeColor = Color.FromArgb(25, 65, 110);
-            selectionLabel.Location = new Point(0, 546);
+            selectionLabel.Location = new Point(0, 570);
             selectionLabel.Name = "selectionLabel";
             selectionLabel.Padding = new Padding(10, 0, 0, 0);
-            selectionLabel.Size = new Size(1098, 44);
+            selectionLabel.Size = new Size(732, 44);
             selectionLabel.TabIndex = 1;
             selectionLabel.Text = "Select a region to see its details.";
             selectionLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -117,9 +117,9 @@ namespace WaterNetworkMonitoring
             // 
             attributionLabel.Dock = DockStyle.Bottom;
             attributionLabel.Font = new Font("Segoe UI", 8F);
-            attributionLabel.Location = new Point(0, 590);
+            attributionLabel.Location = new Point(0, 614);
             attributionLabel.Name = "attributionLabel";
-            attributionLabel.Size = new Size(1098, 28);
+            attributionLabel.Size = new Size(732, 28);
             attributionLabel.TabIndex = 2;
             attributionLabel.Text = "© OpenStreetMap contributors";
             attributionLabel.TextAlign = ContentAlignment.MiddleRight;
@@ -136,7 +136,7 @@ namespace WaterNetworkMonitoring
             toolbar.Location = new Point(0, 48);
             toolbar.Name = "toolbar";
             toolbar.Padding = new Padding(10, 5, 10, 5);
-            toolbar.Size = new Size(1098, 48);
+            toolbar.Size = new Size(732, 48);
             toolbar.TabIndex = 3;
             toolbar.WrapContents = false;
             // 
@@ -197,7 +197,7 @@ namespace WaterNetworkMonitoring
             headerPanel.Dock = DockStyle.Top;
             headerPanel.Location = new Point(0, 0);
             headerPanel.Name = "headerPanel";
-            headerPanel.Size = new Size(1098, 48);
+            headerPanel.Size = new Size(732, 48);
             headerPanel.TabIndex = 4;
             headerPanel.Visible = false;
             // 
@@ -208,13 +208,14 @@ namespace WaterNetworkMonitoring
             titleLabel.Location = new Point(0, 0);
             titleLabel.Name = "titleLabel";
             titleLabel.Padding = new Padding(10, 0, 0, 0);
-            titleLabel.Size = new Size(1098, 48);
+            titleLabel.Size = new Size(732, 48);
             titleLabel.TabIndex = 0;
             titleLabel.Text = "Loggers  /  Blagoevgrad regions";
             titleLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // chartsPanel
             // 
+            chartsPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             chartsPanel.ColumnCount = 1;
             chartsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             chartsPanel.Controls.Add(chartHeader, 0, 0);
@@ -227,7 +228,6 @@ namespace WaterNetworkMonitoring
             chartsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             chartsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             chartsPanel.Size = new Size(350, 644);
-            chartsPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             chartsPanel.TabIndex = 1;
             // 
             // chartHeader

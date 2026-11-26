@@ -43,4 +43,16 @@
     <InternalsVisibleTo Include="WaterNetworkMonitoring.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Forms\DashboardControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Forms\DashboardControl.Designer.cs">
+      <DependentUpon>DashboardControl.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Forms\DashboardControl.resx">
+      <DependentUpon>DashboardControl.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

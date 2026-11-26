@@ -290,7 +290,7 @@ namespace WaterNetworkMonitoring
 
         private void LayoutDashboard()
         {
-            if (page == null || layingOut) return;
+            if (page == null || layingOut || IsDesigner()) return;
             layingOut = true;
             try
             {
