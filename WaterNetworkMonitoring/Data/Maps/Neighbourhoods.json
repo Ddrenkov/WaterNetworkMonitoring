@@ -5,7 +5,6 @@
     "Longitude": 23.0997994,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-24e3eb90-77dc-4abd-bb2f-e3ceacf3876d.png",
     "BoundaryNote": "Approximate project boundary follows the supplied red outline, including Byalata Visota and the school/northern apartment frontage; ends north of Peyo Yavorov Boulevard.",
     "Points": [
       [
@@ -158,8 +157,7 @@
       ]
     ],
     "Holes": [],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-69ce1923-815b-434a-a43e-276ca21ab443.png"
+    "AdditionalParts": []
   },
   {
     "Name": "Balarbashi",
@@ -167,7 +165,6 @@
     "Longitude": 23.0929949,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-11dda880-465c-43e6-a68b-53132c2129ba.png",
     "BoundaryNote": "Outline traced from the supplied screenshot and aligned using shared landmarks; not an official surveyed boundary.",
     "Points": [
       [
@@ -348,7 +345,6 @@
     "Longitude": 23.0917553,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-96495e49-3c06-4291-aeb3-871807debd85.png",
     "BoundaryNote": "Approximate project outline includes the marked Slavyanska and Matitsa frontages, as well as earlier riverfront and northern additions; not an official boundary.",
     "Points": [
       [
@@ -1038,12 +1034,7 @@
         ]
       ]
     ],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-03b4c38e-1670-4cab-b202-6bb49f40ea2a.png",
-    "AdjustmentReferences": [
-      "codex-clipboard-f66f2999-46fe-4c9b-b039-58a552192561.png",
-      "codex-clipboard-88c99dac-b09d-48ee-858b-d85ec00e1970.png"
-    ]
+    "AdditionalParts": []
   },
   {
     "Name": "Elenovo 1",
@@ -1051,7 +1042,6 @@
     "Longitude": 23.1061867,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-3a41df2b-8257-4b63-8313-70e710d52e8e.png",
     "BoundaryNote": "Approximate project outline expanded to include the apartment blocks along 14-ti Polk and beneath Zdravets in the user reference; earlier southern/shared road boundaries retained. Not an official boundary.",
     "Points": [
       [
@@ -1384,8 +1374,7 @@
       ]
     ],
     "Holes": [],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-b8a2c311-2c60-4fff-8d42-e3c7595babaf.png"
+    "AdditionalParts": []
   },
   {
     "Name": "Elenovo 2",
@@ -1393,7 +1382,6 @@
     "Longitude": 23.114431,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-3e68d7aa-65bd-4143-a3ca-a04c97b93fe0.png",
     "BoundaryNote": "Approximate project outline adjusted to the road boundaries and common dividing line in the user red reference; unmarked southern edges retained. Not an official boundary.",
     "Points": [
       [
@@ -1550,8 +1538,7 @@
       ]
     ],
     "Holes": [],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-9136b4fb-71ea-4ff4-b3f2-199b968b327b.png"
+    "AdditionalParts": []
   },
   {
     "Name": "Gramada",
@@ -1559,7 +1546,6 @@
     "Longitude": 23.0779117,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-3c42726f-4ca6-4a9e-b366-d61cb17b95cc.png",
     "BoundaryNote": "Screenshot-derived project outline, adjusted to the supplied map reference; not an official surveyed boundary.",
     "Points": [
       [
@@ -1672,8 +1658,7 @@
       ]
     ],
     "Holes": [],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-0d65283d-ef02-494d-b1f6-0f850cfbdafc.png"
+    "AdditionalParts": []
   },
   {
     "Name": "Orlova Chuka",
@@ -1681,7 +1666,6 @@
     "Longitude": 23.1042947,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-521f9e40-2787-410d-a208-69757e6751f8.png",
     "BoundaryNote": "Approximate project outline with the internal cutout filled and the Varosha edge aligned to the road toward the zoo entrance in the user reference; not an official boundary.",
     "Points": [
       [
@@ -2018,8 +2002,7 @@
       ]
     ],
     "Holes": [],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-92e928b0-b98c-4cc5-8b1d-9f223bd8ae04.png"
+    "AdditionalParts": []
   },
   {
     "Name": "Osvobozhdenie",
@@ -2027,7 +2010,6 @@
     "Longitude": 23.0842761,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-0999afdb-af9e-400b-ab85-964f8b182871.png",
     "BoundaryNote": "Approximate project outline expanded west along the user red stroke to include the marked buildings and Vetren frontage; original area retained. Not an official boundary.",
     "Points": [
       [
@@ -2216,8 +2198,7 @@
       ]
     ],
     "Holes": [],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-03b4c38e-1670-4cab-b202-6bb49f40ea2a.png"
+    "AdditionalParts": []
   },
   {
     "Name": "Southern Industrial Zone",
@@ -2225,7 +2206,6 @@
     "Longitude": 23.0891457,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-e44b4bf5-84c6-4b61-8cff-afcdc041255a.png",
     "BoundaryNote": "Approximate project outline includes the lower riverside campus buildings east of the user red river-side line, as well as the earlier university and southern-frontage refinements; not an official boundary.",
     "Points": [
       [
@@ -3305,8 +3285,7 @@
         ]
       ]
     ],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-3658f963-5e9f-407a-9c22-cafe61aaf5e0.png"
+    "AdditionalParts": []
   },
   {
     "Name": "Strumsko",
@@ -3314,7 +3293,6 @@
     "Longitude": 23.0845504,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-a30632ac-bfd9-4b96-ab26-ef24e53510ec.png",
     "BoundaryNote": "Approximate project boundary expanded along the western and southern residential streets in the supplied reference; Route 1 remains excluded.",
     "Points": [
       [
@@ -3607,8 +3585,7 @@
       ]
     ],
     "Holes": [],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-24344320-b47d-476a-99d7-2f8285cbed22.png"
+    "AdditionalParts": []
   },
   {
     "Name": "Varosha",
@@ -3616,7 +3593,6 @@
     "Longitude": 23.1008915,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-a1a08395-f776-4db7-ba31-d00baa7dcf87.png",
     "BoundaryNote": "Approximate project outline; the Industrial edge is a single straight segment between the Centre and Orlova road junctions. The road boundary toward the zoo is retained; not an official boundary.",
     "Points": [
       [
@@ -3912,12 +3888,7 @@
         23.1056588
       ]
     ],
-    "Holes": [],
-    "AdjustmentReference": "codex-clipboard-3658f963-5e9f-407a-9c22-cafe61aaf5e0.png",
-    "AdjustmentReferences": [
-      "codex-clipboard-f66f2999-46fe-4c9b-b039-58a552192561.png",
-      "codex-clipboard-88c99dac-b09d-48ee-858b-d85ec00e1970.png"
-    ]
+    "Holes": []
   },
   {
     "Name": "Zapad",
@@ -3925,7 +3896,6 @@
     "Longitude": 23.0823668,
     "SourceUrl": "",
     "IsApproximate": true,
-    "ReferenceImage": "codex-clipboard-323ebd60-c0b4-49ba-ae87-ff8845ce1a05.png",
     "BoundaryNote": "Screenshot-derived project outline, adjusted to the supplied map reference; not an official surveyed boundary.",
     "Points": [
       [
@@ -4034,7 +4004,6 @@
       ]
     ],
     "Holes": [],
-    "AdditionalParts": [],
-    "AdjustmentReference": "codex-clipboard-3658f963-5e9f-407a-9c22-cafe61aaf5e0.png"
+    "AdditionalParts": []
   }
 ]

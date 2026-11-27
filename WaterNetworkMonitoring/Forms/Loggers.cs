@@ -47,7 +47,7 @@ namespace WaterNetworkMonitoring
             try
             {
                 var zones = BlagoevgradNeighbourhoods.LoadZones();
-                pipeGraph = BuildingPipeGraph.Create(BuildingMapData.Load(zones),zones.Single(z => z.Name == "Zapad"));
+                pipeGraph = BuildingPipeGraph.Create(BuildingMapData.Load(),zones.Single(z => z.Name == "Zapad"));
                 pipes = pipeGraph.CreateOverlay("logger-pipes");
                 map.Overlays.Add(pipes);
                 map.RoutesEnabled = true;

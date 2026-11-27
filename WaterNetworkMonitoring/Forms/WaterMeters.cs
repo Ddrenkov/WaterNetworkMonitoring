@@ -48,7 +48,7 @@ namespace WaterNetworkMonitoring
         {
             if (IsDesigner() || initialized) return;
             zones = BlagoevgradNeighbourhoods.LoadZones();
-            buildings = BuildingMapData.Load(zones);
+            buildings = BuildingMapData.Load();
             initialized = true;
             GMaps.Instance.Mode = previewData == null ? AccessMode.ServerAndCache : AccessMode.CacheOnly;
             map.MapProvider = OSMap.Instance;

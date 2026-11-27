@@ -68,7 +68,7 @@ namespace WaterNetworkMonitoring
         private void InitializeMap()
         {
             var zones = BlagoevgradNeighbourhoods.LoadZones();
-            buildings = BuildingMapData.Load(zones);
+            buildings = BuildingMapData.Load();
             GMaps.Instance.Mode = previewData == null ? AccessMode.ServerAndCache : AccessMode.CacheOnly;
             map.MapProvider = OSMap.Instance;
             var regions = BlagoevgradNeighbourhoods.CreateOverlay();

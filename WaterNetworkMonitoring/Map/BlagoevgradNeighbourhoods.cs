@@ -13,16 +13,9 @@ namespace WaterNetworkMonitoring
             public double Longitude { get; set; }
             public string SourceUrl { get; set; } = "";
             public bool IsApproximate { get; set; }
-            public string ReferenceImage { get; set; } = "";
             public string BoundaryNote { get; set; } = "";
             public double[][] Points { get; set; } = Array.Empty<double[]>();
             public double[][][] Holes { get; set; } = Array.Empty<double[][]>();
-        }
-
-        public static List<Zone> LoadZones()
-        {
-            // Building numbers and the dashboard remain limited to Zapad.
-            return LoadAllZones().Where(z => z.Name == "Zapad").ToList();
         }
 
         public static List<Zone> LoadAllZones()
@@ -33,94 +26,49 @@ namespace WaterNetworkMonitoring
             return JsonSerializer.Deserialize<List<Zone>>(stream) ?? new List<Zone>();
         }
 
-        public static bool Contains(Zone zone, PointLatLng point)
+        public static List<Zone> LoadZones()
         {
-            return InsideRing(zone.Points, point) && !zone.Holes.Any(hole => InsideRing(hole, point));
+            return LoadAllZones().Where(zone => zone.Name == "Zapad").ToList();
         }
 
-        public static GMapOverlay CreateOverlay()
+        private static GMapPolygon CreatePolygon(Zone zone)
         {
-            return CreateOverlay(LoadZones());
+            var points = new List<PointLatLng>();
+            foreach (var point in zone.Points)
+                points.Add(new PointLatLng(point[0], point[1]));
+
+            return new GMapPolygon(points, zone.Name)
+            {
+                Tag = zone,
+                IsHitTestVisible = true
+            };
         }
+
+        public static GMapOverlay CreateOverlay() => CreateOverlay(LoadZones());
 
         public static GMapOverlay CreateOverlay(IEnumerable<Zone> zones)
         {
             var overlay = new GMapOverlay("neighbourhoods");
             foreach (var zone in zones)
             {
-                var polygon = new RegionPolygon(zone)
-                {
-                    Tag = zone,
-                    IsHitTestVisible = true
-                };
+                var polygon = CreatePolygon(zone);
                 StylePolygon(polygon, false);
                 overlay.Polygons.Add(polygon);
             }
             return overlay;
         }
 
-        public static bool Contains(GMapPolygon polygon, PointLatLng point)
-        {
-            var zone = (Zone)polygon.Tag;
-            return polygon.IsInside(point) && !zone.Holes.Any(hole => InsideRing(hole, point));
-        }
+        public static bool Contains(Zone zone, PointLatLng point) => CreatePolygon(zone).IsInside(point);
 
-        private static bool InsideRing(double[][] ring, PointLatLng point)
-        {
-            bool inside = false;
-            for (int i = 0, j = ring.Length - 1; i < ring.Length; j = i++)
-            {
-                if ((ring[i][0] > point.Lat) != (ring[j][0] > point.Lat) &&
-                    point.Lng < (ring[j][1] - ring[i][1]) * (point.Lat - ring[i][0]) /
-                        (ring[j][0] - ring[i][0]) + ring[i][1]) inside = !inside;
-            }
-            return inside;
-        }
-
-        private sealed class RegionPolygon : GMapPolygon
-        {
-            private readonly Zone zone;
-            public RegionPolygon(Zone zone) : base(zone.Points.Select(p => new PointLatLng(p[0], p[1])).ToList(), zone.Name)
-            {
-                this.zone = zone;
-            }
-
-            public override void OnRender(Graphics graphics)
-            {
-                if (!IsVisible || LocalPoints.Count < 3 || Overlay?.Control == null) return;
-                using var path = new System.Drawing.Drawing2D.GraphicsPath(System.Drawing.Drawing2D.FillMode.Alternate);
-                path.AddPolygon(LocalPoints.Select(p => new PointF(p.X, p.Y)).ToArray());
-                var map = Overlay.Control;
-                var origin = map.MapProvider.Projection.FromLatLngToPixel(Points[0], (int)map.Zoom);
-                foreach (var hole in zone.Holes)
-                {
-                    var points = hole.Select(p =>
-                    {
-                        var pixel = map.MapProvider.Projection.FromLatLngToPixel(p[0], p[1], (int)map.Zoom);
-                        return new PointF(LocalPoints[0].X + pixel.X - origin.X, LocalPoints[0].Y + pixel.Y - origin.Y);
-                    }).ToArray();
-                    if (points.Length >= 3) path.AddPolygon(points);
-                }
-                var smoothing = graphics.SmoothingMode;
-                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                graphics.FillPath(Fill, path);
-                graphics.DrawPath(Stroke, path);
-                graphics.SmoothingMode = smoothing;
-            }
-        }
+        public static bool Contains(GMapPolygon polygon, PointLatLng point) => polygon.IsInside(point);
 
         public static void StylePolygon(GMapPolygon polygon, bool selected)
         {
-            // Keep the original shared GMap default brushes alive.
             if (polygon.Stroke != GMapPolygon.DefaultStroke) polygon.Stroke.Dispose();
             if (polygon.Fill != GMapPolygon.DefaultFill) polygon.Fill.Dispose();
-            polygon.Stroke = new Pen(Color.FromArgb(selected ? 255 : 210, 35, 105, 220), selected ? 3 : 1.8f)
-            {
-                DashStyle = System.Drawing.Drawing2D.DashStyle.Solid,
-                LineJoin = System.Drawing.Drawing2D.LineJoin.Round
-            };
+
+            polygon.Stroke = new Pen(Color.FromArgb(selected ? 255 : 210, 35, 105, 220), selected ? 3 : 1.8f);
             polygon.Fill = new SolidBrush(Color.FromArgb(selected ? 40 : 16, 65, 145, 235));
         }
-
     }
 }

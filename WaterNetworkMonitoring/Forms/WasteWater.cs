@@ -47,7 +47,7 @@ namespace WaterNetworkMonitoring
             var zones = BlagoevgradNeighbourhoods.LoadZones();
             var zone = zones.Single(z => z.Name == "Zapad");
             zapad = zone;
-            buildings = BuildingMapData.Load(zones);
+            buildings = BuildingMapData.Load();
             map.SetZoomToFitRect(RectLatLng.FromLTRB(zone.Points.Min(p=>p[1])-.0002,zone.Points.Max(p=>p[0])+.0002,
                 zone.Points.Max(p=>p[1])+.0002,zone.Points.Min(p=>p[0])-.0002));
             statusLabel.Text = "Drawing the Zapad pipe graph…";
@@ -77,7 +77,7 @@ namespace WaterNetworkMonitoring
             map.OnMarkerLeave += _ => map.Cursor = Cursors.Default;
             try
             {
-                var result = await Task.Run(() => WasteWaterNetwork.Create(buildings,zone));
+                var result = await Task.Run(() => WasteWaterNetwork.Load());
                 if (IsDisposed || Disposing) return;
                 network = result;
                 DrawNetwork();

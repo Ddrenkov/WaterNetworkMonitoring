@@ -19,21 +19,17 @@ namespace WaterNetworkMonitoring.Services
 
         internal WaterMeterConsumptionData(IEnumerable<WaterMeter> meters, IEnumerable<WaterMeterReading> readings)
         {
-            var histories = readings.GroupBy(r => r.WaterMeterId)
-                .ToDictionary(g => g.Key, g => g.OrderBy(r => r.TakenAt).ToArray());
-            var times = histories.Values.SelectMany(r => r).Select(r => r.TakenAt).ToArray();
-            if (times.Length > 0)
-            {
-                var first = new DateTime(times.Min().Year, times.Min().Month, 1);
-                var last = new DateTime(times.Max().Year, times.Max().Month, 1);
-                first = first < last.AddMonths(-12) ? last.AddMonths(-12) : first;
-                for (var date = first; date < last.AddMonths(1); date = date.AddMonths(1))
-                    Months.Add(new Month(date.Year, date.Month));
-            }
-            foreach (var meter in meters.OrderBy(m => m.MapNumber))
+            var histories = readings.GroupBy(reading => reading.WaterMeterId)
+                .ToDictionary(group => group.Key, group => group.OrderBy(reading => reading.TakenAt).ToArray());
+            Months.AddRange(FindMonths(histories.Values.SelectMany(history => history)));
+
+            foreach (var meter in meters.OrderBy(meter => meter.MapNumber))
             {
                 var history = histories.GetValueOrDefault(meter.Id) ?? Array.Empty<WaterMeterReading>();
-                Meters.Add(new MeterUsage(meter, Months.ToDictionary(m => m, m => Calculate(history, m))));
+                var consumption = new Dictionary<Month, Consumption>();
+                foreach (var month in Months)
+                    consumption.Add(month, Calculate(history, month));
+                Meters.Add(new MeterUsage(meter, consumption));
             }
             // A boundary observation in August or December is not a complete month of consumption.
             Months.RemoveAll(month => !Meters.Any(m => m.Months[month].Litres.HasValue));
@@ -62,40 +58,95 @@ namespace WaterNetworkMonitoring.Services
             return new WaterMeterConsumptionData(meters, readings);
         }
 
+        private static List<Month> FindMonths(IEnumerable<WaterMeterReading> readings)
+        {
+            var months = new List<Month>();
+            var times = readings.Select(reading => reading.TakenAt).ToArray();
+            if (times.Length == 0) return months;
+
+            var firstTime = times.Min();
+            var lastTime = times.Max();
+            var first = new DateTime(firstTime.Year, firstTime.Month, 1);
+            var last = new DateTime(lastTime.Year, lastTime.Month, 1);
+            if (first < last.AddMonths(-12)) first = last.AddMonths(-12);
+            for (var date = first; date < last.AddMonths(1); date = date.AddMonths(1))
+                months.Add(new Month(date.Year, date.Month));
+            return months;
+        }
+
         private static Consumption Calculate(WaterMeterReading[] history, Month month)
         {
             var from = new DateTime(month.Year, month.Number, 1);
-            var to = new DateTime(month.Year, month.Number, 1).AddMonths(1);
-            var left = history.LastOrDefault(r => r.TakenAt <= from);
-            var right = history.FirstOrDefault(r => r.TakenAt >= to);
-            if (left == null || right == null) return new(null, false, "Readings before and after the month are needed.");
-            var window = history.Where(r => r.TakenAt >= left.TakenAt && r.TakenAt <= right.TakenAt).ToArray();
-            if (window.DistinctBy(r => r.TakenAt).Count() != window.Length)
-                return new(null, false, "Duplicate reading timestamps.");
-            if (window.Any(r => r.Reading.Length != 8 || r.Reading.Any(c => c is < '0' or > '9')))
-                return new(null, false, "Invalid meter counter.");
-            if (window.Zip(window.Skip(1), (a, b) => Counter(b) < Counter(a)).Any(reset => reset))
-                return new(null, false, "Meter reset or rollover needs review.");
-            var gaps = history.Zip(history.Skip(1), (a, b) => (b.TakenAt-a.TakenAt).TotalSeconds).Where(g => g > 0).Order().ToArray();
-            double typicalGap = gaps.Length == 0 ? 0 : gaps[gaps.Length / 2];
-            decimal? start = CounterAt(window, from, typicalGap), end = CounterAt(window, to, typicalGap);
-            if (!start.HasValue || !end.HasValue) return new(null, false, "A month boundary has missing readings.");
+            var to = from.AddMonths(1);
+            var left = history.LastOrDefault(reading => reading.TakenAt <= from);
+            var right = history.FirstOrDefault(reading => reading.TakenAt >= to);
+            if (left == null || right == null)
+                return new Consumption(null, false, "Readings before and after the month are needed.");
+
+            var window = history.Where(reading => reading.TakenAt >= left.TakenAt && reading.TakenAt <= right.TakenAt).ToArray();
+            string? error = ValidateReadings(window);
+            if (error != null) return new Consumption(null, false, error);
+
+            double typicalGap = TypicalGapSeconds(history);
+            decimal? start = CounterAt(window, from, typicalGap);
+            decimal? end = CounterAt(window, to, typicalGap);
+            if (!start.HasValue || !end.HasValue)
+                return new Consumption(null, false, "A month boundary has missing readings.");
+
+            decimal litres = end.Value - start.Value;
             bool estimated = left.TakenAt != from || right.TakenAt != to;
-            return new(end.Value-start.Value, estimated, estimated
-                ? "Midnight counters estimated between the surrounding readings."
-                : "Difference between recorded counters at both month boundaries.");
+            if (estimated)
+                return new Consumption(litres, true, "Midnight counters estimated between the surrounding readings.");
+            return new Consumption(litres, false, "Difference between recorded counters at both month boundaries.");
+        }
+
+        private static string? ValidateReadings(WaterMeterReading[] rows)
+        {
+            for (int i = 1; i < rows.Length; i++)
+                if (rows[i].TakenAt == rows[i - 1].TakenAt)
+                    return "Duplicate reading timestamps.";
+
+            foreach (var row in rows)
+            {
+                if (row.Reading.Length != 8) return "Invalid meter counter.";
+                foreach (char digit in row.Reading)
+                    if (digit < '0' || digit > '9') return "Invalid meter counter.";
+            }
+
+            for (int i = 1; i < rows.Length; i++)
+                if (Counter(rows[i]) < Counter(rows[i - 1]))
+                    return "Meter reset or rollover needs review.";
+            return null;
+        }
+
+        private static double TypicalGapSeconds(WaterMeterReading[] rows)
+        {
+            var gaps = new List<double>();
+            for (int i = 1; i < rows.Length; i++)
+            {
+                double gap = (rows[i].TakenAt - rows[i - 1].TakenAt).TotalSeconds;
+                if (gap > 0) gaps.Add(gap);
+            }
+            gaps.Sort();
+            if (gaps.Count == 0) return 0;
+            return gaps[gaps.Count / 2];
         }
 
         private static decimal? CounterAt(WaterMeterReading[] rows, DateTime time, double typicalGap)
         {
-            var left = rows.LastOrDefault(r => r.TakenAt <= time);
+            var left = rows.LastOrDefault(reading => reading.TakenAt <= time);
             if (left == null) return null;
             if (left.TakenAt == time) return Counter(left);
-            var right = rows.FirstOrDefault(r => r.TakenAt > time);
-            if (right == null || (right.TakenAt-left.TakenAt).TotalSeconds > typicalGap * 1.5) return null;
-            return Counter(left) + (Counter(right)-Counter(left)) *
-                (decimal)((time-left.TakenAt).TotalSeconds/(right.TakenAt-left.TakenAt).TotalSeconds);
+
+            var right = rows.FirstOrDefault(reading => reading.TakenAt > time);
+            if (right == null) return null;
+            double gap = (right.TakenAt - left.TakenAt).TotalSeconds;
+            if (gap > typicalGap * 1.5) return null;
+
+            decimal fraction = (decimal)((time - left.TakenAt).TotalSeconds / gap);
+            return Counter(left) + (Counter(right) - Counter(left)) * fraction;
         }
+
         private static decimal Counter(WaterMeterReading row) => decimal.Parse(row.Reading, CultureInfo.InvariantCulture);
         internal static DateTime ChartTime(Month month) => new DateTime(month.Year, month.Number, 1, 12, 0, 0);
     }

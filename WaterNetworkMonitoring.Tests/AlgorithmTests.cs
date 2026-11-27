@@ -54,6 +54,53 @@ public class AlgorithmTests
     }
 
     [Test]
+    public void BalancedReadingsAfterLeak_ClearWarningWhileCusumIsStillPositive()
+    {
+        var data = CleanWaterReadings(leak: true);
+        foreach (var reading in data.LoggerReadings.TakeLast(48))
+        {
+            reading.FlowM3PerHour = 1m;
+            reading.PressureBar = 4m;
+        }
+
+        var balances = Analyze(data);
+
+        Assert.That(balances[^2].LeakSuspected, Is.True);
+        Assert.That(balances[^1].Cusum, Is.GreaterThan(0m));
+        Assert.That(balances[^1].LeakSuspected, Is.False);
+    }
+
+    [Test]
+    public void PressureDropWithoutWaterDifference_DoesNotReportLeak()
+    {
+        var data = CleanWaterReadings();
+        foreach (var reading in data.LoggerReadings.TakeLast(48))
+            reading.PressureBar = 3.5m;
+
+        var balance = Analyze(data)[^1];
+
+        Assert.That(balance.PressureDrop, Is.True);
+        Assert.That(balance.ExcessM3PerHour, Is.Zero);
+        Assert.That(balance.LeakSuspected, Is.False);
+    }
+
+    [Test]
+    public void ShortHistory_ReturnsBalancesOnlyWhenDetectionIsOptional()
+    {
+        var data = CleanWaterReadings();
+        var cutoff = data.MeterReadings[9].TakenAt;
+        data.LoggerReadings.RemoveAll(reading => reading.TakenAt > cutoff);
+
+        Assert.Throws<ArgumentException>(() => Analyze(data));
+        var balances = LeakDetectionService.AnalyzeMeterBalance(data.Logger, data.LoggerReadings,
+            new[] { data.Meter }, data.MeterReadings, data.BaselineEnd, requireBaseline: false);
+
+        Assert.That(balances, Has.Count.EqualTo(9));
+        Assert.That(balances.All(balance => balance.DetectionThreshold == 0 && !balance.LeakSuspected), Is.True);
+    }
+
+
+    [Test]
     public void NormalDayAndNightFlows_DoNotRequireCleaning()
     {
         var alerts = WasteWaterMaintenance.FindAlerts(WastewaterReadings());

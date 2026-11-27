@@ -50,40 +50,37 @@ namespace WaterNetworkMonitoring.Services
             var logger = Loggers.Single(l => l.Id == loggerId);
             var scope = MeterScopes.Single(s => s.LoggerId == loggerId);
             var meters = SuppliedMeters(logger);
-            var start = new DateTime(month.Year,month.Number,1);
-            var end = new DateTime(month.Year,month.Number,1).AddMonths(1);
+            var start = new DateTime(month.Year, month.Number, 1);
+            var end = start.AddMonths(1);
             try
             {
-                var comparisonReadings = LoggerReadings;
-                if (logger.ParentLoggerId == null)
+                var comparisonReadings = ComparisonReadings(logger);
+                var baselineEnd = start;
+                if (comparisonReadings.Count > 0)
                 {
-                    // The whole-zone comparison starts when every configured branch is monitored.
-                    // Do not compare periods before the configured branches have readings.
-                    var ids = Loggers.Where(l => l.Id == logger.Id || l.ParentLoggerId == logger.Id).Select(l => l.Id).ToArray();
-                    var coverage = ids.Select(id => LoggerReadings.Where(r => r.LoggerId == id).ToList()).ToArray();
-                    if (coverage.Any(rows => rows.Count == 0))
-                        throw new ArgumentException("A branch has no observations.");
-                    var from = coverage.Max(rows => rows.Min(r => r.TakenAt));
-                    var to = coverage.Min(rows => rows.Max(r => r.TakenAt));
-                    comparisonReadings = LoggerReadings.Where(r => r.TakenAt >= from && r.TakenAt <= to).ToList();
+                    var firstReading = comparisonReadings.Where(r => r.LoggerId == logger.Id)
+                        .Select(r => r.TakenAt).DefaultIfEmpty(start).Min();
+                    baselineEnd = firstReading.AddDays(7);
                 }
-                var baselineEnd = comparisonReadings.Count == 0 ? start : comparisonReadings.Where(r => r.LoggerId == logger.Id).Select(r => r.TakenAt).DefaultIfEmpty(start).Min().AddDays(7);
-                var balances = LeakDetectionService.AnalyzeMeterBalance(logger,comparisonReadings,meters,MeterReadings,baselineEnd, requireBaseline: false)
+                var balances = LeakDetectionService.AnalyzeMeterBalance(logger, comparisonReadings, meters,
+                    MeterReadings, baselineEnd, requireBaseline: false)
                     .Where(b => b.To > start && b.To <= end).ToList();
-                var recorded = MeterReadings.GroupBy(r => r.WaterMeterId)
-                    .ToDictionary(g => g.Key,g => g.Select(r => r.TakenAt).ToHashSet());
-                bool estimated = balances.Any(b => meters.Any(m => !recorded.TryGetValue(m.Id,out var times)
-                    || !times.Contains(b.From) || !times.Contains(b.To)));
-                return new MeterComparison(scope,balances,estimated,balances.Count == 0 ? "No complete matching logger and meter intervals." : null);
+                bool estimated = HasEstimatedCounters(balances, meters);
+                return new MeterComparison(scope, balances, estimated,
+                    balances.Count == 0 ? "No complete matching logger and meter intervals." : null);
             }
             catch (ArgumentException)
             {
-                return new MeterComparison(scope,Array.Empty<BranchBalance>(),false,"Matching logger and meter readings are needed.");
+                return new MeterComparison(scope, Array.Empty<BranchBalance>(), false,
+                    "Matching logger and meter readings are needed.");
             }
         }
-        public List<Month> Months => LoggerReadings.GroupBy(r => new { ReadingDate(r.TakenAt.AddTicks(-1)).Year, Month = ReadingDate(r.TakenAt.AddTicks(-1)).Month })
-            .Select(g => new Month(g.Key.Year, g.Key.Month, g.Count()))
-            .OrderByDescending(m => m.Year).ThenByDescending(m => m.Number).ToList();
+
+        public List<Month> Months => LoggerReadings
+            .Select(reading => IntervalDate(reading.TakenAt))
+            .GroupBy(date => new { date.Year, date.Month })
+            .Select(group => new Month(group.Key.Year, group.Key.Month, group.Count()))
+            .OrderByDescending(month => month.Year).ThenByDescending(month => month.Number).ToList();
 
         public static async Task<DashboardData> LoadAsync(CancellationToken cancellationToken)
         {
@@ -102,7 +99,7 @@ namespace WaterNetworkMonitoring.Services
             var readings = new List<LoggerReading>();
             if (latest.HasValue)
             {
-                var date = ReadingDate(latest.Value.AddTicks(-1));
+                var date = IntervalDate(latest.Value);
                 var from = new DateTime(date.Year, date.Month, 1).AddMonths(-2).AddDays(-1);
                 readings = await db.LoggerReadings.AsNoTracking()
                     .Where(r => ids.Contains(r.LoggerId) && r.TakenAt > from && r.TakenAt <= latest.Value)
@@ -128,69 +125,171 @@ namespace WaterNetworkMonitoring.Services
         public DashboardReport Report(Month month)
         {
             var start = new DateTime(month.Year, month.Number, 1);
-            var end = new DateTime(month.Year, month.Number, 1).AddMonths(1);
+            var end = start.AddMonths(1);
             var readings = LoggerReadings.Where(r => r.TakenAt > start && r.TakenAt <= end).ToList();
             var inlet = Loggers.FirstOrDefault(l => l.ParentLoggerId == null);
             var inletReadings = readings.Where(r => r.LoggerId == inlet?.Id).ToList();
             var baselineEnd = LoggerReadings.Count == 0 ? start : LoggerReadings.Min(r => r.TakenAt).AddDays(7);
-            var analyses = new List<(Models.PressureLogger Logger, List<BranchBalance> Balances)>();
-            int incomplete = 0;
+            var analyses = AnalyzeLoggers(baselineEnd, out int incomplete);
+            var alert = FindLatestLeak(analyses, start, end);
+            var selected = SelectLogger(alert.Logger, inlet);
+            var allBalances = analyses.FirstOrDefault(a => a.Logger.Id == selected?.Id).Balances ?? new List<BranchBalance>();
+            var monthBalances = allBalances.Where(b => b.To > start && b.To <= end).ToList();
+            var latestLeak = alert.Balance;
+            var firstLeak = latestLeak == null ? null : allBalances.FirstOrDefault(b => b.LeakSuspected && b.To <= latestLeak.To);
+            var assigned = Meters.Where(m => m.LoggerId == selected?.Id).ToList();
+            var singleMeter = assigned.Count == 1 ? assigned[0] : null;
+            bool complete = CompleteMonth(month, inletReadings);
+            string location = DescribeLeak(selected, latestLeak, assigned);
+            return new DashboardReport
+            {
+                Period = month.ToString(),
+                IsSimulated = readings.Any(reading => reading.IsSimulated),
+                InletDays = Daily(inletReadings, reading => reading.FlowM3PerHour),
+                InletPressure = Daily(inletReadings, reading => reading.PressureBar),
+                BranchPressure = Daily(readings.Where(reading => reading.LoggerId == selected?.Id).ToList(), reading => reading.PressureBar),
+                FlowSeries = CreateSeries(readings, reading => reading.FlowM3PerHour),
+                PressureSeries = CreateSeries(readings, reading => reading.PressureBar),
+                Balances = monthBalances,
+                LatestLeak = latestLeak,
+                FirstLeak = firstLeak,
+                BranchName = selected?.Name ?? "Branch",
+                BuildingNumber = singleMeter?.MapNumber,
+                MeterId = singleMeter?.Id,
+                LeakLocation = location,
+                FlaggedLoggerId = latestLeak == null ? null : selected?.Id,
+                LoggerSummary = "Loggers: " + string.Join(" · ", Loggers.OrderBy(logger => logger.Id)
+                    .Select(logger => $"{LoggerMapPin.LabelFor(logger.Id)} ({logger.Id})")),
+                AnalysisNote = latestLeak == null && (monthBalances.Count == 0 || incomplete > 0)
+                    ? "Not enough matching readings to assess every branch." : null,
+                SuppliedM3 = inletReadings.Sum(reading => reading.FlowM3PerHour * .25m),
+                CompleteMonth = complete,
+                LastReading = readings.Count == 0 ? null : readings.Max(reading => reading.TakenAt)
+            };
+        }
+
+        private List<LoggerReading> ComparisonReadings(PressureLogger logger)
+        {
+            if (logger.ParentLoggerId != null) return LoggerReadings;
+
+            // The inlet comparison needs a shared observation period for all its branches.
+            DateTime from = DateTime.MinValue, to = DateTime.MaxValue;
+            var monitored = Loggers.Where(item => item.Id == logger.Id || item.ParentLoggerId == logger.Id);
+            foreach (var item in monitored)
+            {
+                var rows = LoggerReadings.Where(reading => reading.LoggerId == item.Id).ToList();
+                if (rows.Count == 0) throw new ArgumentException("A branch has no observations.");
+                var first = rows.Min(reading => reading.TakenAt);
+                var last = rows.Max(reading => reading.TakenAt);
+                if (first > from) from = first;
+                if (last < to) to = last;
+            }
+            return LoggerReadings.Where(reading => reading.TakenAt >= from && reading.TakenAt <= to).ToList();
+        }
+
+        private bool HasEstimatedCounters(List<BranchBalance> balances, List<WaterMeter> meters)
+        {
+            var recorded = MeterReadings.GroupBy(reading => reading.WaterMeterId)
+                .ToDictionary(group => group.Key, group => group.Select(reading => reading.TakenAt).ToHashSet());
+            foreach (var balance in balances)
+                foreach (var meter in meters)
+                    if (!recorded.TryGetValue(meter.Id, out var times) ||
+                        !times.Contains(balance.From) || !times.Contains(balance.To))
+                        return true;
+            return false;
+        }
+
+        private List<(PressureLogger Logger, List<BranchBalance> Balances)> AnalyzeLoggers(
+            DateTime baselineEnd, out int incomplete)
+        {
+            var analyses = new List<(PressureLogger Logger, List<BranchBalance> Balances)>();
+            incomplete = 0;
             foreach (var logger in Loggers)
             {
                 try
                 {
-                    var balances = Loggers.Any(l => l.ParentLoggerId == logger.Id)
-                        ? LeakDetectionService.AnalyzeInlet(logger, Loggers, LoggerReadings, baselineEnd)
-                        : LeakDetectionService.AnalyzeSubzone(logger, LoggerReadings, Meters, MeterReadings, baselineEnd);
+                    IReadOnlyList<BranchBalance> balances;
+                    bool hasBranches = Loggers.Any(child => child.ParentLoggerId == logger.Id);
+                    if (hasBranches)
+                        balances = LeakDetectionService.AnalyzeInlet(logger, Loggers, LoggerReadings, baselineEnd);
+                    else
+                        balances = LeakDetectionService.AnalyzeSubzone(logger, LoggerReadings, Meters, MeterReadings, baselineEnd);
                     analyses.Add((logger, balances.ToList()));
                 }
-                catch (ArgumentException) { incomplete++; }
+                catch (ArgumentException)
+                {
+                    incomplete++;
+                }
             }
-            var alert = analyses.SelectMany(a => a.Balances.Where(b => b.To > start && b.To <= end && b.LeakSuspected)
-                .Select(b => (a.Logger, Balance:b))).OrderByDescending(a => a.Balance.To)
-                .ThenByDescending(a => a.Balance.ExcessM3PerHour).FirstOrDefault();
-            var selected = alert.Logger ?? Loggers.FirstOrDefault(l => l.SuppliedWaterMeterId.HasValue)
-                ?? Loggers.FirstOrDefault(l => l.ParentLoggerId.HasValue) ?? inlet;
-            var allBalances = analyses.FirstOrDefault(a => a.Logger.Id == selected?.Id).Balances ?? new List<BranchBalance>();
-            var monthBalances = allBalances.Where(b => b.To > start && b.To <= end).ToList();
-            var latestLeak = alert.Logger == null ? null : alert.Balance;
-            var firstLeak = latestLeak == null ? null : allBalances.FirstOrDefault(b => b.LeakSuspected && b.To <= latestLeak.To);
-            var assigned = Meters.Where(m => m.LoggerId == selected?.Id).ToList();
-            var singleMeter = assigned.Count == 1 ? assigned[0] : null;
-            var inletDays = inletReadings.GroupBy(r => ReadingDate(r.TakenAt.AddTicks(-1))).ToArray();
-            bool complete = inletDays.Length == DateTime.DaysInMonth(month.Year, month.Number) &&
-                inletDays.All(g => CompleteDay(g.Key, g.ToList()));
-            string location = "";
-            if (latestLeak != null && selected != null)
-                location = selected.ParentLoggerId == null
-                    ? $"Suspected leak: between logger {selected.Id} and its {Loggers.Count(l => l.ParentLoggerId == selected.Id)} downstream loggers. Exact point unknown."
-                    : singleMeter != null
-                        ? $"Suspected leak: between logger {selected.Id} and meter {singleMeter.Id}. Exact point unknown."
-                        : $"Suspected leak: downstream of logger {selected.Id}, serving {assigned.Count} buildings. Exact point unknown.";
-            ChartSeries[] Series(Func<Models.LoggerReading,decimal> value) => Loggers.OrderBy(l => l.Id)
-                .Where(l => readings.Any(r => r.LoggerId == l.Id))
-                .Select(l => new ChartSeries(LoggerMapPin.LabelFor(l.Id), LoggerMapPin.ColorFor(l.Id),
-                    Daily(readings.Where(r => r.LoggerId == l.Id).ToList(),value), TimeSpan.FromHours(26))).ToArray();
-            return new DashboardReport
+            return analyses;
+        }
+
+        private static (PressureLogger? Logger, BranchBalance? Balance) FindLatestLeak(
+            List<(PressureLogger Logger, List<BranchBalance> Balances)> analyses, DateTime start, DateTime end)
+        {
+            PressureLogger? logger = null;
+            BranchBalance? latest = null;
+            foreach (var analysis in analyses)
+                foreach (var balance in analysis.Balances)
+                {
+                    if (!balance.LeakSuspected || balance.To <= start || balance.To > end) continue;
+                    if (latest == null || balance.To > latest.To ||
+                        (balance.To == latest.To && balance.ExcessM3PerHour > latest.ExcessM3PerHour))
+                    {
+                        logger = analysis.Logger;
+                        latest = balance;
+                    }
+                }
+            return (logger, latest);
+        }
+
+        private PressureLogger? SelectLogger(PressureLogger? alertLogger, PressureLogger? inlet)
+        {
+            if (alertLogger != null) return alertLogger;
+            var logger = Loggers.FirstOrDefault(item => item.SuppliedWaterMeterId.HasValue);
+            if (logger != null) return logger;
+            logger = Loggers.FirstOrDefault(item => item.ParentLoggerId.HasValue);
+            if (logger != null) return logger;
+            return inlet;
+        }
+
+        private string DescribeLeak(PressureLogger? logger, BranchBalance? leak, List<WaterMeter> meters)
+        {
+            if (logger == null || leak == null) return "";
+            if (logger.ParentLoggerId == null)
             {
-                Period=month.ToString(), IsSimulated=readings.Any(r => r.IsSimulated),
-                InletDays=Daily(inletReadings,r => r.FlowM3PerHour),
-                InletPressure=Daily(inletReadings,r => r.PressureBar),
-                BranchPressure=Daily(readings.Where(r => r.LoggerId == selected?.Id).ToList(),r => r.PressureBar),
-                FlowSeries=Series(r => r.FlowM3PerHour), PressureSeries=Series(r => r.PressureBar),
-                Balances=monthBalances, LatestLeak=latestLeak, FirstLeak=firstLeak,
-                BranchName=selected?.Name ?? "Branch", BuildingNumber=singleMeter?.MapNumber, MeterId=singleMeter?.Id,
-                LeakLocation=location, FlaggedLoggerId=latestLeak == null ? null : selected?.Id,
-                LoggerSummary="Loggers: "+string.Join(" · ",Loggers.OrderBy(l => l.Id).Select(l => $"{LoggerMapPin.LabelFor(l.Id)} ({l.Id})")),
-                AnalysisNote=latestLeak == null && (monthBalances.Count == 0 || incomplete > 0)
-                    ? "Not enough matching readings to assess every branch." : null,
-                SuppliedM3=inletReadings.Sum(r => r.FlowM3PerHour*.25m), CompleteMonth=complete,
-                LastReading=readings.Count == 0 ? null : readings.Max(r => r.TakenAt)
-            };
+                int branches = Loggers.Count(child => child.ParentLoggerId == logger.Id);
+                return $"Suspected leak: between logger {logger.Id} and its {branches} downstream loggers. Exact point unknown.";
+            }
+            if (meters.Count == 1)
+                return $"Suspected leak: between logger {logger.Id} and meter {meters[0].Id}. Exact point unknown.";
+            return $"Suspected leak: downstream of logger {logger.Id}, serving {meters.Count} buildings. Exact point unknown.";
+        }
+
+        private ChartSeries[] CreateSeries(List<LoggerReading> readings, Func<LoggerReading, decimal> value)
+        {
+            var series = new List<ChartSeries>();
+            foreach (var logger in Loggers.OrderBy(item => item.Id))
+            {
+                var rows = readings.Where(reading => reading.LoggerId == logger.Id).ToList();
+                if (rows.Count == 0) continue;
+                series.Add(new ChartSeries(LoggerMapPin.LabelFor(logger.Id), LoggerMapPin.ColorFor(logger.Id),
+                    Daily(rows, value), TimeSpan.FromHours(26)));
+            }
+            return series.ToArray();
+        }
+
+        private static bool CompleteMonth(Month month, List<LoggerReading> readings)
+        {
+            var days = readings.GroupBy(reading => IntervalDate(reading.TakenAt)).ToArray();
+            if (days.Length != DateTime.DaysInMonth(month.Year, month.Number)) return false;
+            foreach (var day in days)
+                if (!CompleteDay(day.Key, day.ToList())) return false;
+            return true;
         }
 
         private static List<ChartPoint> Daily(List<LoggerReading> rows, Func<LoggerReading, decimal> value) =>
-            rows.GroupBy(r => ReadingDate(r.TakenAt.AddTicks(-1))).OrderBy(g => g.Key)
+            rows.GroupBy(r => IntervalDate(r.TakenAt)).OrderBy(g => g.Key)
                 .Select(g => new ChartPoint(g.Key.ToDateTime(new TimeOnly(12, 0)), (double)g.Average(value))).ToList();
 
         private static bool CompleteDay(DateOnly day, List<LoggerReading> readings)
@@ -198,11 +297,14 @@ namespace WaterNetworkMonitoring.Services
             var from = day.ToDateTime(TimeOnly.MinValue);
             var to = day.AddDays(1).ToDateTime(TimeOnly.MinValue);
             var ordered = readings.OrderBy(r => r.TakenAt).ToArray();
-            return ordered.Length == (to - from).TotalMinutes / 15 &&
-                ordered.Select((r, i) => r.TakenAt == from.AddMinutes((i + 1) * 15)).All(b => b);
+            if (ordered.Length != (to - from).TotalMinutes / 15) return false;
+            for (int i = 0; i < ordered.Length; i++)
+                if (ordered[i].TakenAt != from.AddMinutes((i + 1) * 15)) return false;
+            return true;
         }
 
-        private static DateOnly ReadingDate(DateTime timestamp) => DateOnly.FromDateTime(timestamp);
+        // Each logger reading describes the preceding 15 minutes.
+        private static DateOnly IntervalDate(DateTime timestamp) => DateOnly.FromDateTime(timestamp.AddTicks(-1));
     }
 
     internal sealed class DashboardReport
